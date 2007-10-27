@@ -1,4 +1,4 @@
-SUBDIRS = manpage design_doc beginners_guide
+SUBDIRS = manpage
 
 dist_doc_DATA =
 dist_noinst_DATA =
