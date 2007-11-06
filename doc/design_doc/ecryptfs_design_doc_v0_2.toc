@@ -1,0 +1,21 @@
+\contentsline {section}{\numberline {1}Introduction}{1}
+\contentsline {section}{\numberline {2}Threat Model}{2}
+\contentsline {section}{\numberline {3}Functional Overview}{3}
+\contentsline {subsection}{\numberline {3.1}VFS Objects}{3}
+\contentsline {subsection}{\numberline {3.2}VFS Operations}{3}
+\contentsline {subsubsection}{\numberline {3.2.1}Mount}{3}
+\contentsline {subsubsection}{\numberline {3.2.2}File Open}{4}
+\contentsline {subsubsection}{\numberline {3.2.3}Page Read}{5}
+\contentsline {subsubsection}{\numberline {3.2.4}Page Write}{6}
+\contentsline {subsubsection}{\numberline {3.2.5}File Truncation}{6}
+\contentsline {subsubsection}{\numberline {3.2.6}File Close}{6}
+\contentsline {section}{\numberline {4}Cryptographic Properties}{6}
+\contentsline {subsection}{\numberline {4.1}Key Management}{6}
+\contentsline {subsubsection}{\numberline {4.1.1}Passphrase Authentication Tokens}{8}
+\contentsline {subsubsection}{\numberline {4.1.2}Public Key Authentication Tokens}{8}
+\contentsline {subsection}{\numberline {4.2}Cryptographic Confidentiality Enforcement}{8}
+\contentsline {subsection}{\numberline {4.3}File Format}{10}
+\contentsline {subsubsection}{\numberline {4.3.1}Marker}{12}
+\contentsline {subsection}{\numberline {4.4}Kernel-userspace Communication Protocol}{12}
+\contentsline {subsection}{\numberline {4.5}Deployment Considerations}{13}
+\contentsline {subsection}{\numberline {4.6}Cryptographic Summary}{14}

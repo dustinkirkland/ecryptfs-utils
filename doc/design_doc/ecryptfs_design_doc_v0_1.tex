@@ -1,0 +1,477 @@
+\documentclass{article}
+
+\usepackage{url}
+
+\begin{document}
+
+\title{eCryptfs v0.1 Design Document}
+
+\author{Michael A. Halcrow}
+
+\maketitle
+
+\tableofcontents
+
+\section{Introduction}
+
+This document details the design for eCryptfs\footnote{To obtain
+eCryptfs, visit \url{http://ecryptfs.sf.net}}. eCryptfs is a
+POSIX-compliant enterprise-class stacked cryptographic filesystem for
+Linux. It is derived from Erez Zadok's Cryptfs, implemented through
+the FiST framework for generating stacked filesystems. eCryptfs stores
+cryptographic metadata in the header of each file written, so that
+encrypted files can be copied between hosts; the file will be
+decryptable with the proper key, and there is no need to keep track of
+any additional information aside from what is already in the encrypted
+file itself.
+
+eCryptfs is a native Linux filesystem. It builds as a stand-alone
+kernel module for the Linux kernel version 2.6.15 or higher; there is
+no need to apply any kernel patches.
+
+The developers are implementing eCryptfs features on a staged
+basis. The first stage (version 0.1) includes mount-wide passphrase
+support and data confidentiality enforcement. The second stage
+(version 0.2) will include mount-wide public key support and data
+integrity enforcement. The third stage (version 0.3) will include
+per-file policy support. This document provides a technical
+description of the eCryptfs filesystem release version 0.1. eCryptfs
+version 0.1 is now complete, and the developers are recommending that
+eCryptfs be merged into the mainline Linux kernel.
+
+Michael Halcrow has published two papers covering eCryptfs at the
+Ottawa Linux Symposium (2004 and 2005)\footnote{See
+\url{http://www.linuxsymposium.org/2006/proceedings.php}. The eCryptfs
+paper is on page 209 of the first of the two halves of the proceedings
+document.}. These papers provide a high-level overview of eCryptfs,
+along with extensive discussion of various topics relating to
+filesystem security in Linux.
+
+\section{Threat Model}
+
+eCryptfs version 0.1 protects data confidentiality in the event that
+an unauthorized agent gains access to the data in a context that is
+outside the control of the host operating environment. A secret
+passphrase predicates access to the unencrypted contents of each
+individual file object. An agent without the passphrase secret
+associated with any given file (see Section~\ref{key_management})
+should not be able to discern any strategic information about the
+contents of any given encrypted file, aside from what can be deduced
+from the file name, the file size, or other metadata associated with
+the file. It should about as difficult to attack an encrypted eCryptfs
+file as it is to attack a file encrypted by GnuPG (using the same
+cipher, key, etc.).
+
+No intermediate state of the file on disk should be more easily attacked
+than the final state of the file on disk; in the event of a system error
+or power failure during an eCryptfs operation, no partially written
+content should weaken the file's confidentiality. Attackers should not
+be able to detect via a watermarking attack whether an eCryptfs user is
+storing any particular plaintext. We assume that an attacker potentially
+has access to every intermediate state of an encrypted file on secondary
+storage.
+
+Within a trusted host environment, eCryptfs offers no additional
+access control functions than what is already implementable via
+standard POSIX file permissions, Mandatory Access Control mechanisms
+(i.e., SE Linux), and so forth.
+
+\section{Functional Overview}
+
+eCryptfs is a stacked filesystem that is implemented natively in the
+Linux kernel VFS. Since eCryptfs is stacked, it does not write
+directly into a block device. Instead, it mounts on top of a directory
+in a \emph{lower} filesystem. Most any POSIX-compliant filesystem can
+act as a lower filesystem; EXT2, EXT3, and JFS are known to work with
+eCryptfs. Objects in the eCryptfs filesystem, including \emph{inode},
+\emph{dentry}, and \emph{file} objects, correlate in a one-to-one
+basis with the objects in the lower filesystem.
+
+eCryptfs is derived from Cryptfs, which is part of the FiST framework
+developed and maintained by Erez Zadok and the File systems and
+Storage Lab at Stony Brook University. Visit
+\url{http://filesystems.org} to obtain source code and documentation
+on FiST. Publications containing the design of stackable filesystems
+are retrievable from \url{http://filesystems.org/all-pubs.html}.
+
+\subsection{VFS Objects}
+
+eCryptfs maintains the reference between the objects in the eCryptfs
+filesystem and the objects in the lower filesystem. The references are
+maintained from eCryptfs via (1) the file object's \emph{private\_data}
+pointer, (2) the inode object's \emph{u.generic\_ip} pointer, (3) the
+dentry object's \emph{d\_fsdata} pointer, and (4) the superblock
+object's \emph{s\_fs\_info} pointer. These pointers point to data
+structures that maintain (1) state information with regard to
+cryptographic operations and (2) pointers to the lower filesystem's
+objects. The \emph{ecryptfs\_crypt\_stat} structure is the principle
+cryptographic state structure; the contents of this struct are given in
+Figure~\ref{comp_fig}.
+
+Each file on disk contains context information in a header
+region. eCryptfs maps the cryptographic state information against the
+contents of the header in the file on disk.
+
+\subsection{VFS Operations}
+
+\subsubsection{Mount}
+
+At mount time, a helper application generates an authentication token
+for the passphrase specified by the user. eCryptfs uses the keyring
+support in the Linux kernel to store the authentication token in the
+user's session keyring. A mount parameter contains the signature for
+this authentication token. eCryptfs retrieves the authentication token
+from the session keyring using this signature. It then uses the
+contents of the authentication token to set up the cryptographic
+context for newly created files. It also uses the contents of the
+authentication token to access the contents of previously created
+files.
+
+\subsubsection{File Open}
+
+When an existing file is opened
+%\footnote{\emph{file.c::ecryptfs\_open()}}
+in eCryptfs, eCryptfs opens the lower file and reads in the header. 
+%\footnote{\emph{crypto.c::ecryptfs\_read\_headers()}}
+The existence of an eCryptfs marker is verified, 
+%\footnote{\emph{crypto.c::contains\_ecryptfs\_marker()}}
+the flags are parsed, 
+%\footnote{\emph{crypto.c::ecryptfs\_process\_flags()}}
+and then the packet set is parsed.
+%\footnote{\emph{keystore.c::ecryptfs\_parse\_packet\_set()}}
+
+Each packet in the packet set is matched (via the signature) against
+an existing authentication token from the user session keyring. As
+soon as a matching instantiated authentication token is found, the
+session key encryption key is generated from the secret value in the
+instantiated authentication token and used to decrypt the session key
+for the file\footnote{Note that release 0.1 uses only one mount-wide
+authentication token.}. If eCryptfs cannot find the valid
+authentication token from the user session keyring, the open fails
+with a -EIO error code. eCryptfs generates a root initialization
+vector by taking the MD5 sum of the session key; the root IV is the
+first $N$ bytes of that MD5 sum, where $N$ is the number of bytes
+constituting an initialization vector for the cipher being used for
+the file.
+
+While processing the header information, eCryptfs modifies the
+\emph{ecryptfs\_crypt\_stat} struct associated with the eCryptfs inode
+object.
+%\footnote{\emph{(struct ecryptfs\_inode\_info *)(u.generic\_ip)$\rightarrow$crypt\_stat}}
+The modifications to the ecryptfs\_crypt\_stat structure include:
+
+\begin{itemize}
+\item{Setting various flags, such as \emph{ECRYPTFS\_ENCRYPTED}.}
+\item{Writing the inode session key.}
+\item{Writing the cipher name.}
+\item{Writing the root initialization vector.}
+\item{Filling in the array of authentication token signatures for the
+  authentication tokens associated with the inode.}
+\item{Setting the number of header pages.}
+\item{Setting the extent size.}
+\end{itemize}
+
+eCryptfs later uses this information when performing VFS operations.
+
+Once the \emph{ecryptfs\_crypt\_stat} structure is filled in, eCryptfs
+initializes the kernel crypto API cryptographic context for the inode.
+% \footnote{\emph{crypto.c::ecryptfs\_init\_crypt\_ctx()}}
+The cryptographic context is initialized in CBC mode with the cipher
+selected from the packets in the lower file header.
+
+When a new file is created on open, eCryptfs applies the mount-wide
+authentication token to the file, initializing and associating the
+cryptographic context as appropriate. eCryptfs generates the header
+packet and writes it out to the lower file header before it proceeds
+with subsequent operations.
+
+\subsubsection{Page Read}
+
+\label{page_read}
+
+Reads can only occur on an open file, and a file can only be opened if
+an applicable authentication token exists in the user's session
+keyring at the time that the VFS syscall that effectively opens the
+file takes place.
+
+On a page read, 
+%\footnote{\emph{mmap.c::ecryptfs\_readpage()}}
+the eCryptfs page index is interpolated into the corresponding lower
+page index, taking into account the header pages and any IV pages that
+may exist in the file.
+% \footnote{Release 0.1 ships with an experimental rotated/written IV
+% mode of operation. The default (and recommended) mode of operation
+% is derived IV mode, wherein no IV pages are written at all.}
+eCryptfs derives the initialization vector for the given page index
+%\footnote{\emph{crypto.c::ecryptfs\_derive\_iv()}}
+by concatenating the ASCII text representation of the page offset to
+the root initialization vector bytes for the inode and taking the MD5
+sum of that string.
+
+eCryptfs then reads in the encrypted page from the lower file and
+decrypts the page. 
+% \footnote{\emph{mmap.c::decrypt\_page()}}
+eCryptfs first sets up the scatterlist objects.
+% \footnote{\emph{crypto.c::do\_decrypt\_page\_offset()}}
+It then makes the call to the kernel crypto API to perform the
+decryption for the page
+% \footnote{\emph{crypto.c::do\_decrypt\_scatterlist()}}
+(in release 0.1, pages are equivalent to extents). This decrypted page
+is what gets returned via the VFS syscall to the userspace application
+that made the request.
+
+\subsubsection{Page Write}
+
+On a page write, 
+% \footnote{mmap.c::ecryptfs\_writepage(); mmap.c::ecryptfs\_commit\_write}
+eCryptfs performs a similar set of operations that occur on a page
+read (see Section~\ref{page_read}), only the data is encrypted rather
+than decrypted. The lower index is interpolated, the initialization
+vector is derived, the page is encrypted with the session key via the
+kernel crypto API, and the encrypted page is written out to the lower
+file.
+
+\subsubsection{File Truncation}
+
+When a file is either truncated to a smaller size or extended to a
+larger size, eCryptfs updates the filesize field (the first 8 bytes of
+the lower file) accordingly.
+
+\subsubsection{File Close}
+
+In eCryptfs release 0.1, the packet set in the header never changes
+after the file is initially created. When a file is no longer being
+accessed, the kernel VFS frees its associated file, dentry, and inode
+objects according to the standard resource deallocation process in the
+VFS; eCryptfs does not perform any futher cryptographic operations on
+the file.
+
+\section{Cryptographic Properties}
+
+\subsection{Key Management}
+
+\label{key_management}
+
+RFC2440 (OpenPGP) heavily influences the design of eCryptfs, although
+deviations from the RFC are necessary to support random access in a
+filesystem. eCryptfs stores RFC2440-compatible packets in the header
+for each file. Packet types used include Tag 3 (passphrase) and Tag 11
+(literal). Each file has a unique \emph{session key} associated with
+it; the session key acts as a symmetric key to encrypt and decrypt the
+file contents. eCryptfs generates that session key via the Linux
+kernel \emph{get\_random\_bytes()} function call at the time that a
+file is created. The length of the session key is dependent upon the
+cipher being used. By default, eCryptfs selects Blowfish, which has a
+128-bit key size (later versions will allow the user to select the
+cipher and key length).
+
+Active eCryptfs inodes contain cryptographic contexts, with one unique
+context per unique inode. This context exists in a data structure that
+contains such things as the session key, the cipher name, the root
+initialization vector, signatures of authentication tokens associated
+with the inode, various flags indicating inode cryptographic
+properties, pointers to crypto API structs, and so forth. The
+\emph{ecryptfs\_crypt\_stat} struct definition is in the
+\emph{ecryptfs\_kernel.h} header file and is comprised of the elements
+in Figure~\ref{comp_fig}.
+
+\begin{figure*}[t]
+  \begin{center}
+    \begin{tabular}{|c|c|p{2in}|}
+      \hline
+      \emph{Name} & \emph{Type} & \emph{Description} \\
+      \hline
+      lock & Semaphore & Mutex for crypt stat object \\
+      \hline
+      root\_iv & Byte Array & The root initialization vector \\
+      \hline
+      iv & Byte Array & The current cached initialization vector \\
+      \hline
+      key & Byte Array & The session key \\
+      \hline
+      cipher & Byte Array & Kernel crypto API cipher description
+      string \\
+      \hline
+      keysig & Byte Array & Signature for authentication
+      token associated with the inode \\
+      \hline
+      flags & Bit vector & Status flags (encrypted, etc.) \\
+      \hline
+      iv\_bytes & Integer & Length of IV \\
+      \hline
+      num\_header\_pages & Integer & Number of header pages for
+      lower file \\
+      \hline
+      extent\_size & Integer & Number of bytes in an extent \\
+      \hline
+      key\_size\_bits & Integer & Length of session key in bits \\
+      \hline
+      tfm & Crypto API Context & Bulk data crypto context \\
+      \hline
+      md5\_tfm & Crypto API Context & MD5 crypto context \\
+      \hline
+    \end{tabular}
+    \caption{Contents of cryptographic stat structure for eCryptfs inode}
+    \label{comp_fig}
+  \end{center}
+\end{figure*}
+    
+The session key is encrypted and stored in the first extent of the
+\emph{lower} (encrypted) file. The session key is encrypted with the
+authentication token's session key encryption key. Authentication
+token types reflect the encryption mechanism. There is one ``global''
+\emph{passphrase} authentication token that eCryptfs generates at
+mount time from the user's specified passphrase\footnote{Conversion of
+a passphrase into a key follows the S2K process as described in
+RFC2440, in that the passphrase is concatenated with a salt; that data
+block is then iteratively MD5-hashed 65,536 times to generate the
+session key encryption key.}.
+
+eCryptfs stores authentication tokens in the user's session keyring (a
+component of the Linux kernel keyring service). Helper scripts place
+the authentication token containing the mount-wide passphrase into the
+user session keyring at mount time.
+
+When eCryptfs opens an encrypted file, it attempts to match the
+authentication token contained in the header of the file against the
+instantiated authentication token for the mount point. If the
+authentication token for the mount point matches the authentication
+token in the header of the file, then it uses that instantiated
+authentication token to decrypt the session key that is used to
+encrypt and decrypt the file contents on page write and read
+operations.
+
+\subsection{Cryptographic Confidentiality Enforcement}
+
+eCryptfs enforces the confidentiality of the data that is outside the
+control of the host operating environment by encrypting the contents
+of the file objects containing the data. eCryptfs utilizes the Linux
+kernel cryptographic API to perform the encryption and decryption of
+the contents of its files over subregions known as \emph{extents}.
+
+In release 0.1, the length of each extent is fixed to the page size
+(typically $4096$ bytes). Since each file encrypted by eCryptfs
+contains a header page, the encrypted file in the lower filesystem
+will always be one page larger than the unencrypted file delivered by
+eCryptfs; eCryptfs transparently maps the page indices between the
+eCryptfs file and the lower file on read and write operations. Each
+extent is independently encrypted in CBC mode.
+
+eCryptfs derives the initialization vector (IV) for each extent from a
+\emph{root initialization vector} that is unique for each file. The
+root IV is a subset of the MD5 hash of the session key for the file.
+The extent IV derivation process entails taking the MD5 sum of the
+secret root IV concatenated with the ASCII decimal characters
+representing the extent index. Since the IV's are based on a secret
+value, eCryptfs is not vulnerable to watermarking attacks.
+
+When a \emph{readpage()} request comes through as the result of a VFS
+syscall, eCryptfs will interpolate the page index to find the
+corresponding extent in the lower (encrypted) file. eCryptfs reads
+this extent in and then decrypts it; each extent is encrypted with
+whatever cipher that eCryptfs selected for the file at the time the
+file was created (in release 0.1, this defaults to the Blowfish
+cipher). Each extent region is independent of the other extent
+regions; they are not chained in any way.
+
+When a \emph{writepage()} request comes through as a result of a VFS
+syscall, eCryptfs will read the target extent from the lower file
+using the process described in the prior paragraph. The data on that
+page is modified according to the write request. The entire (modified)
+page is re-encrypted (again, in CBC mode) with the same IV and key
+that were used to originally encrypt the page; the newly encrypted
+page is then written out to the lower file.
+
+\subsection{File Format}
+
+This release only supports a mount-wide passphrase, and so the packet
+set consists only of a single Tag 3 followed by a single Tag 11
+packet. These packets store the encrypted session key and adhere to
+the specification given in RFC2440.
+
+The first 20 bytes consist of the file size, the eCryptfs marker, and
+a set of status flags. From byte 20 on, only RFC2440-compliant packets
+are valid.
+
+\scriptsize
+\begin{verbatim}
+  Page 0:
+    Octets 0-7:        Unencrypted file size
+    Octets 8-15:       eCryptfs special marker
+    Octets 16-19:      Flags
+     Octet 16:         File format version number (between 0 and 255)
+     Octets 17-18:     Reserved for use in later version of eCryptfs
+     Octet 19:         Bit 1 (lsb): Reserved 
+                       Bit 2: Encrypted?
+                       Bits 3-8: Reserved for use in later version of eCryptfs
+    Octet  20:         Begin RFC2440 authentication token packet set
+  Page 1:
+    Extent 0 (CBC encrypted)
+  Page 2:
+    Extent 1 (CBC encrypted)
+  ...
+\end{verbatim}
+\normalsize
+
+In the RFC2440 packet set, each Tag 3 (passphrase) packet is
+immediately followed by a Tag 11 (literal) packet containing the
+identifier for the passphrase in the Tag 3 packet. This identifier is
+formed by hashing the key that is generated from the passphrase in the
+String-to-Key (S2K) operation. Release 0.1 only support one Tag 3/Tag
+11 pair, which correlates with the mount-wide passphrase.
+
+\subsubsection{Marker}
+
+The eCryptfs marker for each file is formed by generating a 32-bit
+random number ($X$) and writing it immediately after the 8-byte file
+size at the head of the lower file. The hexadecimal
+value\footnote{This value is arbitrary.} $0x3c81b7f5$ is XOR'd with
+the random value ($Y=0x3c81b7f5\otimes X$), and the result is written
+immediately after the random number.
+
+\subsection{Deployment Considerations}
+
+eCryptfs is concerned with protecting the confidentiality of data on
+secondary storage that is outside the control of a trusted host
+environment. eCryptfs operates on the VFS layer, and so it will not
+encrypt data written to the swap secondary storage. I recommend that
+the user employ dm-crypt to encrypt the swap space on a machine where
+sensitive data may be loaded into memory at some point.
+
+Selection of a passphrase should follow standard strong passphrase
+practices. eCryptfs ships with various helper applications in the
+misc/ directory; use whatever tools are convenient for you to generate
+a strong passphrase string. The user should store the string in a safe
+place and use that as the passphrase when prompted.
+
+\subsection{Cryptographic Summary}
+
+The key design components for eCryptfs realease 0.1 are:
+
+\begin{itemize}
+\item{Header page contains plaintext file size, eCryptfs marker,
+  version, flags, and RFC2440 packets.}
+\item{A mount-wide passphrase is stored in the user session keyring in
+  the form of an authentication token.}
+\item{Each file has a unique randomly-generate session key. The
+  session key is encrypted and stored in the file header as a Tag 3
+  packet as defined by RFC2440.}
+\item{The authentication token identifier, which is stored in the Tag
+  11 packet following the Tag 3 packet, is formed by taking the hash
+  of the session key encryption key.}
+  \begin{itemize}
+  \item{The session key encryption key is
+    generated according to the S2K mechanism described in RFC2440.}
+  \end{itemize}
+\item{Page-size extents are encrypted with the default cipher in CBC
+  mode.}
+\item{Each file's root initialization vector is the MD5 sum of the
+  session key for the file.}
+\item{The initialization vector for each extent is generated by
+  concatenating the root IV and the ASCII representation of the page
+  index and taking the MD5 sum of that string.}
+\end{itemize}
+
+(End of Document.)
+
+\end{document}

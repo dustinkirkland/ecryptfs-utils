@@ -1,0 +1,10 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: libecryptfs
+Description: eCryptfs library
+Version: @PACKAGE_VERSION@
+Cflags: -I${includedir} @LIBGCRYPT_CFLAGS@ @KEYUTILS_CFLAGS@
+Libs: @LIBGCRYPT_LIBS@ @KEYUTILS_LIBS@ -L${libdir} -lecryptfs

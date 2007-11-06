@@ -1,0 +1,69 @@
+eCryptfs PKCS#11 Key Module
+
+ABOUT
+
+	eCryptfs PKCS#11 key module enables use of PKCS#11 token private key
+	with eCryptfs.
+
+	ecryptfsd must be running in order to use the key module.
+
+	The key module expects a private key and certificate on token, both
+	should have the same value in CKA_ID attribute.
+
+CONFIGURATION
+
+	Configuration is stored at ~/.ecryptfsrc.pkcs11.
+
+	Attributes:
+		pkcs11-log-level (Integer, decimal)
+			Log level of pkcs11-helper, can be from 0-5.
+
+		pkcs11-pin-cache-timeout (Integer, decimal)
+			Maximum PIN/session cache period in seconds.
+			-1 is infinite, until provider invalidates session.
+
+		pkcs11-provider
+			name (String)
+				Provider unique friendly name.
+
+			library (String)
+				Provider library to load.
+
+			allow-protected-auth (Boolean)
+				Enable protected authentication if provider supports the feature.
+
+			cert-private (Boolean)
+				Provider stores the certificates as private objects.
+
+			private-mask (Integer, hex)
+				Provider private key mask:
+				0	Determine automatically.
+				1	Use sign.
+				2	Use sign recover.
+				4	Use decrypt.
+				8	Use unwrap.
+	
+	Example:
+		pkcs11-log-level=5
+		pkcs11-provider1,name=myprovider1,library=/usr/lib/pkcs11/myprovider1.so
+		pkcs11-provider2,name=myprovider2,library=/usr/lib/pkcs11/myprovider2.so
+
+MOUNT OPTIONS
+
+	key Attributes:
+		id (String)
+			PKCS#11 serialized object id, this object id can be
+			aquired using ecryptfs-manager, the default value of
+			this field is a list of "DN (serial) [serialized id]".
+
+		x509file (String)
+			Optional (may be empty) reference to a X.509 PEM file
+			holding id certificate. It is required if the key is
+			added when the token is not available.
+
+	Example:
+		key=pkcs11:id=<serialized-id>
+
+AUTHORS
+	Alon Bar-Lev <alon.barlev@gmail.com>
+

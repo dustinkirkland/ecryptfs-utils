@@ -1,0 +1,17 @@
+SUBDIRS = manpage design_doc beginners_guide
+
+dist_doc_DATA =
+dist_noinst_DATA =
+dist_html_DATA = ecryptfs-faq.html
+
+if BUILD_PAM
+dist_doc_DATA += ecryptfs-pam-doc.txt
+else
+dist_noinst_DATA += ecryptfs-pam-doc.txt
+endif
+
+if BUILD_PKCS11_HELPER
+dist_doc_DATA += ecryptfs-pkcs11-helper-doc.txt
+else
+dist_noinst_DATA += ecryptfs-pkcs11-helper-doc.txt
+endif

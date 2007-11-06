@@ -1,0 +1,41 @@
+digraph pageuptodate {
+	readpage [label="mmap.c::ecryptfs_readpage()"]
+	decryptpage [label="crypto.c::ecryptfs_decrypt_page()"]
+	readlowerpagesegment [label="read_write.c::ecryptfs_read_lower_page_segment()"]
+	readlower [label="read_write.c::ecryptfs_read_lower()"]
+	decryptextent [label="crypto.c::ecryptfs_decrypt_extent()"]
+	copyup [label="mmap.c::ecryptfs_copy_up_encrypted_with_header()"]
+	read [label="read_write.c::ecryptfs_read()"]
+	write [label="read_write.c::ecryptfs_write()"]
+	growfile [label="inode.c::grow_file()"]
+	truncate [label="inode.c::ecryptfs_truncate()"]
+	getpage [label="mmap.c::ecryptfs_get_locked_page()"]
+	preparewrite [label="mmap.c::ecryptfs_prepare_write()"]
+	setclear [label="SetPageUptodate/ClearPageUptodate" shape=box]
+	mapunmapflush [label="kmap/kunmap/flush_dcache_page" shape=box]
+
+	truncate->write
+	growfile->write
+	write->getpage
+	write->decryptpage
+	write->setclear
+	write->mapunmapflush
+	read->getpage
+	read->decryptpage
+	read->setclear
+	read->mapunmapflush
+	readpage->decryptpage
+	readpage->readlowerpagesegment
+	readpage->copyup
+	decryptpage->readlowerpagesegment
+	decryptpage->decryptextent
+	decryptpage->readlower
+	copyup->readlowerpagesegment
+	copyup->mapunmapflush
+	readpage->setclear
+	preparewrite->readlowerpagesegment
+	preparewrite->setclear
+	preparewrite->truncate
+	readlowerpagesegment->readlower
+	readlowerpagesegment->mapunmapflush
+}

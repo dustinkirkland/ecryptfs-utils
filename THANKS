@@ -1,0 +1,23 @@
+ecryptfs THANKS file
+
+eCryptfs is derived from Cryptfs, which was original written by Erez
+Zadok as part of the FiST framework. eCryptfs is a fork from
+Cryptfs. Mike Halcrow is the principal developer of eCryptfs.
+
+Many people have further contributed to eCryptfs by reporting
+problems, suggesting various improvements, or submitting actual
+code. Here is a list of these people. Help me keep it complete and
+exempt of errors:
+
+Kevin Fenzi
+Steve French
+Tyler Hicks
+Trevor Highland
+Bernard Johnson
+David Kleikamp
+Dmitriy Monakhov
+Theresa Nelson
+Michael C. Thompson
+Peter Vrabec
+George Wilson
+Kent Yoder
