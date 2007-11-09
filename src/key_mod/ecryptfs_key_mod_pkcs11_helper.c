@@ -1567,7 +1567,7 @@ static int ecryptfs_pkcs11h_init(char **alias)
 	CK_RV rv = CKR_FUNCTION_FAILED;
 	int rc = 0;
 
-	if (asprintf(alias, "pkcs11") == -1) {
+	if (asprintf(alias, "pkcs11-helper") == -1) {
 		syslog(LOG_ERR, "PKCS#11: Out of memory\n");
 		rc = -ENOMEM;
 		goto out;
