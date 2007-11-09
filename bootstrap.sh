@@ -4,7 +4,3 @@
 # distro's build environment chokes
 
 autoreconf -i -v -f
-libtoolize --copy --force
-aclocal
-autoconf
-automake
