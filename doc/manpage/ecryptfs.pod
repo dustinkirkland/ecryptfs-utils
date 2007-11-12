@@ -35,7 +35,7 @@ itself. Think of eCryptfs as a sort of "gnupgfs."
 
 Specify the type of key to be used when mounting eCryptfs.
 
-=item B<cipher=(cipher)>
+=item B<ecryptfs_cipher=(cipher)>
 
 Specify the symmetric cipher to be used on a per file basis
 
@@ -44,14 +44,36 @@ Specify the symmetric cipher to be used on a per file basis
 Specify the keysize to be used with the selected cipher. If the cipher
 only has one keysize the keysize does not need to be specified.
 
-=item B<passthrough>
+=item B<ecryptfs_passthrough>
 
 Allows for non-eCryptfs files to be read and written from within an
 eCryptfs mount. This option is turned off by default.
 
+=item B<no_sig_cache>
+
+Do not check the mount key signature against the values in the user's
+~/.ecryptfs/sig-cache.txt file. This is useful for such things as
+non-interactive setup scripts, so that the mount helper does not stop
+and prompt the user in the event that the key sig is not in the cache.
+
+=item B<ecryptfs_encrypted_view>
+
+This option, when set, will have eCryptfs return the encrypted
+versions of the lower files, rather than decrypt encrypted files and
+return the decrypted data from the lower files. This options is useful
+for such things as backup utilities.
+
+=item B<ecryptfs_xattr>
+
+Store the metadata in the extended attribute of the lower files rather
+than the header region of the lower files.
+
 =item B<verbosity=(level)>
-Seting verbosity prevents eCryptfs from interactively requesting for options
-to be entered.  The mount will fail if an essential option is absent.
+
+Set to '1' in order to get verbose output from the kernel module. As a
+word of caution, this will cause secret values to be written in the
+clear to the system log, so this options should only be used for
+debugging purposes.
 
 =head2 KEY OPTIONS
 
