@@ -15,6 +15,23 @@ struct jprobe_mapping_elem {
 	void *fp;
 };
 
+#define MAX_CLO_MSGS 8192
+
+struct mutex clo_msg_list_mutex;
+size_t num_clo_msgs = 0;
+
+struct clo_msg;
+
+struct clo_msg {
+	struct clo_msg *next;
+	char *msg;
+	size_t size;
+	size_t current_read_offset;
+};
+
+struct clo_msg *tail_clo_msg = NULL;
+struct clo_msg *head_clo_msg = NULL;
+
 int jp_do_umount(struct vfsmount *mnt, int flags)
 {
 	printk(KERN_INFO "%s: mnt = [0x%p]; flags = [0x%x]\n", __FUNCTION__,
@@ -111,6 +128,35 @@ asmlinkage long jp_sys_umount(char __user * name, int flags)
 	return 0;	
 }
 
+ssize_t jp_vfs_write(struct file *file, const char __user *buf, size_t count,
+		     loff_t *pos)
+{
+	ssize_t rc;
+
+	mutex_lock(&clo_msg_list_mutex);
+	if (!head_clo_msg) {
+		tail_clo_msg = head_clo_msg = kmalloc(sizeof(struct clo_msg),
+						      GFP_KERNEL);
+		if (!head_clo_msg) {
+			rc = -ENOMEM;
+			goto out;
+		}
+	}
+	tail_clo_msg->next = kmalloc(sizeof(struct clo_msg), GFP_KERNEL);
+	if (!tail_clo_msg->next) {
+			rc = -ENOMEM;
+			goto out;
+	}
+	tail_clo_msg = tail_clo_msg->next;
+	memset(tail_clo_msg, 0, sizeof(*tail_clo_msg));
+	tail_clo_msg->size = 3;
+	tail_clo_msg->msg = kmalloc(tail_clo_msg->size, GFP_KERNEL);
+	memcpy(tail_clo_msg->msg, "a\n\0", 3);
+out:
+	mutex_unlock(&clo_msg_list_mutex);
+	return rc;
+}
+
 static ssize_t ecryptfs_read(struct file *filp, char __user *buf, size_t len,
 			     loff_t *ppos);
 static int ecryptfs_open(struct inode *inode, struct file *file);
@@ -125,7 +171,20 @@ struct file_operations ecryptfs_fops = {
 static ssize_t ecryptfs_read(struct file *filp, char __user *buf, size_t len,
 			     loff_t *ppos)
 {
-	return 0;
+	ssize_t rc = 0;
+
+	mutex_lock(&clo_msg_list_mutex);
+	if (!head_clo_msg)
+		goto out;
+	if (len >= head_clo_msg->size) {
+		memcpy(buf, head_clo_msg->msg, head_clo_msg->size);
+		rc = head_clo_msg->size;
+		kfree(head_clo_msg->msg);
+	        head_clo_msg = head_clo_msg->next;
+	}
+out:
+	mutex_unlock(&clo_msg_list_mutex);
+	return rc;
 }
 
 static int ecryptfs_open(struct inode *inode, struct file *file)
@@ -142,6 +201,7 @@ struct jprobe_mapping_elem jprobe_mapping[] = {
 	{NULL, "ecryptfs_kill_block_super", jp_ecryptfs_kill_block_super},
 	{NULL, "ecryptfs_put_super", jp_ecryptfs_put_super},
 	{NULL, "sys_umount", jp_sys_umount},
+	{NULL, "vfs_write", jp_vfs_write},
 /*	{NULL, "ecryptfs_interpose", jp_ecryptfs_interpose} */
 };
 
@@ -181,7 +241,10 @@ static int __init jprobe_mount_init(void)
 		major = -1;
 	} else {
 		major = rc;
+		printk(KERN_INFO "%s: Registered major device [%d]\n",
+		       __FUNCTION__, major);
 	}
+	mutex_init(&clo_msg_list_mutex);
         return 0;
 }
 
