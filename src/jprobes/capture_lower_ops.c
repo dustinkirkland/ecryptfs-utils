@@ -2,7 +2,6 @@
  * Capture statistics from read and writes; export them to /dev/ecryptfs
  */
 
-
 #include <linux/module.h>
 #include <linux/init.h>
 #include <linux/kprobes.h>
@@ -112,6 +111,33 @@ asmlinkage long jp_sys_umount(char __user * name, int flags)
 	return 0;	
 }
 
+static ssize_t ecryptfs_read(struct file *filp, char __user *buf, size_t len,
+			     loff_t *ppos);
+static int ecryptfs_open(struct inode *inode, struct file *file);
+static int ecryptfs_release(struct inode *inode, struct file *file);
+
+struct file_operations ecryptfs_fops = {
+	.read = ecryptfs_read,
+	.open = ecryptfs_open,
+	.release = ecryptfs_release,
+};
+
+static ssize_t ecryptfs_read(struct file *filp, char __user *buf, size_t len,
+			     loff_t *ppos)
+{
+	return 0;
+}
+
+static int ecryptfs_open(struct inode *inode, struct file *file)
+{
+	return 0;
+}
+
+static int ecryptfs_release(struct inode *inode, struct file *file)
+{
+	return 0;
+}
+
 struct jprobe_mapping_elem jprobe_mapping[] = {
 	{NULL, "ecryptfs_kill_block_super", jp_ecryptfs_kill_block_super},
 	{NULL, "ecryptfs_put_super", jp_ecryptfs_put_super},
@@ -119,9 +145,14 @@ struct jprobe_mapping_elem jprobe_mapping[] = {
 /*	{NULL, "ecryptfs_interpose", jp_ecryptfs_interpose} */
 };
 
+int major;
+int minor;
+#define ECRYPTFS_DEVICE_NAME "ecryptfs"
+
 static int __init jprobe_mount_init(void)
 {
 	int i;
+	int rc;
 
 	for (i = 0; i < ARRAY_SIZE(jprobe_mapping); i++) {
 		jprobe_mapping[i].jp = kmalloc(sizeof(struct jprobe),
@@ -142,6 +173,15 @@ static int __init jprobe_mount_init(void)
 		}
 		register_jprobe(jprobe_mapping[i].jp);
 	}
+	rc = register_chrdev(0, ECRYPTFS_DEVICE_NAME, &ecryptfs_fops);
+	if (rc < 0) {
+		printk(KERN_ERR
+		       "%s: Error registering chrdev [%s]; rc = [%d]\n",
+		       __FUNCTION__, ECRYPTFS_DEVICE_NAME, rc);
+		major = -1;
+	} else {
+		major = rc;
+	}
         return 0;
 }
 
@@ -152,6 +192,12 @@ static void __exit jprobe_mount_exit(void)
 	for (i = 0; i < ARRAY_SIZE(jprobe_mapping); i++) {
 		unregister_jprobe(jprobe_mapping[i].jp);
 		kfree(jprobe_mapping[i].jp);
+	}
+	if (major >= 0) {
+		unregister_chrdev(major, ECRYPTFS_DEVICE_NAME);
+	} else {
+		printk(KERN_WARNING "%s: Not unregistering device, since there "
+		       "was an error during registration\n", __FUNCTION__);
 	}
 }
 
