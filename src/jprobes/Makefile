@@ -1,7 +1,4 @@
-obj-m    := jprobe-mount.o
-obj-m    += test-jprobe.o
-obj-m    += jprobe-create.o
-obj-m    += jprobe-release.o
+obj-m    += capture_lower_ops.o
 
 KDIR    := /lib/modules/$(shell uname -r)/build
 PWD     := $(shell pwd)
