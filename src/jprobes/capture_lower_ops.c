@@ -34,102 +34,6 @@ struct clo_msg {
 struct clo_msg *tail_clo_msg = NULL;
 struct clo_msg *head_clo_msg = NULL;
 
-int jp_do_umount(struct vfsmount *mnt, int flags)
-{
-	printk(KERN_INFO "%s: mnt = [0x%p]; flags = [0x%x]\n", __FUNCTION__,
-	       mnt, flags);
-	jprobe_return();
-	return 0;
-}
-
-void jp_ecryptfs_kill_block_super(struct super_block *sb)
-{
-	printk(KERN_INFO "%s: sb = [0x%p]\n", __FUNCTION__, sb);
-	jprobe_return();
-}
-
-void jp_ecryptfs_put_super(struct super_block *sb)
-{
-	printk(KERN_INFO "%s: sb = [0x%p]\n", __FUNCTION__, sb);
-	jprobe_return();
-}
-
-void jp_ecryptfs_umount_begin(struct vfsmount *vfsmnt, int flags)
-{
-	printk(KERN_INFO "%s: vfsmnt = [0x%p]; flags = [0x%.8x]\n",
-	       __FUNCTION__, vfsmnt, flags);
-	jprobe_return();
-}
-
-int jp_ecryptfs_get_sb(struct file_system_type *fs_type, int flags,
-		       const char *dev_name, void *raw_data,
-		       struct vfsmount *mnt)
-{
-	printk(KERN_INFO "%s: fs_type = [0x%p]; flags = [0x%.8x], dev_name = "
-	       "[%s], raw_data = [0x%p], mnt = [0x%p]\n",
-	       __FUNCTION__, fs_type, flags, dev_name, raw_data, mnt);
-	jprobe_return();
-	return 0;
-}
-
-int jp_get_sb_nodev(struct file_system_type *fs_type,
-		    int flags, void *data,
-		    int (*fill_super)(struct super_block *, void *, int),
-		    struct vfsmount *mnt)
-{
-	printk(KERN_INFO "%s: fs_type = [0x%p]; flags = [0x%.8x], data = "
-	       "[0x%p], mnt = [0x%p]\n",
-	       __FUNCTION__, fs_type, flags, data, mnt);
-	jprobe_return();
-	return 0;
-}
-
-int jp_ecryptfs_fill_super(struct super_block *sb, void *raw_data, int silent)
-{
-	printk(KERN_INFO "%s: sb = [0x%p]; raw_data = [0x%p], silent = [%d]\n",
-	       __FUNCTION__, sb, raw_data, silent);
-	jprobe_return();
-	return 0;
-}
-
-int jp_ecryptfs_read_super(struct super_block *sb, const char *dev_name)
-{
-	printk(KERN_INFO "%s: sb = [0x%p]; dev_name = [%s]\n",
-	       __FUNCTION__, sb, dev_name);
-	jprobe_return();
-	return 0;
-}
-
-int jp_ecryptfs_interpose(struct dentry *lower_dentry, struct dentry *dentry,
-			  struct super_block *sb, int flag)
-{
-	printk(KERN_INFO "%s: lower_dentry = [0x%p]; dentry = [0x%p]; sb = "
-	       "[0x%p]; flag = [0x%.8x]\n", __FUNCTION__, lower_dentry, dentry,
-	       sb, flag);
-	if (flag)
-		printk(KERN_INFO "%s: d_add() will be called\n", __FUNCTION__);
-	else
-		printk(KERN_INFO "%s: d_instantiate() will be called\n",
-		       __FUNCTION__);
-	jprobe_return();
-	return 0;
-}
-
-asmlinkage long jp_sys_umount(char __user * name, int flags)
-{
-	char *tmp = getname(name);
-
-	if (!IS_ERR(tmp)) {
-		printk(KERN_INFO "%s: name = [%s]; flags = [0x%x]\n",
-		       __FUNCTION__, tmp, flags);
-		putname(tmp);
-	} else 
-		printk(KERN_INFO "%s: (getname failed); flags = [0x%x]\n",
-		       __FUNCTION__, flags);
-	jprobe_return();
-	return 0;	
-}
-
 /**
  * Copies msg; callee must deallocate msg, and can do so immediately
  * upon return.
@@ -267,7 +171,7 @@ int major;
 int minor;
 #define ECRYPTFS_DEVICE_NAME "ecryptfs"
 
-static int __init jprobe_mount_init(void)
+static int __init jprobe_ecryptfs_init(void)
 {
 	int i;
 	int rc;
@@ -308,7 +212,7 @@ static int __init jprobe_mount_init(void)
         return 0;
 }
 
-static void __exit jprobe_mount_exit(void)
+static void __exit jprobe_ecryptfs_exit(void)
 {
 	int i;
 
@@ -333,6 +237,6 @@ static void __exit jprobe_mount_exit(void)
 	spin_unlock(&clo_msg_list_spinlock);
 }
 
-module_init(jprobe_mount_init);
-module_exit(jprobe_mount_exit);
+module_init(jprobe_ecryptfs_init);
+module_exit(jprobe_ecryptfs_exit);
 MODULE_LICENSE("GPL");
