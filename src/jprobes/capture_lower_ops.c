@@ -9,6 +9,7 @@
 #include <linux/fs.h>
 #include <linux/mount.h>
 #include <linux/bit_spinlock.h>
+#include <linux/sched.h>
 
 struct jprobe_mapping_elem {
 	struct jprobe *jp;
@@ -193,19 +194,21 @@ int jp_ecryptfs_write_lower(struct inode *ecryptfs_inode, char *data,
 		printk(KERN_WARNING "%s: Out of memory\n", __FUNCTION__);
 		goto out;
 	}
-	get_task_comm(task_command, task);
+        task_lock(task);
+        strncpy(task_command, task->comm, sizeof(task->comm));
+        task_unlock(task);
 	atomic_inc(&writeno);
 	sz = (snprintf(&tmp, 0,
-		       "\"write\",\"%Zd\",\"%lld\",\"%s\",\"%dl\","
+		       "\"write\",\"%Zd\",\"%s\",\"%lld\",\"%Zd\","
 		       "\"%ld\",\"yyyy-mm-dd hh:mm:ss.sss\"\n",
-		       writeno_tmp, offset, task_command, size, ts.tv_sec) + 1);
+		       writeno_tmp, task_command, offset, size, ts.tv_sec) + 1);
 	msg = kmalloc(sz, GFP_KERNEL);
 	if (!msg)
 		goto out;
 	sz = (snprintf(msg, sz,
-		       "\"write\",\"%Zd\",\"%lld\",\"%s\",\"%dl\","
+		       "\"write\",\"%Zd\",\"%s\",\"%lld\",\"%Zd\","
 		       "\"%ld\",\"yyyy-mm-dd hh:mm:ss.sss\"\n",
-		       writeno_tmp, offset, task_command, size, ts.tv_sec) + 1);
+		       writeno_tmp, task_command, offset, size, ts.tv_sec) + 1);
 	queue_msg(msg);
 	kfree(msg);
 out:
