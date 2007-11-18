@@ -8,6 +8,7 @@
 #include <linux/kallsyms.h>
 #include <linux/fs.h>
 #include <linux/mount.h>
+#include <linux/bit_spinlock.h>
 
 struct jprobe_mapping_elem {
 	struct jprobe *jp;
@@ -17,7 +18,7 @@ struct jprobe_mapping_elem {
 
 #define MAX_CLO_MSGS 8192
 
-struct mutex clo_msg_list_mutex;
+spinlock_t clo_msg_list_spinlock;
 size_t num_clo_msgs = 0;
 
 struct clo_msg;
@@ -128,33 +129,72 @@ asmlinkage long jp_sys_umount(char __user * name, int flags)
 	return 0;	
 }
 
-ssize_t jp_vfs_write(struct file *file, const char __user *buf, size_t count,
-		     loff_t *pos)
+/**
+ * Copies msg; callee must deallocate msg, and can do so immediately
+ * upon return.
+ */
+static int queue_msg(char *msg)
 {
 	ssize_t rc;
 
-	mutex_lock(&clo_msg_list_mutex);
-	if (!head_clo_msg) {
+	spin_lock(&clo_msg_list_spinlock);
+	if (num_clo_msgs > MAX_CLO_MSGS) {
+		rc = -EBUSY;
+		goto out;
+	}
+	if (!tail_clo_msg) {
 		tail_clo_msg = head_clo_msg = kmalloc(sizeof(struct clo_msg),
 						      GFP_KERNEL);
 		if (!head_clo_msg) {
 			rc = -ENOMEM;
 			goto out;
 		}
-	}
-	tail_clo_msg->next = kmalloc(sizeof(struct clo_msg), GFP_KERNEL);
-	if (!tail_clo_msg->next) {
+	} else {
+		tail_clo_msg->next = kmalloc(sizeof(struct clo_msg),
+					     GFP_KERNEL);
+		if (!tail_clo_msg->next) {
 			rc = -ENOMEM;
 			goto out;
+		}
+		tail_clo_msg = tail_clo_msg->next;
 	}
-	tail_clo_msg = tail_clo_msg->next;
 	memset(tail_clo_msg, 0, sizeof(*tail_clo_msg));
-	tail_clo_msg->size = 3;
+	tail_clo_msg->size = strlen(msg) + 1;
 	tail_clo_msg->msg = kmalloc(tail_clo_msg->size, GFP_KERNEL);
-	memcpy(tail_clo_msg->msg, "a\n\0", 3);
+	memcpy(tail_clo_msg->msg, msg, tail_clo_msg->size);
+	num_clo_msgs++;
 out:
-	mutex_unlock(&clo_msg_list_mutex);
+	spin_unlock(&clo_msg_list_spinlock);
 	return rc;
+}
+
+size_t writeno;
+
+ssize_t jp_vfs_write(struct file *file, const char __user *buf, size_t count,
+		     loff_t *pos)
+{
+	jprobe_return();
+	return 0;
+}
+
+int jp_ecryptfs_write_lower(struct inode *ecryptfs_inode, char *data,
+			    loff_t offset, size_t size)
+{
+	char tmp;
+	char *msg;
+	size_t sz;
+
+	sz = (snprintf(&tmp, 0, "ecryptfs_write_lower: [%d]\n", writeno) + 1);
+	msg = kmalloc(sz, GFP_KERNEL);
+	if (!msg)
+		goto out;
+	snprintf(msg, sz, "ecryptfs_write_lower: [%d]\n", writeno);
+	writeno++;
+	queue_msg(msg);
+	kfree(msg);
+out:
+	jprobe_return();
+	return 0;
 }
 
 static ssize_t ecryptfs_read(struct file *filp, char __user *buf, size_t len,
@@ -173,17 +213,20 @@ static ssize_t ecryptfs_read(struct file *filp, char __user *buf, size_t len,
 {
 	ssize_t rc = 0;
 
-	mutex_lock(&clo_msg_list_mutex);
+	spin_lock(&clo_msg_list_spinlock);
 	if (!head_clo_msg)
 		goto out;
 	if (len >= head_clo_msg->size) {
+		if (head_clo_msg == tail_clo_msg)
+			tail_clo_msg = NULL;
 		memcpy(buf, head_clo_msg->msg, head_clo_msg->size);
 		rc = head_clo_msg->size;
 		kfree(head_clo_msg->msg);
 	        head_clo_msg = head_clo_msg->next;
+		num_clo_msgs--;
 	}
 out:
-	mutex_unlock(&clo_msg_list_mutex);
+	spin_unlock(&clo_msg_list_spinlock);
 	return rc;
 }
 
@@ -198,11 +241,7 @@ static int ecryptfs_release(struct inode *inode, struct file *file)
 }
 
 struct jprobe_mapping_elem jprobe_mapping[] = {
-	{NULL, "ecryptfs_kill_block_super", jp_ecryptfs_kill_block_super},
-	{NULL, "ecryptfs_put_super", jp_ecryptfs_put_super},
-	{NULL, "sys_umount", jp_sys_umount},
-	{NULL, "vfs_write", jp_vfs_write},
-/*	{NULL, "ecryptfs_interpose", jp_ecryptfs_interpose} */
+	{NULL, "ecryptfs_write_lower", jp_ecryptfs_write_lower},
 };
 
 int major;
@@ -215,15 +254,17 @@ static int __init jprobe_mount_init(void)
 	int rc;
 
 	for (i = 0; i < ARRAY_SIZE(jprobe_mapping); i++) {
-		jprobe_mapping[i].jp = kmalloc(sizeof(struct jprobe),
+		jprobe_mapping[i].jp = kzalloc(sizeof(struct jprobe),
 					       GFP_KERNEL);
 		jprobe_mapping[i].jp->entry = jprobe_mapping[i].fp;
-		jprobe_mapping[i].jp->kp.addr = (kprobe_opcode_t *)
-		  kallsyms_lookup_name(jprobe_mapping[i].symbol);
-		if (jprobe_mapping[i].jp->kp.addr == NULL) {
+		jprobe_mapping[i].jp->kp.symbol_name = jprobe_mapping[i].symbol;
+		printk(KERN_INFO "%s: Registering jprobe for symbol [%s]\n",
+		       __FUNCTION__, jprobe_mapping[i].symbol);
+		rc = register_jprobe(jprobe_mapping[i].jp);
+		if (rc < 0) {
 			int j;
 
-			printk(KERN_NOTICE "Unable to find symbol [%s]\n",
+			printk(KERN_NOTICE "Unable to register symbol [%s]\n",
 			       jprobe_mapping[i].symbol);
 			for (j = 0; j < i; j++) {
 				unregister_jprobe(jprobe_mapping[j].jp);
@@ -231,7 +272,6 @@ static int __init jprobe_mount_init(void)
 			}
 			return -EINVAL;
 		}
-		register_jprobe(jprobe_mapping[i].jp);
 	}
 	rc = register_chrdev(0, ECRYPTFS_DEVICE_NAME, &ecryptfs_fops);
 	if (rc < 0) {
@@ -244,7 +284,8 @@ static int __init jprobe_mount_init(void)
 		printk(KERN_INFO "%s: Registered major device [%d]\n",
 		       __FUNCTION__, major);
 	}
-	mutex_init(&clo_msg_list_mutex);
+	spin_lock_init(&clo_msg_list_spinlock);
+	writeno = 0;
         return 0;
 }
 
@@ -262,6 +303,15 @@ static void __exit jprobe_mount_exit(void)
 		printk(KERN_WARNING "%s: Not unregistering device, since there "
 		       "was an error during registration\n", __FUNCTION__);
 	}
+	spin_lock(&clo_msg_list_spinlock);
+	while (head_clo_msg) {
+		struct clo_msg *tmp;
+
+		tmp = head_clo_msg;
+		head_clo_msg = head_clo_msg->next;
+		kfree(tmp);
+	}
+	spin_unlock(&clo_msg_list_spinlock);
 }
 
 module_init(jprobe_mount_init);
