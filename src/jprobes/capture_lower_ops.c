@@ -16,7 +16,7 @@ struct jprobe_mapping_elem {
 	void *fp;
 };
 
-#define MAX_CLO_MSGS 8192
+#define MAX_CLO_MSGS 32768
 
 spinlock_t clo_msg_list_spinlock;
 size_t num_clo_msgs = 0;
@@ -168,7 +168,7 @@ out:
 	return rc;
 }
 
-size_t writeno;
+atomic_t writeno;
 
 ssize_t jp_vfs_write(struct file *file, const char __user *buf, size_t count,
 		     loff_t *pos)
@@ -183,13 +183,29 @@ int jp_ecryptfs_write_lower(struct inode *ecryptfs_inode, char *data,
 	char tmp;
 	char *msg;
 	size_t sz;
+	struct timespec ts = CURRENT_TIME;
+	size_t writeno_tmp = atomic_read(&writeno);
+	struct task_struct *task = current;
+	char *task_command;
 
-	sz = (snprintf(&tmp, 0, "ecryptfs_write_lower: [%d]\n", writeno) + 1);
+	task_command = kmalloc(sizeof(task->comm), GFP_KERNEL);
+	if (!task_command) {
+		printk(KERN_WARNING "%s: Out of memory\n", __FUNCTION__);
+		goto out;
+	}
+	get_task_comm(task_command, task);
+	atomic_inc(&writeno);
+	sz = (snprintf(&tmp, 0,
+		       "\"write\",\"%Zd\",\"%lld\",\"%s\",\"%dl\","
+		       "\"%ld\",\"yyyy-mm-dd hh:mm:ss.sss\"\n",
+		       writeno_tmp, offset, task_command, size, ts.tv_sec) + 1);
 	msg = kmalloc(sz, GFP_KERNEL);
 	if (!msg)
 		goto out;
-	snprintf(msg, sz, "ecryptfs_write_lower: [%d]\n", writeno);
-	writeno++;
+	sz = (snprintf(msg, sz,
+		       "\"write\",\"%Zd\",\"%lld\",\"%s\",\"%dl\","
+		       "\"%ld\",\"yyyy-mm-dd hh:mm:ss.sss\"\n",
+		       writeno_tmp, offset, task_command, size, ts.tv_sec) + 1);
 	queue_msg(msg);
 	kfree(msg);
 out:
@@ -285,7 +301,7 @@ static int __init jprobe_mount_init(void)
 		       __FUNCTION__, major);
 	}
 	spin_lock_init(&clo_msg_list_spinlock);
-	writeno = 0;
+	atomic_set(&writeno, 0);
         return 0;
 }
 
