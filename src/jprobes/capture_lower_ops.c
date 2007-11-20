@@ -1,11 +1,12 @@
 /**
- * Capture statistics from various VFS operations; export them to
+ * Capture events from various VFS operations; export them to
  * /dev/ecryptfs via a ring buffer.
  *
  * Originally written to collect data for a term paper in Dr. Adam
- * Klivans' CS395T course on computational machine learning theory.
+ * Klivans' course on computational machine learning theory (Fall
+ * '07).
  *
- * Author: Michael Halcrow <mike@halcrow.us>
+ * Author: Mike Halcrow <mike@halcrow.us>
  */
 
 #include <linux/module.h>
@@ -47,7 +48,7 @@ struct clo_msg *head_clo_msg = NULL;
  */
 static int queue_msg(char *msg)
 {
-	ssize_t rc;
+	ssize_t rc = 0;
 
 	spin_lock(&clo_msg_list_spinlock);
 	if (num_clo_msgs > MAX_CLO_MSGS) {
@@ -80,33 +81,34 @@ out:
 	return rc;
 }
 
-atomic_t writeno;
-int ignore_header_writes = 1;
+atomic_t readno;
+int ignore_header_reads = 1;
 
-int jp_ecryptfs_write_lower(struct inode *ecryptfs_inode, char *data,
-			    loff_t offset, size_t size)
+int jp_ecryptfs_read_lower(char *data, loff_t offset, size_t size,
+			   struct inode *ecryptfs_inode)
 {
 	char tmp;
 	char *msg;
 	size_t sz;
 	struct timespec ts = CURRENT_TIME;
-	size_t writeno_tmp = atomic_read(&writeno);
+	size_t readno_tmp = atomic_read(&readno);
 	struct task_struct *task = current;
 	char *task_command;
 	uid_t task_uid;
-	char *filepath;
+	char const *filepath;
 	struct file *lower_file;
 	struct dentry *lower_dentry;
 	struct inode *lower_inode;
 	char *fmt = 
-		"\"write\",\"%Zd\",\"%s\",\"%d\",\"%s\",\"%lld\",\"%Zd\","
+		"\"read\",\"%Zd\",\"%s\",\"%d\",\"%s\",\"%lld\",\"%Zd\","
 		"\"%lld\",\"%ld\"\n";
 	struct ecryptfs_inode_info *inode_info =
 		ecryptfs_inode_to_private(ecryptfs_inode);
 	u64 lower_file_size;
 
-	if (offset == 0 && ignore_header_writes == 1)
+	if (offset == 0 && ignore_header_reads == 1)
 		goto out;
+	atomic_inc(&readno);
 	task_command = kmalloc(sizeof(task->comm), GFP_KERNEL);
 	if (!task_command) {
 		printk(KERN_WARNING "%s: Out of memory\n", __FUNCTION__);
@@ -121,7 +123,127 @@ int jp_ecryptfs_write_lower(struct inode *ecryptfs_inode, char *data,
 	lower_inode = lower_dentry->d_inode;
 	lower_file_size = i_size_read(lower_inode);
 	filepath = lower_dentry->d_name.name;
+	sz = (snprintf(&tmp, 0, fmt,
+		       readno_tmp, task_command, task_uid, filepath, offset,
+		       size, lower_file_size, ts.tv_sec) + 1);
+	msg = kmalloc(sz, GFP_KERNEL);
+	if (!msg)
+		goto out;
+	snprintf(msg, sz, fmt,
+		 readno_tmp, task_command, task_uid, filepath, offset,
+		 size, lower_file_size, ts.tv_sec);
+	kfree(task_command);
+	queue_msg(msg);
+	kfree(msg);
+out:
+	jprobe_return();
+	return 0;
+}
+
+atomic_t closeno;
+
+int jp_ecryptfs_release(struct inode *inode, struct file *file)
+{
+	atomic_inc(&closeno);
+	jprobe_return();
+	return 0;
+}
+
+
+atomic_t openno;
+
+int jp_ecryptfs_open(struct inode *inode, struct file *file)
+{
+	char tmp;
+	char *msg;
+	size_t sz;
+	struct timespec ts = CURRENT_TIME;
+	struct task_struct *task = current;
+	char *task_command;
+	uid_t task_uid;
+	char const *filepath;
+	struct file *lower_file;
+	struct dentry *lower_dentry;
+	char *fmt = 
+		"\"open\",\"%Zd\",\"%s\",\"%d\",\"%s\","
+		"\"%ld\"\n";
+	struct ecryptfs_inode_info *inode_info =
+		ecryptfs_inode_to_private(inode);
+	size_t openno_tmp = atomic_read(&openno);
+
+	atomic_inc(&openno);
+	task_command = kmalloc(sizeof(task->comm), GFP_KERNEL);
+	if (!task_command) {
+		printk(KERN_WARNING "%s: Out of memory\n", __FUNCTION__);
+		goto out;
+	}
+        task_lock(task);
+        strncpy(task_command, task->comm, sizeof(task->comm));
+        task_unlock(task);
+	task_uid = task->euid;
+	lower_file = inode_info->lower_file;
+	lower_dentry = lower_file->f_path.dentry;
+	filepath = lower_dentry->d_name.name;
+	sz = (snprintf(&tmp, 0, fmt,
+		       openno_tmp, task_command, task_uid, filepath,
+		       ts.tv_sec) + 1);
+	msg = kmalloc(sz, GFP_KERNEL);
+	if (!msg)
+		goto out;
+	snprintf(msg, sz, fmt,
+		 openno_tmp, task_command, task_uid, filepath,
+		 ts.tv_sec);
+	kfree(task_command);
+	queue_msg(msg);
+	kfree(msg);
+out:
+	jprobe_return();
+	return 0;
+
+}
+
+atomic_t writeno;
+int ignore_header_writes = 1;
+
+int jp_ecryptfs_write_lower(struct inode *ecryptfs_inode, char *data,
+			    loff_t offset, size_t size)
+{
+	char tmp;
+	char *msg;
+	size_t sz;
+	struct timespec ts = CURRENT_TIME;
+	size_t writeno_tmp = atomic_read(&writeno);
+	struct task_struct *task = current;
+	char *task_command;
+	uid_t task_uid;
+	char const *filepath;
+	struct file *lower_file;
+	struct dentry *lower_dentry;
+	struct inode *lower_inode;
+	char *fmt = 
+		"\"write\",\"%Zd\",\"%s\",\"%d\",\"%s\",\"%lld\",\"%Zd\","
+		"\"%lld\",\"%ld\"\n";
+	struct ecryptfs_inode_info *inode_info =
+		ecryptfs_inode_to_private(ecryptfs_inode);
+	u64 lower_file_size;
+
+	if (offset == 0 && ignore_header_writes == 1)
+		goto out;
 	atomic_inc(&writeno);
+	task_command = kmalloc(sizeof(task->comm), GFP_KERNEL);
+	if (!task_command) {
+		printk(KERN_WARNING "%s: Out of memory\n", __FUNCTION__);
+		goto out;
+	}
+        task_lock(task);
+        strncpy(task_command, task->comm, sizeof(task->comm));
+        task_unlock(task);
+	task_uid = task->euid;
+	lower_file = inode_info->lower_file;
+	lower_dentry = lower_file->f_path.dentry;
+	lower_inode = lower_dentry->d_inode;
+	lower_file_size = i_size_read(lower_inode);
+	filepath = lower_dentry->d_name.name;
 	sz = (snprintf(&tmp, 0, fmt,
 		       writeno_tmp, task_command, task_uid, filepath, offset,
 		       size, lower_file_size, ts.tv_sec) + 1);
@@ -188,6 +310,9 @@ static int ecryptfs_dev_release(struct inode *inode, struct file *file)
 
 struct jprobe_mapping_elem jprobe_mapping[] = {
 	{NULL, "ecryptfs_write_lower", jp_ecryptfs_write_lower},
+	{NULL, "ecryptfs_read_lower", jp_ecryptfs_read_lower},
+	{NULL, "ecryptfs_open", jp_ecryptfs_open},
+	{NULL, "ecryptfs_release", jp_ecryptfs_release},
 };
 
 int major;
@@ -227,11 +352,18 @@ static int __init jprobe_ecryptfs_init(void)
 		major = -1;
 	} else {
 		major = rc;
-		printk(KERN_INFO "%s: Registered major device [%d]\n",
-		       __FUNCTION__, major);
+		printk(KERN_INFO "%s: Registered major device [%d]; if your "
+		       "userspace mechanism for generating device files "
+		       "automatically is not configured yet, then you can "
+		       "manually create the node with the command "
+		       "[mknod /dev/ecryptfs c %d 0]\n",
+		       __FUNCTION__, major, major);
 	}
 	spin_lock_init(&clo_msg_list_spinlock);
 	atomic_set(&writeno, 0);
+	atomic_set(&openno, 0);
+	atomic_set(&readno, 0);
+	atomic_set(&closeno, 0);
         return 0;
 }
 
