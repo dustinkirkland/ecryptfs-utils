@@ -93,6 +93,13 @@ AC_ARG_ENABLE(
 )
 
 AC_ARG_WITH(
+	[gpgme-prefix],
+	[AC_HELP_STRING([--with-gpgme-prefix=PATH], [Specify the directory where gpgme install, default /usr])],
+	,
+	[with_gpgme_prefix="/usr"]
+)
+
+AC_ARG_WITH(
 	[pamdir],
 	[AC_HELP_STRING([--with-pamdir=PATH], [Specify the directory where PAM modules are stored])],
 	[pamdir="${withval}"],
@@ -233,15 +240,13 @@ if test "${enable_tspi}" = "yes" ; then
 fi
 
 if test "${enable_gpg}" = "yes" ; then
-	if test -z "${GPGME_LIBS}"; then
-		AC_ARG_VAR([GPGME_CFLAGS], [C compiler flags for gpg])
-		AC_ARG_VAR([GPGME_LIBS], [linker flags for gpg])
-		AC_CHECK_LIB(
-			[gpgme],
-			[gpgme_new],
-			[GPGME_LIBS="-lgpgme"],
-			[AC_MSG_ERROR([Cannot find gpgme])]
-		)
+	AC_MSG_CHECKING([for gpgme])
+	if ! test -x "${with_gpgme_prefix}/bin/gpgme-config"; then
+		AC_MSG_ERROR([Cannot locate gpgme])
+	else
+		AC_MSG_RESULT([found])
+		GPGME_CFLAGS="`\"${with_gpgme_prefix}/bin/gpgme-config\" --cflags`"
+		GPGME_LIBS="`\"${with_gpgme_prefix}/bin/gpgme-config\" --libs`"
 	fi
 fi
 
@@ -280,6 +285,8 @@ AC_SUBST([pamlibdir])
 AC_SUBST([pkgconfigdir])
 AC_SUBST([rootsbindir])
 AC_SUBST([ecryptfskeymoddir])
+AC_SUBST([GPGME_CFLAGS])
+AC_SUBST([GPGME_LIBS])
 AM_CONDITIONAL([BUILD_OPENSSL], [test "${enable_openssl}" = "yes"])
 AM_CONDITIONAL([BUILD_PKCS11_HELPER], [test "${enable_pkcs11_helper}" = "yes"])
 AM_CONDITIONAL([BUILD_TSPI], [test "${enable_tspi}" = "yes"])
