@@ -97,11 +97,13 @@ int jp_ecryptfs_write_lower(struct inode *ecryptfs_inode, char *data,
 	char *filepath;
 	struct file *lower_file;
 	struct dentry *lower_dentry;
+	struct inode *lower_inode;
 	char *fmt = 
 		"\"write\",\"%Zd\",\"%s\",\"%d\",\"%s\",\"%lld\",\"%Zd\","
-		"\"%ld\"\n";
+		"\"%lld\",\"%ld\"\n";
 	struct ecryptfs_inode_info *inode_info =
 		ecryptfs_inode_to_private(ecryptfs_inode);
+	u64 lower_file_size;
 
 	if (offset == 0 && ignore_header_writes == 1)
 		goto out;
@@ -116,17 +118,20 @@ int jp_ecryptfs_write_lower(struct inode *ecryptfs_inode, char *data,
 	task_uid = task->euid;
 	lower_file = inode_info->lower_file;
 	lower_dentry = lower_file->f_path.dentry;
+	lower_inode = lower_dentry->d_inode;
+	lower_file_size = i_size_read(lower_inode);
 	filepath = lower_dentry->d_name.name;
 	atomic_inc(&writeno);
 	sz = (snprintf(&tmp, 0, fmt,
 		       writeno_tmp, task_command, task_uid, filepath, offset,
-		       size, ts.tv_sec) + 1);
+		       size, lower_file_size, ts.tv_sec) + 1);
 	msg = kmalloc(sz, GFP_KERNEL);
 	if (!msg)
 		goto out;
 	snprintf(msg, sz, fmt,
 		 writeno_tmp, task_command, task_uid, filepath, offset,
-		 size, ts.tv_sec);
+		 size, lower_file_size, ts.tv_sec);
+	kfree(task_command);
 	queue_msg(msg);
 	kfree(msg);
 out:
