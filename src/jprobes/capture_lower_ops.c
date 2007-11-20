@@ -1,5 +1,11 @@
 /**
- * Capture statistics from read and writes; export them to /dev/ecryptfs
+ * Capture statistics from various VFS operations; export them to
+ * /dev/ecryptfs via a ring buffer.
+ *
+ * Originally written to collect data for a term paper in Dr. Adam
+ * Klivans' CS395T course on computational machine learning theory.
+ *
+ * Author: Michael Halcrow <mike@halcrow.us>
  */
 
 #include <linux/module.h>
@@ -10,6 +16,7 @@
 #include <linux/mount.h>
 #include <linux/bit_spinlock.h>
 #include <linux/sched.h>
+#include "ecryptfs_kernel.h"
 
 struct jprobe_mapping_elem {
 	struct jprobe *jp;
@@ -74,13 +81,7 @@ out:
 }
 
 atomic_t writeno;
-
-ssize_t jp_vfs_write(struct file *file, const char __user *buf, size_t count,
-		     loff_t *pos)
-{
-	jprobe_return();
-	return 0;
-}
+int ignore_header_writes = 1;
 
 int jp_ecryptfs_write_lower(struct inode *ecryptfs_inode, char *data,
 			    loff_t offset, size_t size)
@@ -92,7 +93,18 @@ int jp_ecryptfs_write_lower(struct inode *ecryptfs_inode, char *data,
 	size_t writeno_tmp = atomic_read(&writeno);
 	struct task_struct *task = current;
 	char *task_command;
+	uid_t task_uid;
+	char *filepath;
+	struct file *lower_file;
+	struct dentry *lower_dentry;
+	char *fmt = 
+		"\"write\",\"%Zd\",\"%s\",\"%d\",\"%s\",\"%lld\",\"%Zd\","
+		"\"%ld\"\n";
+	struct ecryptfs_inode_info *inode_info =
+		ecryptfs_inode_to_private(ecryptfs_inode);
 
+	if (offset == 0 && ignore_header_writes == 1)
+		goto out;
 	task_command = kmalloc(sizeof(task->comm), GFP_KERNEL);
 	if (!task_command) {
 		printk(KERN_WARNING "%s: Out of memory\n", __FUNCTION__);
@@ -101,18 +113,20 @@ int jp_ecryptfs_write_lower(struct inode *ecryptfs_inode, char *data,
         task_lock(task);
         strncpy(task_command, task->comm, sizeof(task->comm));
         task_unlock(task);
+	task_uid = task->euid;
+	lower_file = inode_info->lower_file;
+	lower_dentry = lower_file->f_path.dentry;
+	filepath = lower_dentry->d_name.name;
 	atomic_inc(&writeno);
-	sz = (snprintf(&tmp, 0,
-		       "\"write\",\"%Zd\",\"%s\",\"%lld\",\"%Zd\","
-		       "\"%ld\",\"yyyy-mm-dd hh:mm:ss.sss\"\n",
-		       writeno_tmp, task_command, offset, size, ts.tv_sec) + 1);
+	sz = (snprintf(&tmp, 0, fmt,
+		       writeno_tmp, task_command, task_uid, filepath, offset,
+		       size, ts.tv_sec) + 1);
 	msg = kmalloc(sz, GFP_KERNEL);
 	if (!msg)
 		goto out;
-	sz = (snprintf(msg, sz,
-		       "\"write\",\"%Zd\",\"%s\",\"%lld\",\"%Zd\","
-		       "\"%ld\",\"yyyy-mm-dd hh:mm:ss.sss\"\n",
-		       writeno_tmp, task_command, offset, size, ts.tv_sec) + 1);
+	snprintf(msg, sz, fmt,
+		 writeno_tmp, task_command, task_uid, filepath, offset,
+		 size, ts.tv_sec);
 	queue_msg(msg);
 	kfree(msg);
 out:
@@ -120,19 +134,19 @@ out:
 	return 0;
 }
 
-static ssize_t ecryptfs_read(struct file *filp, char __user *buf, size_t len,
-			     loff_t *ppos);
-static int ecryptfs_open(struct inode *inode, struct file *file);
-static int ecryptfs_release(struct inode *inode, struct file *file);
+static ssize_t ecryptfs_dev_read(struct file *filp, char __user *buf,
+				 size_t len, loff_t *ppos);
+static int ecryptfs_dev_open(struct inode *inode, struct file *file);
+static int ecryptfs_dev_release(struct inode *inode, struct file *file);
 
 struct file_operations ecryptfs_fops = {
-	.read = ecryptfs_read,
-	.open = ecryptfs_open,
-	.release = ecryptfs_release,
+	.read = ecryptfs_dev_read,
+	.open = ecryptfs_dev_open,
+	.release = ecryptfs_dev_release,
 };
 
-static ssize_t ecryptfs_read(struct file *filp, char __user *buf, size_t len,
-			     loff_t *ppos)
+static ssize_t ecryptfs_dev_read(struct file *filp, char __user *buf,
+				 size_t len, loff_t *ppos)
 {
 	ssize_t rc = 0;
 
@@ -140,12 +154,16 @@ static ssize_t ecryptfs_read(struct file *filp, char __user *buf, size_t len,
 	if (!head_clo_msg)
 		goto out;
 	if (len >= head_clo_msg->size) {
+		struct clo_msg *to_delete;
+
 		if (head_clo_msg == tail_clo_msg)
 			tail_clo_msg = NULL;
 		memcpy(buf, head_clo_msg->msg, head_clo_msg->size);
 		rc = head_clo_msg->size;
 		kfree(head_clo_msg->msg);
+		to_delete = head_clo_msg;
 	        head_clo_msg = head_clo_msg->next;
+		kfree(to_delete);
 		num_clo_msgs--;
 	}
 out:
@@ -153,12 +171,12 @@ out:
 	return rc;
 }
 
-static int ecryptfs_open(struct inode *inode, struct file *file)
+static int ecryptfs_dev_open(struct inode *inode, struct file *file)
 {
 	return 0;
 }
 
-static int ecryptfs_release(struct inode *inode, struct file *file)
+static int ecryptfs_dev_release(struct inode *inode, struct file *file)
 {
 	return 0;
 }
@@ -228,11 +246,12 @@ static void __exit jprobe_ecryptfs_exit(void)
 	}
 	spin_lock(&clo_msg_list_spinlock);
 	while (head_clo_msg) {
-		struct clo_msg *tmp;
+		struct clo_msg *to_delete;
 
-		tmp = head_clo_msg;
+		kfree(head_clo_msg->msg);
+		to_delete = head_clo_msg;
 		head_clo_msg = head_clo_msg->next;
-		kfree(tmp);
+		kfree(to_delete);
 	}
 	spin_unlock(&clo_msg_list_spinlock);
 }
