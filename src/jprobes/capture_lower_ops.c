@@ -100,8 +100,8 @@ int jp_ecryptfs_read_lower(char *data, loff_t offset, size_t size,
 	struct dentry *lower_dentry;
 	struct inode *lower_inode;
 	char *fmt = 
-		"\"read\",\"%Zd\",\"%s\",\"%d\",\"%s\",\"%lld\",\"%Zd\","
-		"\"%lld\",\"%ld\"\n";
+		"'read','%Zd','%s','%d','%s','%lld','%Zd',"
+		"'%lld','%ld'\n";
 	struct ecryptfs_inode_info *inode_info =
 		ecryptfs_inode_to_private(ecryptfs_inode);
 	u64 lower_file_size;
@@ -165,8 +165,8 @@ int jp_ecryptfs_open(struct inode *inode, struct file *file)
 	struct file *lower_file;
 	struct dentry *lower_dentry;
 	char *fmt = 
-		"\"open\",\"%Zd\",\"%s\",\"%d\",\"%s\","
-		"\"%ld\"\n";
+		"'open','%Zd','%s','%d','%s',"
+		"'%ld'\n";
 	struct ecryptfs_inode_info *inode_info =
 		ecryptfs_inode_to_private(inode);
 	size_t openno_tmp = atomic_read(&openno);
@@ -221,8 +221,8 @@ int jp_ecryptfs_write_lower(struct inode *ecryptfs_inode, char *data,
 	struct dentry *lower_dentry;
 	struct inode *lower_inode;
 	char *fmt = 
-		"\"write\",\"%Zd\",\"%s\",\"%d\",\"%s\",\"%lld\",\"%Zd\","
-		"\"%lld\",\"%ld\"\n";
+		"'write','%Zd','%s','%d','%s','%lld','%Zd',"
+		"'%lld','%ld'\n";
 	struct ecryptfs_inode_info *inode_info =
 		ecryptfs_inode_to_private(ecryptfs_inode);
 	u64 lower_file_size;
