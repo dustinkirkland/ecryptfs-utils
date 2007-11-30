@@ -105,7 +105,14 @@ AC_ARG_WITH(
 	[pamdir="${withval}"],
 	[
 		case $target in
-			*64* | *s390x)
+			*ia64*)
+				if test "${prefix}" != "/usr" ; then
+					pamdir="\$(prefix)/lib/security"
+				else
+					pamdir="/lib/security"
+				fi
+			;;
+			*64* | *s390x*)
 				if test "${prefix}" != "/usr" ; then
 					pamdir="\$(prefix)/lib64/security"
 				else
