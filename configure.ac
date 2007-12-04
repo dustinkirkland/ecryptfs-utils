@@ -277,7 +277,16 @@ if test "${enable_pam}" = "yes" ; then
 fi
 
 if test "${enable_gui}" = "yes"; then
-	PKG_CHECK_MODULES([GTK], [gtk+ >= 1.0],, AC_MSG_ERROR([Cannot locate gtk+]))
+	PKG_CHECK_MODULES(
+		[GTK],
+		[gtk+-2.0 >= 2.0],
+		,
+		PKG_CHECK_MODULES(
+			[GTK],
+			[gtk+ >= 1.0],,
+			AC_MSG_ERROR([Cannot locate gtk+])
+		)
+	)
 fi
 
 pkgconfigdir="\$(libdir)/pkgconfig"
