@@ -184,14 +184,60 @@ out:
 static int
 ecryptfs_openssl_write_key_to_file(RSA *rsa, char *filename, char *passphrase)
 {
+	uid_t id;
+	struct passwd *pw;
+	char *ecryptfs_dir = NULL;
+	char *pki_dir = NULL;
+	char *openssl_dir = NULL;
 	BIO *out;
 	const EVP_CIPHER *enc = EVP_aes_256_cbc();
 	int rc = 0;
 
+	id = getuid();
+	pw = getpwuid(id);
+	if (!pw) {
+		syslog(LOG_ERR, "%s: Unable to get the current directory from "
+		       "the passwd file on this system\n", __FUNCTION__);
+		rc = -EIO;
+		goto out_free_paths;
+	}
+	rc = asprintf(&ecryptfs_dir, "%s/.ecryptfs", pw->pw_dir);
+	if (rc == -1) {
+		rc = -ENOMEM;
+		goto out_free_paths;
+	}
+	rc = asprintf(&pki_dir, "%s/.ecryptfs/pki", pw->pw_dir);
+	if (rc == -1) {
+		rc = -ENOMEM;
+		goto out_free_paths;
+	}
+	rc = asprintf(&openssl_dir, "%s/.ecryptfs/pki/openssl", pw->pw_dir);
+	if (rc == -1) {
+		rc = -ENOMEM;
+		goto out_free_paths;
+	}
+	rc = mkdir(ecryptfs_dir, 0700);
+	if (rc && rc != EEXIST) {
+		syslog(LOG_ERR, "%s: Error attempting to mkdir [%s]; "
+		       "rc = [%d]\n", __FUNCTION__, ecryptfs_dir, rc);
+		goto out_free_paths;
+	}
+	rc = mkdir(pki_dir, 0700);
+	if (rc && rc != EEXIST) {
+		syslog(LOG_ERR, "%s: Error attempting to mkdir [%s]; "
+		       "rc = [%d]\n", __FUNCTION__, pki_dir, rc);
+		goto out_free_paths;
+	}
+	rc = mkdir(openssl_dir, 0700);
+	if (rc && rc != EEXIST) {
+		syslog(LOG_ERR, "%s: Error attempting to mkdir [%s]; "
+		       "rc = [%d]\n", __FUNCTION__, openssl_dir, rc);
+		goto out_free_paths;
+	}
 	if ((out = BIO_new(BIO_s_file())) == NULL) {
 		syslog(LOG_ERR, "Unable to create BIO for output\n");
 		rc= -EIO;
-		goto out;
+		goto out_free_paths;
 	}
 	if (BIO_write_filename(out, filename) <= 0) {
 		syslog(LOG_ERR, "Failed to open file for reading\n");
@@ -206,7 +252,10 @@ ecryptfs_openssl_write_key_to_file(RSA *rsa, char *filename, char *passphrase)
 	}
 out_free_bio:
 	BIO_free_all(out);
-out:
+out_free_paths:
+	free(ecryptfs_dir);
+	free(pki_dir);
+	free(openssl_dir);
 	return rc;
 }
 
