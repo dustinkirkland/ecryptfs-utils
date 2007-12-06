@@ -324,7 +324,7 @@ int ecryptfs_mount(char *source, char *target, unsigned long flags, char *opts)
 		goto out;
 	}
 	if (source[0] != '/') {
-		rc = asprintf(&fullpath_source, "%s%s", cwd, source);
+		rc = asprintf(&fullpath_source, "%s/%s", cwd, source);
 	} else
 		rc = asprintf(&fullpath_source, "%s", source);
 	if (rc == -1) {
@@ -334,7 +334,7 @@ int ecryptfs_mount(char *source, char *target, unsigned long flags, char *opts)
 		goto out;
 	}
 	if (target[0] != '/') {
-		rc = asprintf(&fullpath_target, "%s%s", cwd, target);
+		rc = asprintf(&fullpath_target, "%s/%s", cwd, target);
 	} else
 		rc = asprintf(&fullpath_target, "%s", target);
 	if (rc == -1) {
