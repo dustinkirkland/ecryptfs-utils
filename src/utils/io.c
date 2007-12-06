@@ -75,6 +75,7 @@ int get_string_stdin(char **val, char *prompt, int echo)
 		rc = -ENOMEM;
 		goto out;
 	}
+	temp[0] = '\0';
 	*val = temp;
 	if (!echo) {
 		rc = disable_echo(&saved_settings);
