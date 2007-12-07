@@ -304,18 +304,6 @@ int ecryptfs_mount(char *source, char *target, unsigned long flags, char *opts)
 		syslog(LOG_ERR, "Invalid mount options length\n");
 		goto out;
 	}
-	if (mount(source, target, "ecryptfs", flags, opts)) {
-		rc = -errno;
-		syslog(LOG_ERR, "Failed to perform eCryptfs mount: "
-		       "[%s]\n", strerror(errno));
-		goto out;
-	}
-	mtab_fd = setmntent("/etc/mtab", "a");
-	if (!mtab_fd) {
-		rc = -EACCES;
-		syslog(LOG_ERR, "Failed to update the mount table\n");
-		goto out;
-	}
 	cwdptr = getcwd(cwd, MAX_PATH_SIZE);
 	if (!cwdptr) {
 		rc = -errno;
@@ -350,6 +338,19 @@ int ecryptfs_mount(char *source, char *target, unsigned long flags, char *opts)
 	i = strlen(fullpath_target);
 	if (i > 1 && fullpath_target[i - 1] == '/')
 		fullpath_target[i - 1] = '\0';
+
+	if (mount(fullpath_source, fullpath_target, "ecryptfs", flags, opts)) {
+		rc = -errno;
+		syslog(LOG_ERR, "Failed to perform eCryptfs mount: "
+		       "[%s]\n", strerror(errno));
+		goto out;
+	}
+	mtab_fd = setmntent("/etc/mtab", "a");
+	if (!mtab_fd) {
+		rc = -EACCES;
+		syslog(LOG_ERR, "Failed to update the mount table\n");
+		goto out;
+	}
 	mountent.mnt_fsname = fullpath_source;
 	mountent.mnt_dir = fullpath_target;
 	mountent.mnt_type = "ecryptfs";
