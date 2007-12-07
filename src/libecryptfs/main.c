@@ -281,7 +281,7 @@ int ecryptfs_mount(char *source, char *target, unsigned long flags, char *opts)
 {
 	FILE *mtab_fd = NULL;
 	struct mntent mountent;
-	char cwd[MAX_PATH_SIZE];
+	char cwd[PATH_MAX];
 	char *cwdptr;
 	char *fullpath_source = NULL;
 	char *fullpath_target = NULL;
@@ -304,7 +304,7 @@ int ecryptfs_mount(char *source, char *target, unsigned long flags, char *opts)
 		syslog(LOG_ERR, "Invalid mount options length\n");
 		goto out;
 	}
-	cwdptr = getcwd(cwd, MAX_PATH_SIZE);
+	cwdptr = getcwd(cwd, PATH_MAX);
 	if (!cwdptr) {
 		rc = -errno;
 		syslog(LOG_ERR, "Failed to get the current working directory; "

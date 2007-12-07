@@ -87,7 +87,6 @@
 #ifndef MAGIC_ECRYPTFS_MARKER_STR
 #define MAGIC_ECRYPTFS_MARKER_STR "3c81b7f5"
 #endif
-#define MAX_PATH_SIZE 1024
 #define MAX_NAME_SIZE 128
 #define MAX_KEY_MOD_VALUE_SIZE 4096
 #define ECRYPTFS_NLMSG_HELO 100
@@ -216,7 +215,7 @@ extern int generate_version_from_string(unsigned char *major,
 					char *version);
 
 struct ecryptfs_daemon_info {
-	char socket_file_full_path[MAX_PATH_SIZE];
+	char socket_file_full_path[PATH_MAX];
 };
 
 struct ecryptfs_cipher_elem {
