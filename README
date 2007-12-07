@@ -11,7 +11,6 @@ Developers: Michael C. Thompson
             Trevor Highland
             Tyler Hicks
             Theresa Nelson
-Current Release Version: 13
 Web Site: http://ecryptfs.sf.net
 
 As you should do with any filesystem, make sure to maintain a backup
@@ -34,12 +33,13 @@ Requirements include:
     release to build a stand-alone kernel module
  - Userspace tools obtainable from the site listed above; requirements
    for the userspace tools are:
-  - David Howells' userspace keyring headers and libraries (version
-    1.0 or higher)
-   - Finding its way into some distro's
+  - keyutils
+   - David Howells' userspace keyring headers and libraries (version
+     1.0 or higher)
+   - Finding its way into some distros
    - Obtainable from <http://people.redhat.com/~dhowells/keyutils> 
   - libgcrypt
-    - Part of most distro's; install the development package
+    - Part of most distros; install the development package
     - If you need to build from source, you probably will want these:
      - <ftp://ftp.gnupg.org/gcrypt/libgpg-error>
      - <ftp://ftp.gnupg.org/gcrypt/libgcrypt>
@@ -68,7 +68,9 @@ eCryptfs is still in a developmental stage. When you upgrade the
 eCryptfs kernel module, it is possible that the eCryptfs file format
 has been updated. For this reason you should copy your files to an
 unencrypted location and then copy the files back into the new
-eCryptfs mount point to migrate the files.
+eCryptfs mount point to migrate the files.  File format version 3
+and beyond (in kernel version 2.6.24) is expected to remain readable,
+however.
 
 
 BUILD AND INSTALL INSTRUCTIONS
@@ -113,7 +115,7 @@ mount helper.  Each key type has a set of name=value pairs associated
 with it.  For instance, the ``passphrase'' key type can accept a
 ``passwd=XXX'' name=value pair and a ``salt=XXX'' name=value pair.
 Attributes that apply to a particular key type immediately follow the
-key type specifier ``key=XXX'' and are separated by colon's.
+key type specifier ``key=XXX'' and are separated by colons.
 Attributes that do not apply to any specific key type (general
 attributes) are separated by comma's.  The option string will take the
 form:
@@ -147,25 +149,26 @@ line to the file:
 
 passwd=<passphrase>
 
-Currently supported aliases and attributes include:
+Currently supported aliases and attributes parsed by the mount helper include:
 
- key alias passphrase:
+ key=passphrase:
      passwd=<passphrase>
      passfile=/path/to/file
      passfd=<file descriptor>
      passstdin (default)
      salt=<salt value>
 
- key alias openssl:
+ key=openssl:
      keyfile=/path/to/key
      passwd=<passphrase>
      passfile=/path/to/file
      passfd=<file descriptor>
      passstdin (default)
 
-Currently supported general attributes include:
+The following general attributes are valid kernel mount options,
+and may also be acted upon by the mount helper, mount.ecryptfs:
 
- cipher=<cipher>
+ ecryptfs_cipher=<cipher>
         Currently supported ciphers include:
          aes
          blowfish
@@ -178,13 +181,38 @@ Currently supported general attributes include:
 	With the exception of AES-192, eCryptfs requires that the
 	keysize be a multiple of the block size.
 
- passthrough
+ ecryptfs_sig=<hex signature>
+	The signature for the FEKEK to use to encrypt the FEK for newly
+	created files.  A key with description <sig> should be in the
+	user's session keyring.  The mount helper, with its key modules,
+	should make sure that the key gets placed there.
+
+ ecryptfs_passthrough
 	Allows for non-eCryptfs files to be read and written from within an
 	eCryptfs mount. This option is disabled by default.
 
+ ecryptfs_xattr_metadata
+	When set, newly created files will have their cryptographic
+	metadata stored in the extended attribute region of the file rather
+	than the header.
+
+ ecryptfs_encrypted_view
+	When set, this option causes eCryptfs to present applications a
+	view of encrypted files as if the cryptographic metadata were
+	stored in the file header, whether the metadata is actually stored
+	in the header or in the extended attributes.
+
+ ecryptfs_debug=<value>
+	A value greater than 0 enables kernel debug messages, see NOTES
+	below.
+
+The following general attributes are parsed only by the mount helper,
+mount.ecryptfs:
+
  verbosity=<value>
-	0 eCryptfs will not prompt the user for unspecified options
-	1 (default) eCryptfs will request unspecified options to be completed
+	0: eCryptfs will not prompt the user for unspecified options
+	1: (default) the eCryptfs mount helper will request unspecified
+	   options to be completed
 
  no_sig_cache
         Do not perform any key signature cache checks. By default,
@@ -311,7 +339,7 @@ passphrase into the user session keyring. Then, the login script will
 perform the mount, using the parameters in your /etc/fstab.
 
 The script src/utils/ecryptfs-setup-pam.sh attempts to automate
-setting up PAM mounts on Red Hat-based distro's. Use that for
+setting up PAM mounts on Red Hat-based distros. Use that for
 inspiration in setting up your own eCryptfs PAM mount.
 
 
@@ -322,12 +350,9 @@ key.  To determine what your current kernel supports, load the
 ecryptfs module and view the contents of fs/ecryptfs/version_str under
 your sysfs mount point.
 
-eCryptfs should only be mounted on (1) empty directories or (2)
-directories containing files only created by eCryptfs. If you mount a
-directory that has pre-existing files not created by eCryptfs, then
-behavior is undefined. Do not run eCryptfs in higher verbosity levels
-unless you are doing so for the sole purpose of development, since
-secret values will be written out to the system log in that case.
+Do not run eCryptfs in higher verbosity levels unless you are doing so
+for the sole purpose of development, since secret values will be written
+out to the system log in that case.
 
 
 TROUBLESHOOTING
