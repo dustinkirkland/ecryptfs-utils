@@ -281,8 +281,6 @@ int ecryptfs_mount(char *source, char *target, unsigned long flags, char *opts)
 {
 	FILE *mtab_fd = NULL;
 	struct mntent mountent;
-	char cwd[PATH_MAX];
-	char *cwdptr;
 	char *fullpath_source = NULL;
 	char *fullpath_target = NULL;
 	int i;
@@ -304,40 +302,21 @@ int ecryptfs_mount(char *source, char *target, unsigned long flags, char *opts)
 		syslog(LOG_ERR, "Invalid mount options length\n");
 		goto out;
 	}
-	cwdptr = getcwd(cwd, PATH_MAX);
-	if (!cwdptr) {
+
+	fullpath_source = realpath(source, NULL);
+	if (!fullpath_source) {
 		rc = -errno;
-		syslog(LOG_ERR, "Failed to get the current working directory; "
-		       "errno = [%d]\n", errno);
+		syslog(LOG_ERR, "could not resolve full path for source %s [%d]",
+			source, -errno);
 		goto out;
 	}
-	if (source[0] != '/') {
-		rc = asprintf(&fullpath_source, "%s/%s", cwd, source);
-	} else
-		rc = asprintf(&fullpath_source, "%s", source);
-	if (rc == -1) {
-		rc = -ENOMEM;
-		fullpath_source = NULL;
-		syslog(LOG_ERR, "Out of memory\n");
+	fullpath_target = realpath(target, NULL);
+	if (!fullpath_target) {
+		rc = -errno;
+		syslog(LOG_ERR, "could not resolve full path for target %s [%d]",
+			target, -errno);
 		goto out;
 	}
-	if (target[0] != '/') {
-		rc = asprintf(&fullpath_target, "%s/%s", cwd, target);
-	} else
-		rc = asprintf(&fullpath_target, "%s", target);
-	if (rc == -1) {
-		rc = -ENOMEM;
-		fullpath_target = NULL;
-		syslog(LOG_ERR, "Out of memory\n");
-		goto out;
-	}
-	rc = 0;
-	i = strlen(fullpath_source);
-	if (i > 1 && fullpath_source[i - 1] == '/')
-		fullpath_source[i - 1] = '\0';
-	i = strlen(fullpath_target);
-	if (i > 1 && fullpath_target[i - 1] == '/')
-		fullpath_target[i - 1] = '\0';
 
 	if (mount(fullpath_source, fullpath_target, "ecryptfs", flags, opts)) {
 		rc = -errno;
