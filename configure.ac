@@ -104,29 +104,11 @@ AC_ARG_WITH(
 	[AC_HELP_STRING([--with-pamdir=PATH], [Specify the directory where PAM modules are stored])],
 	[pamdir="${withval}"],
 	[
-		case $target in
-			*ia64*)
-				if test "${prefix}" != "/usr" ; then
-					pamdir="\$(prefix)/lib/security"
-				else
-					pamdir="/lib/security"
-				fi
-			;;
-			*64* | *s390x*)
-				if test "${prefix}" != "/usr" ; then
-					pamdir="\$(prefix)/lib64/security"
-				else
-					pamdir="/lib64/security"
-				fi
-			;;
-			*)
-				if test "${prefix}" != "/usr" ; then
-					pamdir="\$(prefix)/lib/security"
-				else
-					pamdir="/lib/security"
-				fi
-			;;
-		esac
+		if test "${prefix}" = "/usr"; then
+			pamdir="/lib${libdir##*/lib}/security"
+		else
+			pamdir="\$(libdir)/security"
+		fi
 	]
 )
 
