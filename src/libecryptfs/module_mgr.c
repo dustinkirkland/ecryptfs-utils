@@ -78,7 +78,7 @@ out:
 	return rc;
 }
 
-static struct param_node cipher_param_node;
+static struct param_node ecryptfs_cipher_param_node;
 
 static struct param_node root_param_node = {
 	.num_mnt_opt_names = 1,
@@ -92,7 +92,7 @@ static struct param_node root_param_node = {
 	.num_transitions = 1,
 	.tl = {{.val = "default",
 		.pretty_val = "default",
-		.next_token = &cipher_param_node,
+		.next_token = &ecryptfs_cipher_param_node,
 		.trans_func = sig_param_node_callback}}
 };
 
@@ -222,8 +222,8 @@ static int get_encrypted_passthrough(struct ecryptfs_ctx *ctx,
 
 static struct param_node end_param_node = {
 	.num_mnt_opt_names = 1,
-	.mnt_opt_names = {"cipher"},
-	.prompt = "Select cipher",
+	.mnt_opt_names = {"end"},
+	.prompt = "end",
 	.val_type = VAL_STR,
 	.val = NULL,
 	.display_opts = NULL,
@@ -233,7 +233,7 @@ static struct param_node end_param_node = {
 	.tl = {{.val = "default",
 		.pretty_val = "default",
 		.next_token = NULL,
-		.trans_func = get_cipher}}
+		.trans_func = NULL}}
 };
 
 static struct param_node encrypted_passthrough_param_node = {
@@ -284,21 +284,232 @@ static struct param_node passthrough_param_node = {
 		.trans_func = get_passthrough}}
 };
 
-static struct param_node cipher_param_node = {
+static struct param_node ecryptfs_key_bytes_param_node = {
 	.num_mnt_opt_names = 1,
-	.mnt_opt_names = {"cipher"},
+	.mnt_opt_names = {"ecryptfs_key_bytes"},
+	.prompt = "Select key bytes",
+	.val_type = VAL_STR,
+	.val = NULL,
+	.display_opts = NULL,
+	.default_val = NULL,
+	.flags = (DISPLAY_TRANSITION_NODE_VALS
+		  | ECRYPTFS_PARAM_FORCE_DISPLAY_NODES
+		  | ECRYPTFS_PARAM_FLAG_ECHO_INPUT),
+	.num_transitions = 0,
+	.tl = {{0}}
+};
+
+static struct supported_key_bytes {
+	char *cipher_name;
+	uint32_t key_bytes;
+} supported_key_bytes[] = {
+	{"aes", 16},
+	{"aes", 24},
+	{"aes", 32},
+	{"anubis", 16},
+	{"anubis", 32},
+	{"des3_ede", 24},
+	{"serpent", 16},
+	{"serpent", 32},
+	{"tnepres", 16},
+	{"tnepres", 32},
+	{"tea", 16},
+	{"xeta", 16},
+	{"xtea", 16},
+	{"cast5", 16},
+	{"cast6", 16},
+	{"cast6", 32},
+	{"twofish", 16},
+	{"twofish", 32},
+	{"blowfish", 16},
+	{"blowfish", 32},
+	{"khazad", 16},
+	{"arc4", 16},
+	{"arc4", 32},
+	{NULL, 0}
+};
+
+static int tf_ecryptfs_key_bytes(struct ecryptfs_ctx *ctx,
+				 struct param_node *node,
+				 struct val_node **head, void **foo)
+{
+	char *opt;
+	int rc = 0;
+
+	rc = asprintf(&opt, "ecryptfs_key_bytes=%s", node->val);
+	free(node->val);
+	node->val = NULL;
+	if (rc == -1) {
+		rc = -ENOMEM;
+		goto out;
+	}
+	rc = 0;
+	stack_push(head, opt);
+out:
+	return rc;
+}
+
+static int init_ecryptfs_key_bytes_param_node(char *cipher_name)
+{
+	int i;
+	int rc = 0;
+
+	i = 0;
+	while (supported_key_bytes[i].cipher_name) {
+		if (strcmp(cipher_name, supported_key_bytes[i].cipher_name)
+		    == 0) {
+			struct transition_node *tn;
+			
+			tn = &ecryptfs_key_bytes_param_node.tl[
+				ecryptfs_key_bytes_param_node.num_transitions];
+			rc = asprintf(&tn->val, "%d",
+				      supported_key_bytes[i].key_bytes);
+			if (rc == -1) {
+				rc = -ENOMEM;
+				goto out;
+			}
+			rc = 0;
+			if (!ecryptfs_key_bytes_param_node.suggested_val) {
+				rc = asprintf(&ecryptfs_key_bytes_param_node.suggested_val,
+					      "%d",
+					      supported_key_bytes[i].key_bytes);
+				if (rc == -1) {
+					rc = -ENOMEM;
+					goto out;
+				}
+				rc = 0;
+			}
+			tn->next_token = &end_param_node;
+			tn->trans_func = tf_ecryptfs_key_bytes;
+			ecryptfs_key_bytes_param_node.num_transitions++;
+		}
+		i++;
+	}
+out:
+	return rc;
+}
+
+static int tf_ecryptfs_cipher(struct ecryptfs_ctx *ctx, struct param_node *node,
+			      struct val_node **head, void **foo)
+{
+	char *opt;
+	int rc;
+
+	rc = init_ecryptfs_key_bytes_param_node(node->val);
+	if (rc) {
+		syslog(LOG_ERR, "%s: Error initializing key_bytes param node; "
+		       "rc = [%d]\n", __FUNCTION__, rc);
+		goto out;
+	}
+	rc = asprintf(&opt, "ecryptfs_cipher=%s", node->val);
+	free(node->val);
+	node->val = NULL;
+	if (rc == -1) {
+		rc = -ENOMEM;
+		goto out;
+	}
+	rc = 0;
+	if (ecryptfs_verbosity)
+		syslog(LOG_INFO, "%s: Pushing onto stack; opt = [%s]\n",
+		       __FUNCTION__, opt);
+	stack_push(head, opt);
+out:
+	return rc;
+}
+
+static struct param_node ecryptfs_cipher_param_node = {
+	.num_mnt_opt_names = 1,
+	.mnt_opt_names = {"ecryptfs_cipher"},
 	.prompt = "Select cipher",
 	.val_type = VAL_STR,
 	.val = NULL,
 	.display_opts = NULL,
 	.default_val = NULL,
-	.flags = ECRYPTFS_PARAM_FLAG_NO_VALUE,
-	.num_transitions = 1,
-	.tl = {{.val = "default",
-		.pretty_val = "default",
-		.next_token = &end_param_node,
-		.trans_func = get_cipher}}
+	.flags = (DISPLAY_TRANSITION_NODE_VALS | ECRYPTFS_DISPLAY_PRETTY_VALS
+		  | ECRYPTFS_PARAM_FLAG_ECHO_INPUT),
+	.num_transitions = 0,
+	.tl = {{0}}
 };
+
+static int init_ecryptfs_cipher_param_node(uint32_t version)
+{
+	struct cipher_descriptor cd_head;
+	struct cipher_descriptor *cd_cursor;
+	int rc;
+
+	memset(&cd_head, 0, sizeof(cd_head));
+	rc = ecryptfs_get_kernel_ciphers(&cd_head);
+	if (rc) {
+		syslog(LOG_ERR, "%s: Error getting kernel ciphers; rc = [%d]\n",
+		       __FUNCTION__, rc);
+		goto out;
+	}
+	rc = ecryptfs_get_module_ciphers(&cd_head);
+	if (rc) {
+		syslog(LOG_ERR, "%s: Error getting module ciphers; rc = [%d]\n",
+		       __FUNCTION__, rc);
+		goto out;
+	}
+	cd_cursor = cd_head.next;
+	while (cd_cursor) {
+		struct transition_node *tn;
+		struct cipher_descriptor *cd_tmp;
+
+		if (ecryptfs_cipher_param_node.num_transitions
+		    >= MAX_NUM_TRANSITIONS) {
+			syslog(LOG_WARNING, "%s: Exceeded maximum number of "
+			       "transition nodes [%d] whilst constructing "
+			       "cipher list\n", __FUNCTION__,
+			       MAX_NUM_TRANSITIONS);
+			goto out;
+		}
+		tn = &ecryptfs_cipher_param_node.tl[
+			ecryptfs_cipher_param_node.num_transitions];
+		rc = asprintf(&tn->val, "%s", cd_cursor->crypto_api_name);
+		if (rc == -1) {
+			rc = -ENOMEM;
+			goto out;
+		}
+		rc = 0;
+		if (!ecryptfs_cipher_param_node.suggested_val) {
+			rc = asprintf(&ecryptfs_cipher_param_node.suggested_val,
+				      "%s", cd_cursor->crypto_api_name);
+			if (rc == -1) {
+				rc = -ENOMEM;
+				goto out;
+			}
+			rc = 0;
+		}
+		rc = asprintf(&tn->pretty_val,
+			      "%s: blocksize = %d; "
+			      "min keysize = %d; max keysize = %d (%s)",
+			      cd_cursor->crypto_api_name,
+			      cd_cursor->blocksize,
+			      cd_cursor->min_keysize,
+			      cd_cursor->max_keysize,
+			      ((cd_cursor->flags
+				& CIPHER_DESCRIPTOR_FLAG_LOADED) ? "loaded"
+			       : "not loaded"));
+		if (rc == -1) {
+			rc = -ENOMEM;
+			goto out;
+		}
+		rc = 0;
+		tn->next_token = &ecryptfs_key_bytes_param_node;
+		tn->trans_func = tf_ecryptfs_cipher;
+		ecryptfs_cipher_param_node.num_transitions++;
+		free(cd_cursor->crypto_api_name);
+		free(cd_cursor->descriptive_name);
+		free(cd_cursor->driver_name);
+		free(cd_cursor->module_name);
+		cd_tmp = cd_cursor;
+		cd_cursor = cd_cursor->next;
+		cd_tmp->next = NULL;
+		free(cd_tmp);
+	}
+out:
+	return rc;
+}
 
 static int
 another_key_param_node_callback(struct ecryptfs_ctx *ctx,
@@ -337,7 +548,7 @@ another_key_param_node_callback(struct ecryptfs_ctx *ctx,
 			}
 		nvp = nvp->next;
 	}
-	node->tl[0].next_token = &cipher_param_node;
+	node->tl[0].next_token = &ecryptfs_cipher_param_node;
 out:
 	return rc;
 }
@@ -358,28 +569,46 @@ static struct param_node another_key_param_node = {
 	.num_transitions = 1,
 	.tl = {{.val = "default",
 		.pretty_val = "default",
-		.next_token = &cipher_param_node,
+		.next_token = &ecryptfs_cipher_param_node,
 		.trans_func = another_key_param_node_callback}}
 };
 
-static void
+static int
 fill_in_decision_graph_based_on_version_support(struct param_node *root,
 						uint32_t version)
 {
-	struct param_node *last_param_node = &cipher_param_node;
+	struct param_node *last_param_node = &ecryptfs_key_bytes_param_node;
+	int rc;
 
 	ecryptfs_set_exit_param_on_graph(root, &another_key_param_node);
+	rc = init_ecryptfs_cipher_param_node(version);
+	if (rc) {
+		syslog(LOG_ERR,
+		       "%s: Error initializing cipher list; rc = [%d]\n",
+		       __FUNCTION__, rc);
+		goto out;
+	}
 	if (ecryptfs_supports_plaintext_passthrough(version)) {
-		last_param_node->tl[0].next_token = &passthrough_param_node;
+		int i;
+
+		for (i = 0; i < last_param_node->num_transitions; i++)
+			last_param_node->tl[i].next_token =
+				&passthrough_param_node;
 		last_param_node = &passthrough_param_node;
 	}
 	if (ecryptfs_supports_xattr(version)) {
-		last_param_node->tl[0].next_token = &xattr_param_node;
+		int i;
+
+		for (i = 0; i < last_param_node->num_transitions; i++)
+			last_param_node->tl[i].next_token = &xattr_param_node;
 		last_param_node = &xattr_param_node;
-		last_param_node->tl[0].next_token =
-			&encrypted_passthrough_param_node;
+		for (i = 0; i < last_param_node->num_transitions; i++)
+			last_param_node->tl[i].next_token =
+				&encrypted_passthrough_param_node;
 		last_param_node = &encrypted_passthrough_param_node;
 	}
+out:
+	return rc;
 }
 
 static struct param_node dummy_param_node = {
@@ -498,10 +727,15 @@ int ecryptfs_process_decision_graph(struct ecryptfs_ctx *ctx,
 		}
 		key_mod = key_mod->next;
 	}
-	if (key_module_only == ECRYPTFS_ASK_FOR_ALL_MOUNT_OPTIONS)
-		fill_in_decision_graph_based_on_version_support(&key_module_select_node,
-								version);
-	else
+	if (key_module_only == ECRYPTFS_ASK_FOR_ALL_MOUNT_OPTIONS) {
+		rc = fill_in_decision_graph_based_on_version_support(
+			&key_module_select_node, version);
+		if (rc) {
+			syslog(LOG_ERR, "%s: Error attempting to fill in "
+			       "decision graph; rc = [%d]\n", __FUNCTION__, rc);
+			goto out;
+		}
+	} else
 		ecryptfs_set_exit_param_on_graph(&key_module_select_node,
 						 &dummy_param_node);
 	memset(&nvp_head, 0, sizeof(struct ecryptfs_name_val_pair));

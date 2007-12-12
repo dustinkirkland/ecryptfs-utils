@@ -99,10 +99,18 @@ struct param_node {
 #define PARAMETER_SET			   0x00000080
 #define ECRYPTFS_PARAM_FLAG_LOCK_MEM       0x00000100
 #define ECRYPTFS_PARAM_FORCE_DISPLAY_NODES 0x00000200
+#define ECRYPTFS_DISPLAY_PRETTY_VALS       0x00000400
         uint32_t flags;
         int num_transitions;
-#define MAX_NUM_TRANSITIONS 8
+#define MAX_NUM_TRANSITIONS 64
         struct transition_node tl[MAX_NUM_TRANSITIONS];
+};
+
+struct prompt_elem;
+
+struct prompt_elem {
+	char *str;
+	struct prompt_elem *next;
 };
 
 int add_transition_node_to_param_node(struct param_node *param_node,

@@ -269,15 +269,20 @@ int do_transition(struct ecryptfs_ctx *ctx, struct param_node **next,
  * Try to find one of the aliases for this node in the list of
  * name-value pairs. If found, set the value from that element in the
  * list.
+ *
+ * Returns non-zero on error condition
  */
-static int retrieve_val(struct ecryptfs_name_val_pair *nvp_head,
+static int retrieve_val(int *value_retrieved,
+			struct ecryptfs_name_val_pair *nvp_head,
 			struct param_node *node)
 {
 	int i = node->num_mnt_opt_names;
+	int rc = 0;
 
 	if (ecryptfs_verbosity)
 		syslog(LOG_INFO, "%s: Called on node [%s]\n", __FUNCTION__,
 		       node->mnt_opt_names[0]);
+	(*value_retrieved) = 0;
 	while (i > 0) {
 		struct ecryptfs_name_val_pair *temp = nvp_head->next;
 
@@ -299,23 +304,32 @@ static int retrieve_val(struct ecryptfs_name_val_pair *nvp_head,
 				if (temp->value
 				    && (strcmp(temp->value, "(null)") != 0)) {
 					if (asprintf(&node->val, "%s",
-						     temp->value) == -1)
-						return -ENOMEM;
-				} else {
+						     temp->value) == -1) {
+						rc = -ENOMEM;
+						goto out;
+					}
+				} else
 					node->flags |= PARAMETER_SET;
-					return -1;
-				}
-				return 0;
+				(*value_retrieved) = 1;
+				goto out;
 			}
 			temp = temp->next;
 		}
 	}
 	if (node->default_val) {
-		if (asprintf(&node->val, "%s", node->default_val) == -1)
-			return -ENOMEM;
-		return 0;
+		if (asprintf(&node->val, "%s", node->default_val) == -1) {
+			rc = -ENOMEM;
+			goto out;
+		}
+		if (ecryptfs_verbosity)
+			syslog(LOG_INFO, "%s: Value retrieved from "
+			       "node->default_val = [%s]\n", __FUNCTION__,
+			       node->default_val);
+		(*value_retrieved) = 1;
+		goto out;
 	}
-	return -1;
+out:
+	return rc;
 }
 
 /**
@@ -328,75 +342,154 @@ static int alloc_and_get_val(struct ecryptfs_ctx *ctx, struct param_node *node,
 {
 	char *verify_prompt;
 	char *verify;
-	int rc = 0;
 	int val;
+	int value_retrieved;
+	int rc;
 
-	if (!retrieve_val(nvp_head, node))
+	rc = retrieve_val(&value_retrieved, nvp_head, node);
+	if (rc) {
+		syslog(LOG_ERR, "%s: Error attempting to retrieve value; "
+		       "rc = [%d]\n", __FUNCTION__, rc);
 		goto out;
-	if (node->flags & ECRYPTFS_PARAM_FLAG_NO_VALUE)
+	}
+	if (value_retrieved) {
+		if (ecryptfs_verbosity)
+			syslog(LOG_INFO,
+			       "%s: Value retrieved from default_val or from "
+			       "parameter list; returning\n",
+			       __FUNCTION__);
 		goto out;
-	if (ctx->verbosity == 0 && !(node->flags & STDIN_REQUIRED))
-		return 0;
-	if ((node->flags & PARAMETER_SET) && !(node->flags & STDIN_REQUIRED))
-		return 0;
+	}
+	if (node->flags & ECRYPTFS_PARAM_FLAG_NO_VALUE) {
+		if (ecryptfs_verbosity)
+			syslog(LOG_INFO,
+			       "%s: ECRYPTFS_PARAM_FLAG_NO_VALUE set\n",
+			       __FUNCTION__);
+		goto out;
+	}
+	if (ctx->verbosity == 0 && !(node->flags & STDIN_REQUIRED)) {
+		if (ecryptfs_verbosity)
+			syslog(LOG_INFO, "%s: ctx->verbosity == 0 and "
+			       "STDIN_REQUIRED not set\n", __FUNCTION__);
+		goto out;
+	}
+	if ((node->flags & PARAMETER_SET) && !(node->flags & STDIN_REQUIRED)) {
+		if (ecryptfs_verbosity)
+			syslog(LOG_INFO, "%s: PARAMETER_SET and "
+			       "STDIN_REQUIRED not set\n", __FUNCTION__);
+		goto out;
+	}
 	if (ctx->get_string) {
+		if (ecryptfs_verbosity)
+			syslog(LOG_INFO, "%s: ctx->get_string defined\n",
+			       __FUNCTION__);
 		if (node->flags & DISPLAY_TRANSITION_NODE_VALS) {
-			int i, strpos = 0;
-			int node_prompt_len = strlen(node->prompt);
-			int default_val_len = 0;
-			int len;
+			struct prompt_elem pe_head;
+			struct prompt_elem *pe;
 			char *prompt;
+			uint32_t prompt_len;
+			int i;
 
-			if (node->default_val)
-				default_val_len = strlen(node->default_val);
-			len = node_prompt_len + default_val_len + 32;
-			if (node->num_transitions == 1
+			if (ecryptfs_verbosity)
+				syslog(LOG_INFO, "%s: DISPLAY_TRANSITION_NODE_"
+				       "VALS set\n", __FUNCTION__);
+			memset(&pe_head, 0, sizeof(pe_head));
+			pe = &pe_head;
+			if ((node->num_transitions == 1)
 			    && !(node->flags
 				 & ECRYPTFS_PARAM_FORCE_DISPLAY_NODES)) {
 				if (asprintf(&(node->val), "%s",
-					     node->tl[0].val) == -1)
-					return MOUNT_ERROR;
-				return 0;
+					     node->tl[0].val) == -1) {
+					rc = -ENOMEM;
+					goto out;
+				}
+				rc = 0;
+				goto out;
 			}
-			for (i = 0; i < node->num_transitions; i++)
-				len += (strlen(node->tl[i].val) + 5);
-			prompt = malloc(len);
-			if (!prompt)
-				return -ENOMEM;
-			memcpy(prompt, node->prompt, node_prompt_len);
-			prompt[node_prompt_len] = ':';
-			strpos = node_prompt_len + 1;
-			prompt[strpos++] = '\n';
+			/* === Begin add component to prompt === */
+			pe->next = malloc(sizeof(*pe));
+			if (!pe->next) {
+				rc = -ENOMEM;
+				goto out;
+			}
+			pe = pe->next;
+			memset(pe, 0, sizeof(*pe));
+			rc = asprintf(&pe->str, "%s: \n", node->prompt);
+			if (rc == -1) {
+				rc = -ENOMEM;
+				goto out;
+			}
+			rc = 0;
+			/* === End add component to prompt === */
 			for (i = 0; i < node->num_transitions; i++) {
-				prompt[strpos++] = ' ';
-				prompt[strpos++] = '0' + (char)(i + 1);
-				prompt[strpos++] = ')';
-				prompt[strpos++] = ' ';
-				memcpy(&prompt[strpos], node->tl[i].val,
-				       strlen(node->tl[i].val));
-				strpos += strlen(node->tl[i].val);
-				prompt[strpos++] = '\n';
+				pe->next = malloc(sizeof(*pe));
+				if (!pe->next) {
+					rc = -ENOMEM;
+					goto out;
+				}
+				pe = pe->next;
+				memset(pe, 0, sizeof(*pe));
+				if (node->flags & ECRYPTFS_DISPLAY_PRETTY_VALS)
+					rc = asprintf(&pe->str, " %d) %s\n",
+						      (i + 1),
+						      node->tl[i].pretty_val);
+				else
+					rc = asprintf(&pe->str, " %d) %s\n",
+						      (i + 1),
+						      node->tl[i].val);
+				if (rc == -1) {
+					rc = -ENOMEM;
+					goto out;
+				}
+				rc = 0;
 			}
-			memcpy(&prompt[strpos], "Selection", 9);
-			strpos += 9;
-			if (node->suggested_val) {
-				memcpy(&prompt[strpos], " [", 2);
-				strpos += 2;
-				memcpy(&prompt[strpos], node->default_val,
-				       default_val_len);
-				strpos += default_val_len;
-				memcpy(&prompt[strpos], "]", 1);
-				strpos += 1;
-			} else if (node->default_val) {
-				memcpy(&prompt[strpos], " [", 2);
-				strpos += 2;
-				memcpy(&prompt[strpos], node->default_val,
-				       default_val_len);
-				strpos += default_val_len;
-				memcpy(&prompt[strpos], "]", 1);
-				strpos += 1;
+			pe->next = malloc(sizeof(*pe));
+			if (!pe->next) {
+				rc = -ENOMEM;
+				goto out;
 			}
-			prompt[strpos] = '\0';
+			pe = pe->next;
+			memset(pe, 0, sizeof(*pe));
+			if (node->suggested_val)
+				rc = asprintf(&pe->str, "Selection [%s]",
+					      node->suggested_val);
+			else if (node->default_val)
+				rc = asprintf(&pe->str, "Selection [%s]",
+					      node->default_val);
+			else
+				rc = asprintf(&pe->str, "Selection");
+			if (rc == -1) {
+				rc = -ENOMEM;
+				goto out;
+			}
+			rc = 0;
+			/* Convert prompt_elem linked list into
+			 * single prompt string */
+			prompt_len = 0;
+			pe = pe_head.next;
+			while (pe) {
+				prompt_len += strlen(pe->str);
+				pe = pe->next;
+			}
+			prompt_len++;
+			i = 0;
+			prompt = malloc(prompt_len);
+			if (!prompt) {
+				rc = -ENOMEM;
+				goto out;
+			}
+			pe = pe_head.next;
+			while (pe) {
+				struct prompt_elem *pe_tmp;
+
+				memcpy(&prompt[i], pe->str, strlen(pe->str));
+				i += strlen(pe->str);
+				pe_tmp = pe;
+				pe = pe->next;
+				free(pe_tmp->str);
+				free(pe_tmp);
+			}
+			prompt[i] = '\0';
 get_value:
 			rc = (ctx->get_string)
 				(&(node->val), prompt,
@@ -408,13 +501,38 @@ get_value:
 				asprintf(&(node->val), "%s",
 					 node->tl[val - 1].val);
 			} else {
-				goto get_value;
+				int valid_val;
+
+				if (node->val[0] == '\0') {
+					if (!node->suggested_val)
+						goto get_value;
+					rc = asprintf(&node->val, "%s",
+						      node->suggested_val);
+					if (rc == -1) {
+						rc = -ENOMEM;
+						goto out;
+					}
+					rc = 0;
+				}
+				valid_val = 0;
+				for (i = 0; i < node->num_transitions; i++) {
+					if (strcmp(node->val, node->tl[i].val)
+					    == 0) {
+						valid_val = 1;
+						break;
+					}
+				}
+				if (!valid_val)
+					goto get_value;
 			}
 			free(prompt);
 			return rc;
 		} else {
 			char *prompt;
 
+			if (ecryptfs_verbosity)
+				syslog(LOG_INFO, "%s: DISPLAY_TRANSITION_NODE_"
+				       "VALS not set\n", __FUNCTION__);
 obtain_value:
 			if (node->suggested_val)
 				asprintf(&prompt, "%s [%s]", node->prompt,
@@ -451,8 +569,12 @@ obtain_value:
 			}
 			return rc;
 		}
+	} else {
+		if (ecryptfs_verbosity)
+			syslog(LOG_INFO, "%s: ctx->get_string not defined",
+			       __FUNCTION__);
 	}
-	return MOUNT_ERROR;
+	rc = MOUNT_ERROR;
 out:
 	return rc;
 }

@@ -39,14 +39,18 @@
 #include "../include/ecryptfs.h"
 
 #define MAX_BUF_LEN 128
+#define MTAB_FULLPATH "/etc/mtab"
 
+/**
+ * Pulling ourselves up by the bootstraps...
+ */
 static int get_proc_mount_point(char **proc_mount_point)
 {
 	FILE *fp;
 	struct mntent *mntent;
 	int rc = 0;
 
-	fp = fopen("/etc/mtab", "r");
+	fp = fopen(MTAB_FULLPATH, "r");
 	if (!fp) {
 		rc = -errno;
 		goto out;
@@ -307,4 +311,297 @@ int ecryptfs_free_cipher_list(struct ecryptfs_cipher_elem cipher_list_head)
 		current = next;
 	}
 	return 0;
+}
+
+int ecryptfs_get_kernel_ciphers(struct cipher_descriptor *cd_head)
+{
+	struct cipher_descriptor *cd_cursor = cd_head;
+	char *proc_mount_point = NULL;
+	char *crypto_full_path = NULL;
+	FILE *crypto_file = NULL;
+	char buf[MAX_BUF_LEN];
+	char *tmp = NULL;
+	int rc;
+
+	rc = get_proc_mount_point(&proc_mount_point);
+	if (rc) {
+		syslog(LOG_WARNING, "Error attempting to find proc mount "
+		       "point in [/etc/mtab]. Defaulting to [/proc].\n");
+		rc = 0;
+		if (asprintf(&proc_mount_point, "/proc") == -1) {
+			proc_mount_point = NULL;
+			rc = -ENOMEM;
+			goto out;
+		}
+	}
+	if (asprintf(&crypto_full_path, "%s/crypto", proc_mount_point) == -1) {
+			crypto_full_path = NULL;
+			rc = -ENOMEM;
+			goto out;
+	}
+	if (!(crypto_file = fopen(crypto_full_path, "r"))) {
+		rc = -EIO;
+		goto out;
+	}
+	while (fgets(buf, MAX_BUF_LEN, crypto_file)) {
+		if (!strncmp(buf, "name", 4)) {
+			struct cipher_descriptor *cd_tmp;
+			int found_duplicate = 0;
+
+			strtok(buf, ": ");
+			tmp = strtok(NULL, ": ");
+			cd_tmp = cd_head->next;
+			while (cd_tmp) {
+				if (!strcmp(cd_tmp->crypto_api_name, tmp)) {
+					found_duplicate = 1;
+					break;
+				}
+				cd_tmp = cd_tmp->next;
+			}
+			if (found_duplicate)
+				continue;
+			cd_cursor->next = malloc(sizeof(*cd_cursor));
+			if (!cd_cursor->next) {
+				rc = -ENOMEM;
+				goto out;
+			}
+			memset(cd_cursor->next, 0, sizeof(*cd_cursor));
+			cd_cursor->next->flags |= CIPHER_DESCRIPTOR_FLAG_LOADED;
+			if (strlen(tmp) <= 0) {
+				rc = -EINVAL;
+				goto out;
+			}
+			tmp[strlen(tmp) - 1] = '\0';
+			rc = asprintf(&cd_cursor->next->crypto_api_name,
+				      "%s", tmp);
+			if (rc == -1) {
+				cd_cursor->next->crypto_api_name = NULL;
+				free(cd_cursor->next);
+				rc = -ENOMEM;
+				goto out;
+			}
+			rc = 0;
+		} else if (!strncmp(buf, "module", 6)) {
+			if (!cd_cursor->next)
+				continue;
+			strtok(buf, ": ");
+			tmp = strtok(NULL, ": ");
+			if (strlen(tmp) <= 0) {
+				rc = -EINVAL;
+				goto out;
+			}
+			tmp[strlen(tmp) - 1] = '\0';
+			rc = asprintf(&cd_cursor->next->module_name, "%s.ko",
+				      tmp);
+			if (rc == -1) {
+				cd_cursor->next->module_name = NULL;
+				free(cd_cursor->next->crypto_api_name);
+				free(cd_cursor->next);
+				rc = -ENOMEM;
+				goto out;
+			}
+			rc = 0;
+		} else if (!strncmp(buf, "driver", 6)) {
+			if (!cd_cursor->next)
+				continue;
+			strtok(buf, ": ");
+			tmp = strtok(NULL, ": ");
+			if (strlen(tmp) <= 0) {
+				rc = -EINVAL;
+				goto out;
+			}
+			tmp[strlen(tmp) - 1] = '\0';
+			rc = asprintf(&cd_cursor->next->driver_name, "%s", tmp);
+			if (rc == -1) {
+				cd_cursor->next->module_name = NULL;
+				free(cd_cursor->next->module_name);
+				free(cd_cursor->next->crypto_api_name);
+				free(cd_cursor->next);
+				rc = -ENOMEM;
+				goto out;
+			}
+			rc = 0;
+		} else if (!strncmp(buf, "type", 4)) {
+			if (!cd_cursor->next)
+				continue;
+			strtok(buf, ": ");
+			tmp = strtok(NULL, ": ");
+			if (strlen(tmp) <= 0) {
+				rc = -EINVAL;
+				goto out;
+			}
+			tmp[strlen(tmp) - 1] = '\0';
+			/* We only care about ciphers, not hashes, etc. */
+			if (strncmp(tmp, "cipher", 6)) {
+				free(cd_cursor->next->module_name);
+				free(cd_cursor->next->crypto_api_name);
+				free(cd_cursor->next->driver_name);
+				free(cd_cursor->next);
+				cd_cursor->next = NULL;
+				continue;
+			}
+		} else if (!strncmp(buf, "blocksize", 9)) {
+			if (!cd_cursor->next)
+				continue;
+			strtok(buf, ": ");
+			tmp = strtok(NULL, ": ");
+			if (strlen(tmp) <= 0) {
+				rc = -EINVAL;
+				goto out;
+			}
+			tmp[strlen(tmp) - 1] = '\0';
+			cd_cursor->next->blocksize = atoi(tmp);
+		} else if (!strncmp(buf, "min keysize", 11)) {
+			if (!cd_cursor->next)
+				continue;
+			strtok(buf, ": ");
+			tmp = strtok(NULL, ": ");
+			if (strlen(tmp) <= 0) {
+				rc = -EINVAL;
+				goto out;
+			}
+			tmp[strlen(tmp) - 1] = '\0';
+			cd_cursor->next->min_keysize = atoi(tmp);
+		} else if (!strncmp(buf, "max keysize", 11)) {
+			if (!cd_cursor->next)
+				continue;
+			strtok(buf, ": ");
+			tmp = strtok(NULL, ": ");
+			if (strlen(tmp) <= 0) {
+				rc = -EINVAL;
+				goto out;
+			}
+			tmp[strlen(tmp) - 1] = '\0';
+			cd_cursor->next->max_keysize = atoi(tmp);
+			cd_cursor = cd_cursor->next;
+		}
+	}
+out:
+	if (crypto_file)
+		fclose(crypto_file);
+	free(proc_mount_point);
+	free(crypto_full_path);
+	return rc;
+}
+
+static struct cipher_name_module_map {
+	char *name;
+	char *module;
+	uint32_t blocksize;
+	uint32_t min_keysize;
+	uint32_t max_keysize;
+} cipher_name_module_map[] = {
+	{"aes", "aes.ko", 16, 16, 32},
+	{"aes", "aes_generic.ko", 16, 16, 32},
+	{"serpent", "serpent.ko", 16, 0, 32},
+	{"tnepres", "serpent.ko", 16, 0, 32},
+	{"arc4", "arc4.ko", 1, 1, 256},
+	{"tea", "tea.ko", 8, 16, 16},
+	{"xeta", "tea.ko", 8, 16, 16},
+	{"xtea", "tea.ko", 8, 16, 16},
+	{"blowfish", "blowfish.ko", 16, 16, 32},
+	{"twofish", "twofish.ko", 16, 16, 32},
+	{"khazad", "khazad.ko", 8, 16, 16},
+	{"cast5", "cast5.ko", 8, 5, 16},
+	{"cast6", "cast6.ko", 16, 16, 32},
+	{"des3_ede", "des.ko", 8, 24, 24},
+	{"des3_ede", "des_generic.ko", 8, 24, 24},
+	{"anubis", "anubis.ko", 16, 16, 40},
+	{"cipher_null", "cipher_null.ko", 1, 0, 0},
+	{NULL, NULL}
+};
+
+int ecryptfs_get_module_ciphers(struct cipher_descriptor *cd_head)
+{
+	struct cipher_descriptor *cd_cursor = cd_head;
+	char *kernel_crypto_dir = NULL;
+	struct utsname kern_info;
+	DIR *dir = NULL;
+	struct dirent *dir_entry;
+	int rc;
+
+	while (cd_cursor->next)
+		cd_cursor = cd_cursor->next;
+	rc = uname(&kern_info);
+	if (rc) {
+		syslog(LOG_ERR, "%s: uname returned [%d]\n", __FUNCTION__, rc);
+		goto out;
+	}
+	rc = asprintf(&kernel_crypto_dir, "/lib/modules/%s/kernel/crypto",
+		      kern_info.release);
+	if (rc == -1) {
+		syslog(LOG_ERR, "%s: Error building kernel location string\n",
+		       __FUNCTION__);
+		rc = -ENOMEM;
+		goto out;
+	}
+	rc = 0;
+	dir = opendir(kernel_crypto_dir);
+	if (!dir) {
+		syslog(LOG_ERR, "%s: opendir error on [%s]\n", __FUNCTION__,
+			kernel_crypto_dir);
+		rc = -EINVAL;
+		goto out;
+	}
+	while ((dir_entry = readdir(dir))) {
+		struct cipher_descriptor *cd_tmp;
+		int found_match;
+		int i;
+
+		if (!strstr(dir_entry->d_name, ".ko"))
+			continue;
+		found_match = 0;
+		cd_tmp = cd_head->next;
+		while (cd_tmp) {
+			if (!strcmp(cd_tmp->module_name, dir_entry->d_name)) {
+				found_match = 1;
+				break;
+			}
+			cd_tmp = cd_tmp->next;
+		}
+		if (found_match)
+			continue;
+		i = 0;
+		while (cipher_name_module_map[i].name) {
+			if (!strcmp(cipher_name_module_map[i].module,
+				    dir_entry->d_name)) {
+				cd_cursor->next = malloc(sizeof(*cd_cursor));
+				if (!cd_cursor->next) {
+					rc = -ENOMEM;
+					goto out;
+				}
+				memset(cd_cursor->next, 0, sizeof(*cd_cursor));
+				rc = asprintf(&cd_cursor->next->crypto_api_name,
+					      "%s",
+					      cipher_name_module_map[i].name);
+				if (rc == -1) {
+					free(cd_cursor->next);
+					rc = -ENOMEM;
+					goto out;
+				}
+				rc = asprintf(&cd_cursor->next->module_name,
+					      "%s", dir_entry->d_name);
+				if (rc == -1) {
+					free(cd_cursor->next->crypto_api_name);
+					free(cd_cursor->next);
+					rc = -ENOMEM;
+					goto out;
+				}
+				rc = 0;
+				cd_cursor->next->blocksize =
+					cipher_name_module_map[i].blocksize;
+				cd_cursor->next->min_keysize =
+					cipher_name_module_map[i].min_keysize;
+				cd_cursor->next->max_keysize =
+					cipher_name_module_map[i].max_keysize;
+				cd_cursor = cd_cursor->next;
+			}
+			i++;
+		}
+	}
+out:
+	free(kernel_crypto_dir);
+	if (dir)
+		closedir(dir);
+	return rc;
 }

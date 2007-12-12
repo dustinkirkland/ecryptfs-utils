@@ -218,14 +218,6 @@ struct ecryptfs_daemon_info {
 	char socket_file_full_path[PATH_MAX];
 };
 
-struct ecryptfs_cipher_elem {
-	uint8_t loaded_cipher;
-	char *kernel_name;
-	char *user_name;
-	uint32_t bytes;
-	struct ecryptfs_cipher_elem *next;
-};
-
 struct ecryptfs_netlink_message {
 	uint32_t index;
 	uint32_t data_len;
@@ -365,12 +357,6 @@ struct ecryptfs_ctx {
 	struct ecryptfs_name_val_pair *nvp_head;
 };
 
-struct cipher_str_name_map_elem {
-	char *kernel_name;
-	char *user_name;
-	int keysize_bytes;
-};
-
 enum main_menu_enum {
 	MME_NULL,
 	MME_MOUNT_PASSPHRASE,
@@ -382,6 +368,39 @@ enum main_menu_enum {
 struct val_node;
 struct param_node;
 
+struct cipher_str_name_map_elem {
+	char *kernel_name;
+	char *user_name;
+	int keysize_bytes;
+};
+
+struct ecryptfs_cipher_elem;
+
+struct ecryptfs_cipher_elem {
+	uint8_t loaded_cipher;
+	char *kernel_name;
+	char *user_name;
+	uint32_t bytes;
+	struct ecryptfs_cipher_elem *next;
+};
+
+struct cipher_descriptor;
+
+struct cipher_descriptor {
+#define CIPHER_DESCRIPTOR_FLAG_LOADED 0x00000001
+	uint32_t flags;
+	char *crypto_api_name;
+	char *descriptive_name;
+	char *driver_name;
+	char *module_name;
+	uint32_t blocksize;
+	uint32_t min_keysize;
+	uint32_t max_keysize;
+	struct cipher_descriptor *next;
+};
+
+int ecryptfs_get_kernel_ciphers(struct cipher_descriptor *cd_head);
+int ecryptfs_get_module_ciphers(struct cipher_descriptor *cd_head);
 int ecryptfs_get_version(uint32_t *version);
 int ecryptfs_supports_passphrase(uint32_t version);
 int ecryptfs_supports_pubkey(uint32_t version);
