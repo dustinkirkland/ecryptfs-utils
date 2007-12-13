@@ -675,6 +675,7 @@ int ecryptfs_process_decision_graph(struct ecryptfs_ctx *ctx,
 		rc = -ENOMEM;
 		goto out_free_allowed_duplicates;
 	}
+	key_module_select_node.num_transitions = 0;
 	key_mod = ctx->key_mod_list_head.next;
 	while (key_mod) {
 		struct transition_node *trans_node;
@@ -789,6 +790,7 @@ int ecryptfs_process_key_gen_decision_graph(struct ecryptfs_ctx *ctx,
 		       "rc = [%d]\n", rc);
 		goto out;
 	}
+	key_module_select_node.num_transitions = 0;
 	key_mod = ctx->key_mod_list_head.next;
 	while (key_mod) {
 		struct transition_node *trans_node;

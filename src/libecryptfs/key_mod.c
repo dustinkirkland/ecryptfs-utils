@@ -425,5 +425,6 @@ int ecryptfs_free_key_mod_list(struct ecryptfs_ctx *ctx)
 		curr = curr->next;
 		free(temp);
 	}
+	ctx->key_mod_list_head.next = NULL;
 	return 0;
 }
