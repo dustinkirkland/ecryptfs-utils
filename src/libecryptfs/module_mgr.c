@@ -302,31 +302,32 @@ static struct param_node ecryptfs_key_bytes_param_node = {
 static struct supported_key_bytes {
 	char *cipher_name;
 	uint32_t key_bytes;
+	uint32_t order;
 } supported_key_bytes[] = {
-	{"aes", 16},
-	{"aes", 24},
-	{"aes", 32},
-	{"anubis", 16},
-	{"anubis", 32},
-	{"des3_ede", 24},
-	{"serpent", 16},
-	{"serpent", 32},
-	{"tnepres", 16},
-	{"tnepres", 32},
-	{"tea", 16},
-	{"xeta", 16},
-	{"xtea", 16},
-	{"cast5", 16},
-	{"cast6", 16},
-	{"cast6", 32},
-	{"twofish", 16},
-	{"twofish", 32},
-	{"blowfish", 16},
-	{"blowfish", 32},
-	{"khazad", 16},
-	{"arc4", 16},
-	{"arc4", 32},
-	{NULL, 0}
+	{"aes", 16, 1},
+	{"aes", 32, 2},
+	{"aes", 24, 3},
+	{"anubis", 16, 1},
+	{"anubis", 32, 2},
+	{"des3_ede", 24, 1},
+	{"serpent", 16, 1},
+	{"serpent", 32, 2},
+	{"tnepres", 16, 1},
+	{"tnepres", 32, 2},
+	{"tea", 16, 1},
+	{"xeta", 16, 1},
+	{"xtea", 16, 1},
+	{"cast5", 16, 1},
+	{"cast6", 16, 1},
+	{"cast6", 32, 2},
+	{"twofish", 16, 1},
+	{"twofish", 32, 2},
+	{"blowfish", 16, 1},
+	{"blowfish", 32, 2},
+	{"khazad", 16, 1},
+	{"arc4", 16, 1},
+	{"arc4", 32, 2},
+	{NULL, 0, 0}
 };
 
 static int tf_ecryptfs_key_bytes(struct ecryptfs_ctx *ctx,
@@ -447,6 +448,12 @@ static int init_ecryptfs_cipher_param_node(uint32_t version)
 	rc = ecryptfs_get_module_ciphers(&cd_head);
 	if (rc) {
 		syslog(LOG_ERR, "%s: Error getting module ciphers; rc = [%d]\n",
+		       __FUNCTION__, rc);
+		goto out;
+	}
+	rc = ecryptfs_sort_ciphers(&cd_head);
+	if (rc) {
+		syslog(LOG_ERR, "%s: Error sorting ciphers; rc = [%d]\n",
 		       __FUNCTION__, rc);
 		goto out;
 	}

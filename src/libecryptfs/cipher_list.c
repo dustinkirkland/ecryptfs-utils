@@ -350,6 +350,11 @@ int ecryptfs_get_kernel_ciphers(struct cipher_descriptor *cd_head)
 
 			strtok(buf, ": ");
 			tmp = strtok(NULL, ": ");
+			if (strlen(tmp) <= 0) {
+				rc = -EINVAL;
+				goto out;
+			}
+			tmp[strlen(tmp) - 1] = '\0';
 			cd_tmp = cd_head->next;
 			while (cd_tmp) {
 				if (!strcmp(cd_tmp->crypto_api_name, tmp)) {
@@ -367,11 +372,6 @@ int ecryptfs_get_kernel_ciphers(struct cipher_descriptor *cd_head)
 			}
 			memset(cd_cursor->next, 0, sizeof(*cd_cursor));
 			cd_cursor->next->flags |= CIPHER_DESCRIPTOR_FLAG_LOADED;
-			if (strlen(tmp) <= 0) {
-				rc = -EINVAL;
-				goto out;
-			}
-			tmp[strlen(tmp) - 1] = '\0';
 			rc = asprintf(&cd_cursor->next->crypto_api_name,
 				      "%s", tmp);
 			if (rc == -1) {
@@ -490,25 +490,26 @@ static struct cipher_name_module_map {
 	uint32_t blocksize;
 	uint32_t min_keysize;
 	uint32_t max_keysize;
+	uint32_t priority;
 } cipher_name_module_map[] = {
-	{"aes", "aes.ko", 16, 16, 32},
-	{"aes", "aes_generic.ko", 16, 16, 32},
-	{"serpent", "serpent.ko", 16, 0, 32},
-	{"tnepres", "serpent.ko", 16, 0, 32},
-	{"arc4", "arc4.ko", 1, 1, 256},
-	{"tea", "tea.ko", 8, 16, 16},
-	{"xeta", "tea.ko", 8, 16, 16},
-	{"xtea", "tea.ko", 8, 16, 16},
-	{"blowfish", "blowfish.ko", 16, 16, 32},
-	{"twofish", "twofish.ko", 16, 16, 32},
-	{"khazad", "khazad.ko", 8, 16, 16},
-	{"cast5", "cast5.ko", 8, 5, 16},
-	{"cast6", "cast6.ko", 16, 16, 32},
-	{"des3_ede", "des.ko", 8, 24, 24},
-	{"des3_ede", "des_generic.ko", 8, 24, 24},
-	{"anubis", "anubis.ko", 16, 16, 40},
-	{"cipher_null", "cipher_null.ko", 1, 0, 0},
-	{NULL, NULL}
+	{"aes", "aes.ko", 16, 16, 32, 1},
+	{"aes", "aes_generic.ko", 16, 16, 32, 1},
+	{"serpent", "serpent.ko", 16, 0, 32, 12},
+	{"tnepres", "serpent.ko", 16, 0, 32, 13},
+	{"arc4", "arc4.ko", 1, 1, 256, 6},
+	{"tea", "tea.ko", 8, 16, 16, 7},
+	{"xeta", "tea.ko", 8, 16, 16, 9},
+	{"xtea", "tea.ko", 8, 16, 16, 8},
+	{"blowfish", "blowfish.ko", 16, 16, 32, 2},
+	{"twofish", "twofish.ko", 16, 16, 32, 4},
+	{"khazad", "khazad.ko", 8, 16, 16, 11},
+	{"cast5", "cast5.ko", 8, 5, 16, 14},
+	{"cast6", "cast6.ko", 16, 16, 32, 5},
+	{"des3_ede", "des.ko", 8, 24, 24, 3},
+	{"des3_ede", "des_generic.ko", 8, 24, 24, 3},
+	{"anubis", "anubis.ko", 16, 16, 40, 10},
+	{"cipher_null", "cipher_null.ko", 1, 0, 0, 99},
+	{NULL, NULL, 0, 0, 0, 0}
 };
 
 int ecryptfs_get_module_ciphers(struct cipher_descriptor *cd_head)
@@ -603,5 +604,75 @@ out:
 	free(kernel_crypto_dir);
 	if (dir)
 		closedir(dir);
+	return rc;
+}
+
+int ecryptfs_sort_ciphers(struct cipher_descriptor *cd_head)
+{
+	struct cipher_descriptor *cd_walker;
+	struct cipher_descriptor *cd_cursor;
+	struct cipher_descriptor *cd_prior;
+	struct cipher_descriptor *cd_highest_priority;
+	struct cipher_descriptor *cd_highest_priority_parent;
+	int rc = 0;
+
+	cd_walker = cd_head;
+	while (cd_walker) {
+		cd_prior = cd_highest_priority_parent = cd_walker;
+		cd_cursor = cd_highest_priority = cd_walker->next;
+		while (cd_cursor) {
+			int i;
+			uint32_t cd_cursor_priority = 99;
+			uint32_t cd_highest_priority_priority = 99;
+
+			i = 0;
+			while (cipher_name_module_map[i].name) {
+				if (strcmp(cipher_name_module_map[i].name,
+					   cd_cursor->crypto_api_name) == 0) {
+					cd_cursor_priority =
+						cipher_name_module_map[i].priority;
+				}
+				i++;
+			}
+			i = 0;
+			while (cipher_name_module_map[i].name) {
+				if (strcmp(cipher_name_module_map[i].name,
+					   cd_highest_priority->crypto_api_name)
+				    == 0) {
+					cd_highest_priority_priority =
+						cipher_name_module_map[i].priority;
+				}
+				i++;
+			}
+			if (cd_cursor_priority
+			    <= cd_highest_priority_priority) {
+				cd_highest_priority = cd_cursor;
+				cd_highest_priority_parent = cd_prior;
+			}
+			cd_prior = cd_cursor;
+			cd_cursor = cd_cursor->next;
+		}
+		if (cd_highest_priority != cd_walker->next) {
+			cd_highest_priority_parent->next =
+				cd_highest_priority->next;
+			cd_highest_priority->next = cd_walker->next;
+			cd_walker->next = cd_highest_priority;
+		}
+		cd_walker = cd_walker->next;
+	}
+	cd_prior = cd_head;
+	cd_cursor = cd_head->next;
+	while (cd_cursor) {
+		struct cipher_descriptor *cd_next = cd_cursor->next;
+
+		while (cd_next) {
+			if (strcmp(cd_cursor->crypto_api_name,
+				   cd_next->crypto_api_name) == 0) {
+				cd_cursor->next = cd_next->next;
+			}
+			cd_next = cd_next->next;
+		}
+		cd_cursor = cd_cursor->next;
+	}
 	return rc;
 }

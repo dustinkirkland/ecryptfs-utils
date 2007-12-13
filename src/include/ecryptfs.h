@@ -396,11 +396,13 @@ struct cipher_descriptor {
 	uint32_t blocksize;
 	uint32_t min_keysize;
 	uint32_t max_keysize;
+	uint32_t priority;
 	struct cipher_descriptor *next;
 };
 
 int ecryptfs_get_kernel_ciphers(struct cipher_descriptor *cd_head);
 int ecryptfs_get_module_ciphers(struct cipher_descriptor *cd_head);
+int ecryptfs_sort_ciphers(struct cipher_descriptor *cd_head);
 int ecryptfs_get_version(uint32_t *version);
 int ecryptfs_supports_passphrase(uint32_t version);
 int ecryptfs_supports_pubkey(uint32_t version);
