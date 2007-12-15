@@ -742,149 +742,6 @@ static struct param_node ecryptfs_openssl_gen_key_param_nodes[] = {
 		         &tf_ecryptfs_openssl_gen_key_param_node_passphrase}}}
 };
 
-#define SSL_OPENSSL_TOK 0
-#define SSL_FILE_TOK 1
-#define SSL_PASSWD_TOK 2
-#define SSL_PASS_FILE_TOK 3
-#define SSL_PASS_ENV_TOK 4
-#define SSL_PASS_FD_TOK 5
-#define SSL_PASS_STDIN_TOK 6
-#define SSL_DEFAULT_PASS_TOK 7
-static struct param_node ssl_param_nodes[] = {
-	{.num_mnt_opt_names = 1,
-	 .mnt_opt_names = {"keyformat"},
-	 .prompt = "Key format",
-	 .val_type = VAL_STR,
-	 .val = NULL,
-	 .display_opts = NULL,
-	 .default_val = "keyfile",
-	 .flags = ECRYPTFS_PARAM_FLAG_NO_VALUE,
-	 .num_transitions = 1,
-	 .tl = {{.val = "default",
-		 .pretty_val = "OpenSSL Key File",
-		 .next_token = &ssl_param_nodes[SSL_FILE_TOK],
-		 .trans_func = NULL}}},
-
-	{.num_mnt_opt_names = 1,
-	 .mnt_opt_names = {"keyfile"},
-	 .prompt = "SSL key file",
-	 .val_type = VAL_STR,
-	 .val = NULL,
-	 .display_opts = NULL,
-	 .default_val = NULL,
-	 .suggested_val = NULL,
-	 .flags = ECRYPTFS_PARAM_FLAG_ECHO_INPUT,
-	 .num_transitions = 6,
-	 .tl = {{.val = "passwd",
-		 .pretty_val = "",
-		 .next_token = &ssl_param_nodes[SSL_PASSWD_TOK],
-		 .trans_func = tf_ssl_keyfile},
-	 	{.val = "passfile",
-		 .pretty_val = "Passphrase File",
-		 .next_token = &ssl_param_nodes[SSL_PASS_FILE_TOK],
-		 .trans_func = tf_ssl_keyfile},
-	 	{.val = "passenv",
-		 .pretty_val = "Passphrase ENV",
-		 .next_token = &ssl_param_nodes[SSL_PASS_ENV_TOK],
-		 .trans_func = tf_ssl_keyfile},
-	 	{.val = "passfd",
-		 .pretty_val = "Passphrase File Descriptor",
-		 .next_token = &ssl_param_nodes[SSL_PASS_FD_TOK],
-		 .trans_func = tf_ssl_keyfile},
-	 	{.val = "passstdin",
-		 .pretty_val = "Passphrase STDIN",
-		 .next_token = &ssl_param_nodes[SSL_PASS_STDIN_TOK],
-		 .trans_func = tf_ssl_keyfile},
-	 	{.val = "default",
-		 .pretty_val = "Passphrase",
-		 .next_token = &ssl_param_nodes[SSL_DEFAULT_PASS_TOK],
-		 .trans_func = tf_ssl_keyfile}}},
-
-	{.num_mnt_opt_names = 1,
-	 .mnt_opt_names = {"passwd"},
-	 .prompt = "Passphrase",
-	 .val_type = VAL_STR,
-	 .val = NULL,
-	 .display_opts = NULL,
-	 .default_val = NULL,
-	 .flags = ECRYPTFS_PARAM_FLAG_MASK_OUTPUT,
-	 .num_transitions = 1,
-	 .tl = {{.val = NULL,
-		 .pretty_val = NULL,
-		 .next_token = NULL,
-		 .trans_func = tf_ssl_passwd}}},
-
-	{.num_mnt_opt_names = 1,
-	 .mnt_opt_names = {"passfile"},
-	 .prompt = "Passphrase",
-	 .val_type = VAL_STR,
-	 .val = NULL,
-	 .display_opts = NULL,
-	 .default_val = NULL,
-	 .flags = ECRYPTFS_PARAM_FLAG_MASK_OUTPUT,
-	 .num_transitions = 1,
-	 .tl = {{.val = NULL,
-		 .pretty_val = NULL,
-		 .next_token = NULL,
-		 .trans_func = tf_ssl_passfile}}},
-
-	{.num_mnt_opt_names = 1,
-	 .mnt_opt_names = {"passenv"},
-	 .prompt = "Passphrase",
-	 .val_type = VAL_STR,
-	 .val = NULL,
-	 .display_opts = NULL,
-	 .default_val = NULL,
-	 .flags = ECRYPTFS_PARAM_FLAG_MASK_OUTPUT,
-	 .num_transitions = 1,
-	 .tl = {{.val = NULL,
-		 .pretty_val = NULL,
-		 .next_token = NULL,
-		 .trans_func = tf_ssl_passwd}}},
-
-	{.num_mnt_opt_names = 1,
-	 .mnt_opt_names = {"passfd"},
-	 .prompt = "Passphrase",
-	 .val_type = VAL_STR,
-	 .val = NULL,
-	 .display_opts = NULL,
-	 .default_val = NULL,
-	 .flags = ECRYPTFS_PARAM_FLAG_MASK_OUTPUT,
-	 .num_transitions = 1,
-	 .tl = {{.val = NULL,
-		 .pretty_val = NULL,
-		 .next_token = NULL,
-		 .trans_func = tf_ssl_passfile}}},
-
-	{.num_mnt_opt_names = 1,
-	 .mnt_opt_names = {"passstdin"},
-	 .prompt = "Passphrase",
-	 .val_type = VAL_STR,
-	 .val = NULL,
-	 .display_opts = NULL,
-	 .default_val = NULL,
-	 .flags = VERIFY_VALUE | STDIN_REQUIRED,
-	 .num_transitions = 1,
-	 .tl = {{.val = NULL,
-		 .pretty_val = NULL,
-		 .next_token = NULL,
-		 .trans_func = tf_ssl_passwd}}},
-
-	{.num_mnt_opt_names = 1,
-	 .mnt_opt_names = {"defaultpass"},
-	 .prompt = "Passphrase",
-	 .val_type = VAL_STR,
-	 .val = NULL,
-	 .display_opts = NULL,
-	 .default_val = NULL,
-	 .flags = STDIN_REQUIRED,
-	 .num_transitions = 1,
-	 .tl = {{.val = NULL,
-		 .pretty_val = NULL,
-		 .next_token = NULL,
-		 .trans_func = tf_ssl_passwd}}},
-};
-
 #define SSL_KEY_SOURCE_TOK 0
 #define SSL_KEY_FILE_TOK 1
 #define SSL_PASSPHRASE_METHOD_TOK 2
@@ -934,15 +791,16 @@ static struct param_node ssl_param_nodes_new[] = {
 		   | ECRYPTFS_PARAM_FLAG_ECHO_INPUT),
 	 .num_transitions = 3,
 	 .tl = {{.val = "passwd",
-		 .pretty_val = "Enter on Console",
+		 .pretty_val = "passwd: Enter on Console",
 		 .next_token = &ssl_param_nodes_new[SSL_USER_PROVIDED_PASSWD_TOK],
 		 .trans_func = NULL},
 		{.val = "passwd_file",
-		 .pretty_val = "File Containing Passphrase",
+		 .pretty_val = "passwd_file: File Containing Passphrase",
 		 .next_token = &ssl_param_nodes_new[SSL_FILE_PASSWD_TOK],
 		 .trans_func = NULL},
 		{.val = "passwd_fd",
-		 .pretty_val = "File Descriptor for File Containing Passphrase",
+		 .pretty_val = ("passwd_fd: File Descriptor for File "
+				"Containing Passphrase"),
 		 .next_token = &ssl_param_nodes_new[SSL_FD_PASSWD_TOK],
 		 .trans_func = NULL}}},
 
@@ -1087,12 +945,7 @@ static int ecryptfs_openssl_get_gen_key_param_subgraph_trans_node(
 
 int ecryptfs_openssl_finalize(void)
 {
-	if (ssl_param_nodes[SSL_FILE_TOK].suggested_val)
-		free(ssl_param_nodes[SSL_FILE_TOK].suggested_val);
-	if (ecryptfs_openssl_gen_key_param_nodes[
-			ECRYPTFS_OPENSSL_GEN_KEY_PARAM_NODE_KEYFILE].suggested_val)
-		free(ecryptfs_openssl_gen_key_param_nodes[
-			     ECRYPTFS_OPENSSL_GEN_KEY_PARAM_NODE_KEYFILE].suggested_val);
+	return 0;
 }
 
 static int ecryptfs_openssl_init(char **alias)
