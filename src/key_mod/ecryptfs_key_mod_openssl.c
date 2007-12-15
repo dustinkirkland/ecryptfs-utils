@@ -218,21 +218,18 @@ ecryptfs_openssl_write_key_to_file(RSA *rsa, char *filename, char *passphrase)
 	}
 	rc = mkdir(ecryptfs_dir, 0700);
 	if (rc && rc != EEXIST) {
-		syslog(LOG_ERR, "%s: Error attempting to mkdir [%s]; "
+		syslog(LOG_WARNING, "%s: Error attempting to mkdir [%s]; "
 		       "rc = [%d]\n", __FUNCTION__, ecryptfs_dir, rc);
-		goto out_free_paths;
 	}
 	rc = mkdir(pki_dir, 0700);
 	if (rc && rc != EEXIST) {
-		syslog(LOG_ERR, "%s: Error attempting to mkdir [%s]; "
+		syslog(LOG_WARNING, "%s: Error attempting to mkdir [%s]; "
 		       "rc = [%d]\n", __FUNCTION__, pki_dir, rc);
-		goto out_free_paths;
 	}
 	rc = mkdir(openssl_dir, 0700);
 	if (rc && rc != EEXIST) {
-		syslog(LOG_ERR, "%s: Error attempting to mkdir [%s]; "
+		syslog(LOG_WARNING, "%s: Error attempting to mkdir [%s]; "
 		       "rc = [%d]\n", __FUNCTION__, openssl_dir, rc);
-		goto out_free_paths;
 	}
 	if ((out = BIO_new(BIO_s_file())) == NULL) {
 		syslog(LOG_ERR, "Unable to create BIO for output\n");
@@ -297,7 +294,7 @@ static int ecryptfs_openssl_read_key(RSA **rsa, unsigned char *blob)
 	    == NULL) {
 		syslog(LOG_ERR,
 		       "%s: Unable to read private key from file [%s]\n",
-		       __FUNCTION__, openssl_data->passphrase);
+		       __FUNCTION__, openssl_data->path);
 		rc = -EIO;
 		goto out;
 	}
@@ -745,7 +742,7 @@ static struct param_node ecryptfs_openssl_gen_key_param_nodes[] = {
 		         &tf_ecryptfs_openssl_gen_key_param_node_passphrase}}}
 };
 
-#define OPENSSL_TOK 0
+#define SSL_OPENSSL_TOK 0
 #define SSL_FILE_TOK 1
 #define SSL_PASSWD_TOK 2
 #define SSL_PASS_FILE_TOK 3
@@ -906,7 +903,7 @@ static struct param_node ssl_param_nodes_new[] = {
 	 .num_transitions = 1,
 	 .tl = {{.val = "default",
 		 .pretty_val = "OpenSSL Key File",
-		 .next_token = &ssl_param_nodes[SSL_KEY_FILE_TOK],
+		 .next_token = &ssl_param_nodes_new[SSL_KEY_FILE_TOK],
 		 .trans_func = NULL}}}, /* Add more options here later */
 
 	{.num_mnt_opt_names = 1,
@@ -918,9 +915,11 @@ static struct param_node ssl_param_nodes_new[] = {
 	 .default_val = NULL,
 	 .flags = 0,
 	 .num_transitions = 1,
-	 .tl = {{.val = "default",
+	 .tl = {{.val = "default", /* The decision graph code will
+				    * just follow a "default"
+				    * transition node */
 		 .pretty_val = "Passphrase Method",
-		 .next_token = &ssl_param_nodes[SSL_PASSPHRASE_METHOD_TOK],
+		 .next_token = &ssl_param_nodes_new[SSL_PASSPHRASE_METHOD_TOK],
 		 .trans_func = tf_ssl_keyfile}}},
 
 	{.num_mnt_opt_names = 1,
@@ -929,20 +928,22 @@ static struct param_node ssl_param_nodes_new[] = {
 	 .val_type = VAL_STR,
 	 .val = NULL,
 	 .display_opts = NULL,
-	 .default_val = "user_provided_passphrase",
-	 .flags = ECRYPTFS_PARAM_FLAG_NO_VALUE,
+	 .default_val = NULL,
+	 .suggested_val = "passwd",
+	 .flags = (DISPLAY_TRANSITION_NODE_VALS | ECRYPTFS_DISPLAY_PRETTY_VALS
+		   | ECRYPTFS_PARAM_FLAG_ECHO_INPUT),
 	 .num_transitions = 3,
 	 .tl = {{.val = "passwd",
-		 .pretty_val = "User-provided Passphrase",
-		 .next_token = &ssl_param_nodes[SSL_USER_PROVIDED_PASSWD_TOK],
+		 .pretty_val = "Enter on Console",
+		 .next_token = &ssl_param_nodes_new[SSL_USER_PROVIDED_PASSWD_TOK],
 		 .trans_func = NULL},
 		{.val = "passwd_file",
 		 .pretty_val = "File Containing Passphrase",
-		 .next_token = &ssl_param_nodes[SSL_FILE_PASSWD_TOK],
+		 .next_token = &ssl_param_nodes_new[SSL_FILE_PASSWD_TOK],
 		 .trans_func = NULL},
 		{.val = "passwd_fd",
 		 .pretty_val = "File Descriptor for File Containing Passphrase",
-		 .next_token = &ssl_param_nodes[SSL_FD_PASSWD_TOK],
+		 .next_token = &ssl_param_nodes_new[SSL_FD_PASSWD_TOK],
 		 .trans_func = NULL}}},
 
 	{.num_mnt_opt_names = 1,
@@ -952,7 +953,7 @@ static struct param_node ssl_param_nodes_new[] = {
 	 .val = NULL,
 	 .display_opts = NULL,
 	 .default_val = NULL,
-	 .flags = STDIN_REQUIRED,
+	 .flags = STDIN_REQUIRED | ECRYPTFS_PARAM_FLAG_MASK_OUTPUT,
 	 .num_transitions = 1,
 	 .tl = {{.val = NULL,
 		 .pretty_val = NULL,
@@ -1054,7 +1055,7 @@ out:
 struct transition_node openssl_transition = {
 	.val = "openssl",
 	.pretty_val = "OpenSSL module",
-	.next_token = &(ssl_param_nodes[0]),
+	.next_token = &(ssl_param_nodes_new[SSL_KEY_SOURCE_TOK]),
 	.trans_func = tf_openssl_enter
 };
 
@@ -1114,7 +1115,7 @@ static int ecryptfs_openssl_init(char **alias)
 		rc = -EIO;
 		goto out;
 	}
-	if ((rc = asprintf(&ssl_param_nodes[SSL_FILE_TOK].suggested_val,
+	if ((rc = asprintf(&ssl_param_nodes_new[SSL_KEY_FILE_TOK].suggested_val,
 			   "%s/.ecryptfs/pki/openssl/key.pem",
 			   pw->pw_dir)) == -1) {
 		rc = -ENOMEM;

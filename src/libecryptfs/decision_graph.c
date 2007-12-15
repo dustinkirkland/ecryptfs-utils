@@ -248,7 +248,7 @@ int do_transition(struct ecryptfs_ctx *ctx, struct param_node **next,
 	for (i = 0; i < current->num_transitions; i++) {
 		struct transition_node *tn = &current->tl[i];
 
-		if (tn->val && strcmp("default", tn->val) == 0){
+		if (tn->val && strcmp("default", tn->val) == 0) {
 			int trans_func_tok_id = NULL_TOK;
 
 			if (tn->trans_func)
