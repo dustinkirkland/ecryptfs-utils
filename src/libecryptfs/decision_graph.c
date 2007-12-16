@@ -316,7 +316,7 @@ static int retrieve_val(int *value_retrieved,
 			temp = temp->next;
 		}
 	}
-	if (node->default_val) {
+	if (node->default_val && (strcmp(node->default_val, "NULL") != 0)) {
 		if (asprintf(&node->val, "%s", node->default_val) == -1) {
 			rc = -ENOMEM;
 			goto out;
@@ -344,8 +344,18 @@ static int alloc_and_get_val(struct ecryptfs_ctx *ctx, struct param_node *node,
 	char *verify;
 	int val;
 	int value_retrieved;
+	int i;
 	int rc;
 
+	if (ecryptfs_verbosity)
+		syslog(LOG_INFO, "%s: Called on node->mnt_opt_names[0] = [%s]",
+		       __FUNCTION__, node->mnt_opt_names[0]);
+	if (node->val) {
+		if (ecryptfs_verbosity)
+			syslog(LOG_INFO, "%s: node->val already set to [%s]\n",
+			       __FUNCTION__, node->val);
+		goto out;
+	}
 	rc = retrieve_val(&value_retrieved, nvp_head, node);
 	if (rc) {
 		syslog(LOG_ERR, "%s: Error attempting to retrieve value; "
@@ -359,6 +369,35 @@ static int alloc_and_get_val(struct ecryptfs_ctx *ctx, struct param_node *node,
 			       "parameter list; returning\n",
 			       __FUNCTION__);
 		goto out;
+	}
+	if (node->flags & ECRYPTFS_ALLOW_IMPLICIT_TRANSITION
+	    && !(node->flags & ECRYPTFS_NO_AUTO_TRANSITION)) {
+		for (i = 0; i < node->num_transitions; i++) {
+			if (node->tl[i].next_token)
+				rc = retrieve_val(&value_retrieved, nvp_head,
+						  node->tl[i].next_token);
+			if (rc) {
+				syslog(LOG_ERR, "%s: Error attempting to retrieve "
+				       "value; rc = [%d]\n", __FUNCTION__, rc);
+				goto out;
+			}
+			if (value_retrieved) {
+				if (ecryptfs_verbosity)
+					syslog(LOG_INFO,
+					       "%s: Value retrieved from default_val "
+					       "or from parameter list for successive "
+					       "node at transition slot [%d]; "
+					       "returning\n", __FUNCTION__, i);
+				rc = asprintf(&node->val, "%s",
+					      node->tl[i].next_token->mnt_opt_names[0]);
+				if (rc == -1) {
+					rc = -ENOMEM;
+					goto out;
+				}
+				rc = 0;
+				goto out;
+			}
+		}
 	}
 	if (node->flags & ECRYPTFS_PARAM_FLAG_NO_VALUE) {
 		if (ecryptfs_verbosity)
@@ -541,8 +580,9 @@ obtain_value:
 				asprintf(&prompt, "%s", node->prompt);
 			if (ecryptfs_verbosity)
 				syslog(LOG_INFO,
-				       "node->mnt_opt_names[0] = [%s]\n; "
+				       "%s: node->mnt_opt_names[0] = [%s]\n; "
 				       "node->flags = [0x%.8x]\n",
+				       __FUNCTION__,
 				       node->mnt_opt_names[0], node->flags);
 			rc = (ctx->get_string)
 				(&(node->val), prompt,

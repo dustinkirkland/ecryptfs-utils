@@ -27,6 +27,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <libgen.h>
 #include <openssl/pem.h>
 #include <openssl/rsa.h>
 #include <openssl/err.h>
@@ -182,59 +183,59 @@ out:
 }
 
 static int
+ecryptfs_openssl_mkdir_recursive(char *dir, mode_t mode)
+{
+	char *temp = NULL;
+	char *parent = NULL;
+	int rc = 0;
+
+	if (!strcmp(dir, ".") || !strcmp(dir, "/"))
+		goto out;
+	temp = strdup(dir);
+	if (temp == NULL) {
+		rc = -ENOMEM;
+		goto out;
+	}
+	parent = dirname(temp);
+	rc = ecryptfs_openssl_mkdir_recursive(parent, mode);
+	if (rc)
+		goto out;
+	if (mkdir(dir, mode) == -1) {
+		if (errno != EEXIST) {
+			rc = -errno;
+			goto out;
+		}
+	}
+	rc = 0;
+out:
+	free(temp);
+	return rc;
+}
+
+static int
 ecryptfs_openssl_write_key_to_file(RSA *rsa, char *filename, char *passphrase)
 {
-	uid_t id;
-	struct passwd *pw;
-	char *ecryptfs_dir = NULL;
-	char *pki_dir = NULL;
-	char *openssl_dir = NULL;
+	char *tmp_filename;
+	char *openssl_dir;
 	BIO *out;
 	const EVP_CIPHER *enc = EVP_aes_256_cbc();
 	int rc = 0;
 
-	id = getuid();
-	pw = getpwuid(id);
-	if (!pw) {
-		syslog(LOG_ERR, "%s: Unable to get the current directory from "
-		       "the passwd file on this system\n", __FUNCTION__);
-		rc = -EIO;
-		goto out_free_paths;
-	}
-	rc = asprintf(&ecryptfs_dir, "%s/.ecryptfs", pw->pw_dir);
-	if (rc == -1) {
+	tmp_filename = strdup(filename);
+	if (tmp_filename == NULL) {
 		rc = -ENOMEM;
-		goto out_free_paths;
+		goto out;
 	}
-	rc = asprintf(&pki_dir, "%s/.ecryptfs/pki", pw->pw_dir);
-	if (rc == -1) {
-		rc = -ENOMEM;
-		goto out_free_paths;
-	}
-	rc = asprintf(&openssl_dir, "%s/.ecryptfs/pki/openssl", pw->pw_dir);
-	if (rc == -1) {
-		rc = -ENOMEM;
-		goto out_free_paths;
-	}
-	rc = mkdir(ecryptfs_dir, 0700);
-	if (rc && rc != EEXIST) {
-		syslog(LOG_WARNING, "%s: Error attempting to mkdir [%s]; "
-		       "rc = [%d]\n", __FUNCTION__, ecryptfs_dir, rc);
-	}
-	rc = mkdir(pki_dir, 0700);
-	if (rc && rc != EEXIST) {
-		syslog(LOG_WARNING, "%s: Error attempting to mkdir [%s]; "
-		       "rc = [%d]\n", __FUNCTION__, pki_dir, rc);
-	}
-	rc = mkdir(openssl_dir, 0700);
-	if (rc && rc != EEXIST) {
+	openssl_dir = dirname(tmp_filename);
+	rc = ecryptfs_openssl_mkdir_recursive(openssl_dir, 0700);
+	if (rc) {
 		syslog(LOG_WARNING, "%s: Error attempting to mkdir [%s]; "
 		       "rc = [%d]\n", __FUNCTION__, openssl_dir, rc);
 	}
 	if ((out = BIO_new(BIO_s_file())) == NULL) {
 		syslog(LOG_ERR, "Unable to create BIO for output\n");
 		rc= -EIO;
-		goto out_free_paths;
+		goto out;
 	}
 	if (BIO_write_filename(out, filename) <= 0) {
 		syslog(LOG_ERR, "Failed to open file for reading\n");
@@ -249,10 +250,8 @@ ecryptfs_openssl_write_key_to_file(RSA *rsa, char *filename, char *passphrase)
 	}
 out_free_bio:
 	BIO_free_all(out);
-out_free_paths:
-	free(ecryptfs_dir);
-	free(pki_dir);
-	free(openssl_dir);
+out:
+	free(tmp_filename);
 	return rc;
 }
 
@@ -559,12 +558,16 @@ static int tf_ssl_passwd(struct ecryptfs_ctx *ctx, struct param_node *node,
 	struct ecryptfs_subgraph_ctx *subgraph_ctx;
 	int rc;
 
+	if (ecryptfs_verbosity)	
+		syslog(LOG_INFO, "%s: Called w/ node->val = [%s]\n",
+		       __FUNCTION__, node->val);
 	subgraph_ctx = (struct ecryptfs_subgraph_ctx *)(*foo);
 	if ((rc = asprintf(&subgraph_ctx->openssl_data.passphrase, "%s",
 			   node->val)) == -1) {
 		rc = MOUNT_ERROR;
 		goto out;
 	}
+	free(node->val);
 	node->val = NULL;
 	if ((rc = ecryptfs_openssl_process_key(subgraph_ctx, mnt_params))) {
 		syslog(LOG_ERR, "Error processing OpenSSL key; rc = [%d]", rc);
@@ -788,7 +791,8 @@ static struct param_node ssl_param_nodes_new[] = {
 	 .default_val = NULL,
 	 .suggested_val = "passwd",
 	 .flags = (DISPLAY_TRANSITION_NODE_VALS | ECRYPTFS_DISPLAY_PRETTY_VALS
-		   | ECRYPTFS_PARAM_FLAG_ECHO_INPUT),
+		   | ECRYPTFS_PARAM_FLAG_ECHO_INPUT
+		   | ECRYPTFS_ALLOW_IMPLICIT_TRANSITION),
 	 .num_transitions = 3,
 	 .tl = {{.val = "passwd",
 		 .pretty_val = "passwd: Enter on Console",
