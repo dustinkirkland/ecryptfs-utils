@@ -310,6 +310,7 @@ static int process_sig(char *auth_tok_sig)
 		goto out;
 	}
 	mkdir(dot_ecryptfs_dir, S_IRWXU);
+	chown(dot_ecryptfs_dir, getuid(), getgid());
 	free(dot_ecryptfs_dir);
 	rc = asprintf(&sig_cache_filename, "%s/.ecryptfs/sig-cache.txt",
 		      home);

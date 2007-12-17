@@ -486,6 +486,7 @@ int ecryptfs_append_sig(char *auth_tok_sig, char *sig_cache_filename)
 		rc = -EIO;
 		goto out;
 	}
+	fchown(fd, getuid(), getgid());
 	lseek(fd, 0, SEEK_END);
 	memcpy(tmp, auth_tok_sig, ECRYPTFS_SIG_SIZE_HEX);
 	tmp[ECRYPTFS_SIG_SIZE_HEX] = '\n';
