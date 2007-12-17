@@ -555,9 +555,13 @@ int main(int argc, char **argv)
 			ECRYPTFS_ASK_FOR_ALL_MOUNT_OPTIONS);
 		if (rc) {
 			printf("Error attempting to evaluate mount options; "
-			       "rc = [%d]. Try updating/reinstalling your "
-			       "ecryptfs-utils package, or submit a bug "
-			       "report.\n", rc);
+			       "rc = [%d]. See your system logs for more "
+			       "details on why this happened. Try "
+			       "updating/reinstalling your "
+			       "ecryptfs-utils package, contact your operating "
+			       "system vendor, and/or submit a bug "
+			       "report on the ecryptfs-devel mailing list on "
+			       "SourceForge.\n", rc);
 			goto out;
 		}
 		rc = ecryptfs_do_mount(argc, argv, mnt_params, sig_cache);

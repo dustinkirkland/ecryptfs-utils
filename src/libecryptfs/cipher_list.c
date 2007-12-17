@@ -340,6 +340,11 @@ int ecryptfs_get_kernel_ciphers(struct cipher_descriptor *cd_head)
 			goto out;
 	}
 	if (!(crypto_file = fopen(crypto_full_path, "r"))) {
+		syslog(LOG_INFO, "%s: Error attempting to open [%s] for "
+		       "reading; cannot detect loaded ciphers in your kernel. "
+		       "Bailing out. Make sure you have crypto support in your "
+		       "kernel and that /etc/mtab has your /proc mount point."
+		       "\n", __FUNCTION__, crypto_full_path);
 		rc = -EIO;
 		goto out;
 	}
@@ -355,6 +360,9 @@ int ecryptfs_get_kernel_ciphers(struct cipher_descriptor *cd_head)
 				goto out;
 			}
 			tmp[strlen(tmp) - 1] = '\0';
+			if (strncmp(tmp, "ecb", 3) == 0
+			    || strncmp(tmp, "cbc", 3) == 0)
+				continue;
 			cd_tmp = cd_head->next;
 			while (cd_tmp) {
 				if (!strcmp(cd_tmp->crypto_api_name, tmp)) {
@@ -381,6 +389,11 @@ int ecryptfs_get_kernel_ciphers(struct cipher_descriptor *cd_head)
 				goto out;
 			}
 			rc = 0;
+			if (ecryptfs_verbosity)
+				syslog(LOG_INFO, "%s: Adding kernel cipher "
+				       "with name [%s] to the list\n",
+				       __FUNCTION__,
+				       cd_cursor->next->crypto_api_name);
 		} else if (!strncmp(buf, "module", 6)) {
 			if (!cd_cursor->next)
 				continue;
@@ -452,27 +465,52 @@ int ecryptfs_get_kernel_ciphers(struct cipher_descriptor *cd_head)
 			tmp[strlen(tmp) - 1] = '\0';
 			cd_cursor->next->blocksize = atoi(tmp);
 		} else if (!strncmp(buf, "min keysize", 11)) {
+			int i;
+			int buflen;
+
+			if (ecryptfs_verbosity)
+				syslog(LOG_INFO, "%s: min keysize match on "
+				       "buf = [%s]\n", __FUNCTION__, buf);
 			if (!cd_cursor->next)
 				continue;
-			strtok(buf, ": ");
-			tmp = strtok(NULL, ": ");
-			if (strlen(tmp) <= 0) {
-				rc = -EINVAL;
-				goto out;
-			}
+			buflen = strlen(buf);
+			i = 0;
+			while (buf[i] != ':' && (i + 1) < buflen)
+				i++;
+			if ((i + 1) == buflen)
+				continue;
+			tmp = &buf[i + 2];
 			tmp[strlen(tmp) - 1] = '\0';
 			cd_cursor->next->min_keysize = atoi(tmp);
+			if (ecryptfs_verbosity)
+				syslog(LOG_INFO, "%s: For cipher "
+				       "with name [%s], set min_keysize = "
+				       "[%d] from str = [%s]\n", 
+				       __FUNCTION__,
+				       cd_cursor->next->crypto_api_name,
+				       cd_cursor->next->min_keysize, tmp);
 		} else if (!strncmp(buf, "max keysize", 11)) {
+			int i;
+			int buflen;
+
 			if (!cd_cursor->next)
 				continue;
-			strtok(buf, ": ");
-			tmp = strtok(NULL, ": ");
-			if (strlen(tmp) <= 0) {
-				rc = -EINVAL;
-				goto out;
-			}
+			buflen = strlen(buf);
+			i = 0;
+			while (buf[i] != ':' && (i + 1) < buflen)
+				i++;
+			if ((i + 1) == buflen)
+				continue;
+			tmp = &buf[i + 2];
 			tmp[strlen(tmp) - 1] = '\0';
 			cd_cursor->next->max_keysize = atoi(tmp);
+			if (ecryptfs_verbosity)
+				syslog(LOG_INFO, "%s: For cipher "
+				       "with name [%s], set max_keysize = "
+				       "[%d] from str = [%s]\n", 
+				       __FUNCTION__,
+				       cd_cursor->next->crypto_api_name,
+				       cd_cursor->next->max_keysize, tmp);
 			cd_cursor = cd_cursor->next;
 		}
 	}
@@ -539,9 +577,9 @@ int ecryptfs_get_module_ciphers(struct cipher_descriptor *cd_head)
 	rc = 0;
 	dir = opendir(kernel_crypto_dir);
 	if (!dir) {
-		syslog(LOG_ERR, "%s: opendir error on [%s]\n", __FUNCTION__,
+		syslog(LOG_WARNING, "%s: opendir error on [%s]. Cannot get a "
+		       "list of ciphers available as modules.\n", __FUNCTION__,
 			kernel_crypto_dir);
-		rc = -EINVAL;
 		goto out;
 	}
 	while ((dir_entry = readdir(dir))) {

@@ -96,90 +96,6 @@ static struct param_node root_param_node = {
 		.trans_func = sig_param_node_callback}}
 };
 
-static int get_cipher(struct ecryptfs_ctx *ctx, struct param_node *node,
-		      struct val_node **head, void **foo)
-{
-	char *temp, *val;
-	char *prompt;
-	int rc, i=1;
-	struct ecryptfs_cipher_elem cipher_list_head;
-	struct ecryptfs_cipher_elem *current;
-	struct ecryptfs_cipher_elem *default_cipher;
-
-	memset(&cipher_list_head, 0, sizeof(struct ecryptfs_cipher_elem));
-	if (node->val) {
-		rc = asprintf(&temp, "ecryptfs_cipher=%s", node->val);
-		free(node->val);
-		node->val = NULL;
-		if (rc == -1)
-			return MOUNT_ERROR;
-		goto out;
-	}
-	if (ctx->verbosity == 0)
-		return NULL_TOK;
-	rc = ecryptfs_get_current_kernel_ciphers(&cipher_list_head);
-	if (rc)
-		goto out_error;
-	current = cipher_list_head.next;
-
-	asprintf(&prompt, "Cipher\n");
-	while (current) {
-		rc = asprintf(&temp,"%s%d) %s\n", prompt, i,
-			      current->user_name);
-		if (rc == -1)
-			goto out_error;
-		i++;
-		free(prompt);
-		prompt = temp;
-		current = current->next;
-	}
-	rc = ecryptfs_default_cipher(&default_cipher, &cipher_list_head);
-	asprintf(&temp, "%sSelection [%s]", prompt, default_cipher->user_name);
-	free(prompt);
-	prompt = temp;
-
-get_cipher:
-	(ctx->get_string)(&val, prompt, ECRYPTFS_PARAM_FLAG_ECHO_INPUT);
-	if ((i = atoi(val)))
-		current = cipher_list_head.next;
-	while (current) {
-		if (i == 1)
-			break;
-		current = current->next;
-		i--;
-	}
-	if (current && i == 1) {
-		rc = asprintf(&temp, "ecryptfs_key_bytes=%d", current->bytes);
-		stack_push(head, temp);
-		rc = asprintf(&temp, "ecryptfs_cipher=%s",
-			      current->kernel_name);
-		if (rc == -1)
-			goto out_error;
-	}
-	else if (val[0] == '\0'){
-		rc = asprintf(&temp, "ecryptfs_key_bytes=%d",
-			      default_cipher->bytes);
-		stack_push(head, temp);
-		rc = asprintf(&temp, "ecryptfs_cipher=%s",
-			      default_cipher->kernel_name);
-		if (rc == -1)
-			goto out_error;
-	} else {
-		goto get_cipher;
-	}
-	free(node->val);
-	node->val = NULL;
-	if (rc == -1)
-		goto out_error;
-out:
-	ecryptfs_free_cipher_list(cipher_list_head);
-	stack_push(head, temp);
-	return NULL_TOK;
-out_error:
-	ecryptfs_free_cipher_list(cipher_list_head);
-		return MOUNT_ERROR;
-}
-
 static int get_passthrough(struct ecryptfs_ctx *ctx, struct param_node *node,
 			   struct val_node **head, void **foo)
 {
@@ -449,6 +365,12 @@ static int init_ecryptfs_cipher_param_node(uint32_t version)
 	if (rc) {
 		syslog(LOG_ERR, "%s: Error getting module ciphers; rc = [%d]\n",
 		       __FUNCTION__, rc);
+		goto out;
+	}
+	if (cd_head.next == NULL) {
+		syslog(LOG_ERR, "%s: Unable to detect any available kernel "
+		       "ciphers; bailing out\n", __FUNCTION__);
+		rc = -ENOTSUP;
 		goto out;
 	}
 	rc = ecryptfs_sort_ciphers(&cd_head);
