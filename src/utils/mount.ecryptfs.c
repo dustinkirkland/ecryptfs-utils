@@ -550,6 +550,21 @@ int main(int argc, char **argv)
 	if (!opts_str_contains_option(opts_str, "remount")) {
 		if (opts_str_contains_option(opts_str, "no_sig_cache"))
 			sig_cache = 0;
+		if (opts_str_contains_option(opts_str, "no_prompt")
+		    || opts_str_contains_option(opts_str, "wild_ass_guess")) {
+			if (!opts_str_contains_option(opts_str,
+						      "verbosity=0")) {
+				char *tmp;
+
+				rc = asprintf(&tmp, "%s,verbosity=0", opts_str);
+				if (rc == -1) {
+					rc = -ENOMEM;
+					goto out;
+				}
+				rc = 0;
+				opts_str = tmp;
+			}
+		}
 		if (opts_str_contains_option(opts_str, "verbosity=0"))
 			sig_cache = 0;
 		rc = ecryptfs_process_decision_graph(
