@@ -159,9 +159,15 @@ function mount_salt {
 }
 
 # SSL keyfile mounts
+# These 
 function mount_keyfile {
     for i in "openssl" "openssl" "openssl"; do
         echo "Performing mount with key file [$i]"
+        keyfile=$PASSWD_DIR/$i/key.pem
+        if [ ! -e $keyfile ]; then
+            echo "Error: no $i key file found. Please create $keyfile with password = t, by running ecryptfs-manager"
+            exit 1
+        fi
         mount_cmd="/sbin/mount.ecryptfs $SRC_DIR $DST_DIR -o key=openssl:passwd=t:keyfile=$PASSWD_DIR/$i/key.pem:verbosity=0,ecryptfs_key_bytes=16,ecryptfs_cipher=aes"
         if [ -z "$INTERACTIVE" ]; then
             $mount_cmd > /dev/null
