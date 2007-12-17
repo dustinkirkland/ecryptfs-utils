@@ -550,6 +550,8 @@ int main(int argc, char **argv)
 	if (!opts_str_contains_option(opts_str, "remount")) {
 		if (opts_str_contains_option(opts_str, "no_sig_cache"))
 			sig_cache = 0;
+		if (opts_str_contains_option(opts_str, "verbosity=0"))
+			sig_cache = 0;
 		rc = ecryptfs_process_decision_graph(
 			&ctx, &mnt_params, version, opts_str,
 			ECRYPTFS_ASK_FOR_ALL_MOUNT_OPTIONS);
