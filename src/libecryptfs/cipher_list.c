@@ -602,8 +602,9 @@ int ecryptfs_get_module_ciphers(struct cipher_descriptor *cd_head)
 			continue;
 		i = 0;
 		while (cipher_name_module_map[i].name) {
-			if (!strcmp(cipher_name_module_map[i].module,
-				    dir_entry->d_name)) {
+			if (!strncmp(cipher_name_module_map[i].module,
+				     dir_entry->d_name,
+				     strlen(cipher_name_module_map[i].module))) {
 				cd_cursor->next = malloc(sizeof(*cd_cursor));
 				if (!cd_cursor->next) {
 					rc = -ENOMEM;
