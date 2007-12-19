@@ -313,6 +313,34 @@ int ecryptfs_free_cipher_list(struct ecryptfs_cipher_elem cipher_list_head)
 	return 0;
 }
 
+static struct cipher_name_module_map {
+	char *name;
+	char *module;
+	uint32_t blocksize;
+	uint32_t min_keysize;
+	uint32_t max_keysize;
+	uint32_t priority;
+	uint32_t enabled;
+} cipher_name_module_map[] = {
+	{"aes", "aes.ko", 16, 16, 32, 1, 1},
+	{"aes", "aes_generic.ko", 16, 16, 32, 1, 1},
+	{"serpent", "serpent.ko", 16, 0, 32, 12, 0},
+	{"tnepres", "serpent.ko", 16, 0, 32, 13, 0},
+	{"tea", "tea.ko", 8, 16, 16, 7, 0},
+	{"xeta", "tea.ko", 8, 16, 16, 9, 0},
+	{"xtea", "tea.ko", 8, 16, 16, 8, 0},
+	{"blowfish", "blowfish.ko", 16, 16, 32, 2, 1},
+	{"twofish", "twofish.ko", 16, 16, 32, 4, 1},
+	{"khazad", "khazad.ko", 8, 16, 16, 11, 0},
+	{"cast5", "cast5.ko", 8, 5, 16, 14, 1},
+	{"cast6", "cast6.ko", 16, 16, 32, 5, 1},
+	{"des3_ede", "des.ko", 8, 24, 24, 3, 1},
+	{"des3_ede", "des_generic.ko", 8, 24, 24, 3, 1},
+	{"anubis", "anubis.ko", 16, 16, 40, 10, 0},
+	{"cipher_null", "cipher_null.ko", 1, 0, 0, 99, 0},
+	{NULL, NULL, 0, 0, 0, 0}
+};
+
 int ecryptfs_get_kernel_ciphers(struct cipher_descriptor *cd_head)
 {
 	struct cipher_descriptor *cd_cursor = cd_head;
@@ -352,6 +380,8 @@ int ecryptfs_get_kernel_ciphers(struct cipher_descriptor *cd_head)
 		if (!strncmp(buf, "name", 4)) {
 			struct cipher_descriptor *cd_tmp;
 			int found_duplicate = 0;
+			int reject;
+			int i;
 
 			strtok(buf, ": ");
 			tmp = strtok(NULL, ": ");
@@ -362,6 +392,20 @@ int ecryptfs_get_kernel_ciphers(struct cipher_descriptor *cd_head)
 			tmp[strlen(tmp) - 1] = '\0';
 			if (strncmp(tmp, "ecb", 3) == 0
 			    || strncmp(tmp, "cbc", 3) == 0)
+				continue;
+			i = 0;
+			reject = 0;
+			while (cipher_name_module_map[i].name) {
+				if (cipher_name_module_map[i].enabled == 0
+				    && strncmp(tmp,
+					       cipher_name_module_map[i].name,
+					       strlen(cipher_name_module_map[i].name)) == 0) {
+					reject = 1;
+					break;
+				}
+				i++;
+			}
+			if (reject)
 				continue;
 			cd_tmp = cd_head->next;
 			while (cd_tmp) {
@@ -522,34 +566,6 @@ out:
 	return rc;
 }
 
-static struct cipher_name_module_map {
-	char *name;
-	char *module;
-	uint32_t blocksize;
-	uint32_t min_keysize;
-	uint32_t max_keysize;
-	uint32_t priority;
-} cipher_name_module_map[] = {
-	{"aes", "aes.ko", 16, 16, 32, 1},
-	{"aes", "aes_generic.ko", 16, 16, 32, 1},
-	{"serpent", "serpent.ko", 16, 0, 32, 12},
-	{"tnepres", "serpent.ko", 16, 0, 32, 13},
-	{"arc4", "arc4.ko", 1, 1, 256, 6},
-	{"tea", "tea.ko", 8, 16, 16, 7},
-	{"xeta", "tea.ko", 8, 16, 16, 9},
-	{"xtea", "tea.ko", 8, 16, 16, 8},
-	{"blowfish", "blowfish.ko", 16, 16, 32, 2},
-	{"twofish", "twofish.ko", 16, 16, 32, 4},
-	{"khazad", "khazad.ko", 8, 16, 16, 11},
-	{"cast5", "cast5.ko", 8, 5, 16, 14},
-	{"cast6", "cast6.ko", 16, 16, 32, 5},
-	{"des3_ede", "des.ko", 8, 24, 24, 3},
-	{"des3_ede", "des_generic.ko", 8, 24, 24, 3},
-	{"anubis", "anubis.ko", 16, 16, 40, 10},
-	{"cipher_null", "cipher_null.ko", 1, 0, 0, 99},
-	{NULL, NULL, 0, 0, 0, 0}
-};
-
 int ecryptfs_get_module_ciphers(struct cipher_descriptor *cd_head)
 {
 	struct cipher_descriptor *cd_cursor = cd_head;
@@ -605,6 +621,10 @@ int ecryptfs_get_module_ciphers(struct cipher_descriptor *cd_head)
 			if (!strncmp(cipher_name_module_map[i].module,
 				     dir_entry->d_name,
 				     strlen(cipher_name_module_map[i].module))) {
+				if (cipher_name_module_map[i].enabled == 0) {
+					i++;
+					continue;
+				}
 				cd_cursor->next = malloc(sizeof(*cd_cursor));
 				if (!cd_cursor->next) {
 					rc = -ENOMEM;
