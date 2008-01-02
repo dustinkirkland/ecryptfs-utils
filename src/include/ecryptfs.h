@@ -66,6 +66,7 @@
 #define ECRYPTFS_VERSIONING_PLAINTEXT_PASSTHROUGH 0x00000004
 #define ECRYPTFS_VERSIONING_POLICY                0x00000008
 #define ECRYPTFS_VERSIONING_XATTR                 0x00000010
+#define ECRYPTFS_VERSIONING_HMAC                  0x00000040
 
 #define ECRYPTFS_MAX_PASSWORD_LENGTH 64
 #define ECRYPTFS_MAX_PASSPHRASE_BYTES ECRYPTFS_MAX_PASSWORD_LENGTH
@@ -407,6 +408,7 @@ int ecryptfs_get_version(uint32_t *version);
 int ecryptfs_supports_passphrase(uint32_t version);
 int ecryptfs_supports_pubkey(uint32_t version);
 int ecryptfs_supports_plaintext_passthrough(uint32_t version);
+int ecryptfs_supports_hmac(uint32_t version);
 int ecryptfs_supports_policy(uint32_t version);
 #define ECRYPTFS_ASK_FOR_ALL_MOUNT_OPTIONS 0
 #define ECRYPTFS_KEY_MODULE_ONLY 1

@@ -45,11 +45,9 @@ static void usage()
 {
 	fprintf(stderr, "\teCryptfs mount helper\n\tusage: "
 		"mount -t ecryptfs [lower directory] [ecryptfs mount point]\n"
-		"Available options:\n"
-		"\tkey=<pki alias>\n"
-		"\n\t\tAvailable pki aliases: passphrase\n"
-		"\tpassthrough\n"
-		"\tplaintext_passthrough\n"
+		"\n"
+		"See the README file in the ecryptfs-utils package for "
+		"complete usage guidelines.\n"
 		);
 	exit(-EINVAL);
 }
@@ -203,8 +201,13 @@ char *parameters_to_scrub[] = {
 	"key=",
 	"cipher=",
 	"passthrough",
+	"ecryptfs_passthrough",
+	"hmac",
+	"ecryptfs_hmac",
 	"xattr",
+	"ecryptfs_xattr",
 	"encrypted_view",
+	"ecryptfs_encrypted_view",
 	"user",
 	"sig",
 	"no_sig_cache",

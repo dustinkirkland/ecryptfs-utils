@@ -202,6 +202,10 @@ and may also be acted upon by the mount helper, mount.ecryptfs:
 	stored in the file header, whether the metadata is actually stored
 	in the header or in the extended attributes.
 
+ ecryptfs_hmac
+        When set, eCryptfs will include HMAC integrity enforcement to
+        its files.
+
  ecryptfs_debug=<value>
 	A value greater than 0 enables kernel debug messages, see NOTES
 	below.

@@ -112,7 +112,8 @@ struct ecryptfs_version_str_map_elem {
 	{ECRYPTFS_VERSIONING_PUBKEY, "pubkey"},
 	{ECRYPTFS_VERSIONING_PLAINTEXT_PASSTHROUGH, "plaintext passthrough"},
 	{ECRYPTFS_VERSIONING_POLICY, "policy"},
-	{ECRYPTFS_VERSIONING_XATTR, "metadata in extended attribute"}
+	{ECRYPTFS_VERSIONING_XATTR, "metadata in extended attribute"},
+	{ECRYPTFS_VERSIONING_HMAC, "hmac"},
 };
 
 /**
@@ -131,6 +132,11 @@ int ecryptfs_supports_pubkey(uint32_t version)
 int ecryptfs_supports_plaintext_passthrough(uint32_t version)
 {
 	return (version & ECRYPTFS_VERSIONING_PLAINTEXT_PASSTHROUGH);
+}
+
+int ecryptfs_supports_hmac(uint32_t version)
+{
+	return (version & ECRYPTFS_VERSIONING_HMAC);
 }
 
 int ecryptfs_supports_policy(uint32_t version)

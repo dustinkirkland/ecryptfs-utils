@@ -96,6 +96,19 @@ static struct param_node root_param_node = {
 		.trans_func = sig_param_node_callback}}
 };
 
+static int get_hmac(struct ecryptfs_ctx *ctx, struct param_node *node,
+		    struct val_node **head, void **foo)
+{
+	if (node->val && (*(node->val) == 'y')) {
+		stack_push(head, "ecryptfs_hmac");
+	} else if (node->flags & PARAMETER_SET) {
+		stack_push(head, "ecryptfs_hmac");
+		return 0;
+	}
+	free(node->val);
+	return 0;
+}
+
 static int get_passthrough(struct ecryptfs_ctx *ctx, struct param_node *node,
 			   struct val_node **head, void **foo)
 {
@@ -214,6 +227,22 @@ static struct param_node passthrough_param_node = {
 		.pretty_val = "default",
 		.next_token = &end_param_node,
 		.trans_func = get_passthrough}}
+};
+
+static struct param_node hmac_param_node = {
+	.num_mnt_opt_names = 1,
+	.mnt_opt_names = {"ecryptfs_hmac"},
+	.prompt = "Enable HMAC integrity verification (y/n)",
+	.val_type = VAL_STR,
+	.val = NULL,
+	.display_opts = NULL,
+	.default_val = NULL,
+	.flags = ECRYPTFS_PARAM_FLAG_ECHO_INPUT,
+	.num_transitions = 1,
+	.tl = {{.val = "default",
+		.pretty_val = "default",
+		.next_token = &end_param_node,
+		.trans_func = get_hmac}}
 };
 
 static struct param_node ecryptfs_key_bytes_param_node = {
@@ -540,6 +569,14 @@ fill_in_decision_graph_based_on_version_support(struct param_node *root,
 			last_param_node->tl[i].next_token =
 				&passthrough_param_node;
 		last_param_node = &passthrough_param_node;
+	}
+	if (ecryptfs_supports_hmac(version)) {
+		int i;
+
+		for (i = 0; i < last_param_node->num_transitions; i++)
+			last_param_node->tl[i].next_token =
+				&hmac_param_node;
+		last_param_node = &hmac_param_node;
 	}
 	if (ecryptfs_supports_xattr(version)) {
 		int i;
