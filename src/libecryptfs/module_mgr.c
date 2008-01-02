@@ -136,6 +136,22 @@ static int get_encrypted_passthrough(struct ecryptfs_ctx *ctx,
 	return 0;
 }
 
+static struct param_node ecryptfs_version_support_node = {
+	.num_mnt_opt_names = 1,
+	.mnt_opt_names = {"end"},
+	.prompt = "end",
+	.val_type = VAL_STR,
+	.val = NULL,
+	.display_opts = NULL,
+	.default_val = NULL,
+	.flags = ECRYPTFS_PARAM_FLAG_NO_VALUE,
+	.num_transitions = 1,
+	.tl = {{.val = "default",
+		.pretty_val = "default",
+		.next_token = NULL,
+		.trans_func = NULL}}
+};
+
 static struct param_node end_param_node = {
 	.num_mnt_opt_names = 1,
 	.mnt_opt_names = {"end"},
@@ -154,7 +170,7 @@ static struct param_node end_param_node = {
 
 static struct param_node encrypted_passthrough_param_node = {
 	.num_mnt_opt_names = 1,
-	.mnt_opt_names = {"encrypted_view"},
+	.mnt_opt_names = {"ecryptfs_encrypted_view"},
 	.prompt = "Pass through encrypted versions of all files (y/n)",
 	.val_type = VAL_STR,
 	.val = NULL,
@@ -170,7 +186,7 @@ static struct param_node encrypted_passthrough_param_node = {
 
 static struct param_node xattr_param_node = {
 	.num_mnt_opt_names = 1,
-	.mnt_opt_names = {"xattr"},
+	.mnt_opt_names = {"ecryptfs_xattr"},
 	.prompt = "Write metadata to extended attribute region (y/n)",
 	.val_type = VAL_STR,
 	.val = NULL,
@@ -186,7 +202,7 @@ static struct param_node xattr_param_node = {
 
 static struct param_node passthrough_param_node = {
 	.num_mnt_opt_names = 1,
-	.mnt_opt_names = {"passthrough"},
+	.mnt_opt_names = {"ecryptfs_passthrough"},
 	.prompt = "Enable plaintext passthrough (y/n)",
 	.val_type = VAL_STR,
 	.val = NULL,
@@ -296,7 +312,7 @@ static int init_ecryptfs_key_bytes_param_node(char *cipher_name)
 				}
 				rc = 0;
 			}
-			tn->next_token = &end_param_node;
+			tn->next_token = &ecryptfs_version_support_node;
 			tn->trans_func = tf_ecryptfs_key_bytes;
 			ecryptfs_key_bytes_param_node.num_transitions++;
 		}
@@ -506,7 +522,7 @@ static int
 fill_in_decision_graph_based_on_version_support(struct param_node *root,
 						uint32_t version)
 {
-	struct param_node *last_param_node = &ecryptfs_key_bytes_param_node;
+	struct param_node *last_param_node = &ecryptfs_version_support_node;
 	int rc;
 
 	ecryptfs_set_exit_param_on_graph(root, &another_key_param_node);
