@@ -29,6 +29,7 @@
 
 #include <stdint.h>
 #include <netdb.h>
+#include <limits.h>
 #ifndef S_SPLINT_S
 #include <stdio.h>
 #include <syslog.h>
