@@ -83,13 +83,13 @@ The actual password is password. Since the password is visible to utilities
 (like ’ps’ under Unix) this form should only be used where security is not
 important.
 
-=item B<passfile=(filename)>
+=item B<passwd_file=(filename)>
 
 The password should be specified in a file with B<passwd=(passphrase)>. It is
 highly reccomended that the file be stored on a secure medium such as a
 personal usb key.
 
-=item B<passfd=(file descriptor)>
+=item B<passwd_fd=(file descriptor)>
 
 The password is specified through the specified file descriptor.
 
