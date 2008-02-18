@@ -581,11 +581,13 @@ out:
 	return rc;
 }
 
-/**
- * Read the passphrase from a file
- */
-static int tf_ssl_passfile(struct ecryptfs_ctx *ctx, struct param_node *node,
-			   struct val_node **mnt_params, void **foo)
+static int tf_ssl_file(struct ecryptfs_ctx *ctx, struct param_node *node,
+		       struct val_node **mnt_params, void **foo)
+{
+}
+
+static int tf_ssl_passwd_file(struct ecryptfs_ctx *ctx, struct param_node *node,
+			      struct val_node **mnt_params, void **foo)
 {
 	int rc = 0;
 	char *tmp_val = NULL;
@@ -596,9 +598,9 @@ static int tf_ssl_passfile(struct ecryptfs_ctx *ctx, struct param_node *node,
 
 	syslog(LOG_INFO, "%s: Called\n", __FUNCTION__);
 	subgraph_ctx = (struct ecryptfs_subgraph_ctx *)(*foo);
-	if (strcmp(node->mnt_opt_names[0], "passfile") == 0)
+	if (strcmp(node->mnt_opt_names[0], "passwd_file") == 0)
 		fd = open(node->val, O_RDONLY);
-	else if (strcmp(node->mnt_opt_names[0], "passfd") == 0)
+	else if (strcmp(node->mnt_opt_names[0], "passwd_fd") == 0)
 		fd = strtol(node->val, NULL, 0);
 	else {
 		rc = MOUNT_ERROR;
@@ -652,16 +654,6 @@ out:
 	node->val = NULL;
 	syslog(LOG_INFO, "%s: Exiting\n", __FUNCTION__);
 	return rc;
-}
-
-static int tf_ssl_file(struct ecryptfs_ctx *ctx, struct param_node *node,
-		       struct val_node **mnt_params, void **foo)
-{
-}
-
-static int tf_ssl_passwd_file(struct ecryptfs_ctx *ctx, struct param_node *node,
-			      struct val_node **mnt_params, void **foo)
-{
 }
 
 static int tf_ssl_passwd_fd(struct ecryptfs_ctx *ctx, struct param_node *node,
@@ -751,7 +743,7 @@ static struct param_node ecryptfs_openssl_gen_key_param_nodes[] = {
 #define SSL_USER_PROVIDED_PASSWD_TOK 3
 #define SSL_FILE_PASSWD_TOK 4
 #define SSL_FD_PASSWD_TOK 5
-static struct param_node ssl_param_nodes_new[] = {
+static struct param_node ssl_param_nodes[] = {
 	{.num_mnt_opt_names = 1,
 	 .mnt_opt_names = {"keysource"},
 	 .prompt = "Key source",
@@ -763,7 +755,7 @@ static struct param_node ssl_param_nodes_new[] = {
 	 .num_transitions = 1,
 	 .tl = {{.val = "default",
 		 .pretty_val = "OpenSSL Key File",
-		 .next_token = &ssl_param_nodes_new[SSL_KEY_FILE_TOK],
+		 .next_token = &ssl_param_nodes[SSL_KEY_FILE_TOK],
 		 .trans_func = NULL}}}, /* Add more options here later */
 
 	{.num_mnt_opt_names = 1,
@@ -779,7 +771,7 @@ static struct param_node ssl_param_nodes_new[] = {
 				    * just follow a "default"
 				    * transition node */
 		 .pretty_val = "Passphrase Method",
-		 .next_token = &ssl_param_nodes_new[SSL_PASSPHRASE_METHOD_TOK],
+		 .next_token = &ssl_param_nodes[SSL_PASSPHRASE_METHOD_TOK],
 		 .trans_func = tf_ssl_keyfile}}},
 
 	{.num_mnt_opt_names = 1,
@@ -796,16 +788,16 @@ static struct param_node ssl_param_nodes_new[] = {
 	 .num_transitions = 3,
 	 .tl = {{.val = "passwd",
 		 .pretty_val = "passwd: Enter on Console",
-		 .next_token = &ssl_param_nodes_new[SSL_USER_PROVIDED_PASSWD_TOK],
+		 .next_token = &ssl_param_nodes[SSL_USER_PROVIDED_PASSWD_TOK],
 		 .trans_func = NULL},
 		{.val = "passwd_file",
 		 .pretty_val = "passwd_file: File Containing Passphrase",
-		 .next_token = &ssl_param_nodes_new[SSL_FILE_PASSWD_TOK],
+		 .next_token = &ssl_param_nodes[SSL_FILE_PASSWD_TOK],
 		 .trans_func = NULL},
 		{.val = "passwd_fd",
 		 .pretty_val = ("passwd_fd: File Descriptor for File "
 				"Containing Passphrase"),
-		 .next_token = &ssl_param_nodes_new[SSL_FD_PASSWD_TOK],
+		 .next_token = &ssl_param_nodes[SSL_FD_PASSWD_TOK],
 		 .trans_func = NULL}}},
 
 	{.num_mnt_opt_names = 1,
@@ -917,7 +909,7 @@ out:
 struct transition_node openssl_transition = {
 	.val = "openssl",
 	.pretty_val = "OpenSSL module",
-	.next_token = &(ssl_param_nodes_new[SSL_KEY_SOURCE_TOK]),
+	.next_token = &(ssl_param_nodes[SSL_KEY_SOURCE_TOK]),
 	.trans_func = tf_openssl_enter
 };
 
@@ -972,7 +964,7 @@ static int ecryptfs_openssl_init(char **alias)
 		rc = -EIO;
 		goto out;
 	}
-	if ((rc = asprintf(&ssl_param_nodes_new[SSL_KEY_FILE_TOK].suggested_val,
+	if ((rc = asprintf(&ssl_param_nodes[SSL_KEY_FILE_TOK].suggested_val,
 			   "%s/.ecryptfs/pki/openssl/key.pem",
 			   pw->pw_dir)) == -1) {
 		rc = -ENOMEM;
