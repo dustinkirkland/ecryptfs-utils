@@ -2,17 +2,11 @@ if BUILD_PAM
 pam_LTLIBRARIES = libpam_ecryptfs.la
 
 install-data-hook:
-	mv -f "$(DESTDIR)$(pamdir)/libpam_ecryptfs.so.0.0.0" "$(DESTDIR)$(pamdir)/pam_ecryptfs.so"
-	rm -fr \
-		"$(DESTDIR)$(pamdir)/libpam_ecryptfs.so.0" \
-		"$(DESTDIR)$(pamdir)/libpam_ecryptfs.so" \
-		"$(DESTDIR)$(pamdir)/libpam_ecryptfs.la" \
-		"$(DESTDIR)$(pamdir)/libpam_ecryptfs.a"
+	rm -f "$(DESTDIR)$(pamdir)/libpam_ecryptfs.la"
+	rm -f "$(DESTDIR)$(pamdir)/libpam_ecryptfs.a"
 endif
-
-# force libtool to install us
-libdir=$(pamlibdir)
 
 libpam_ecryptfs_la_SOURCES = pam_ecryptfs.c
 libpam_ecryptfs_la_CFLAGS = $(AM_CFLAGS) $(LIBGCRYPT_CFLAGS)
 libpam_ecryptfs_la_LIBADD = $(top_srcdir)/src/libecryptfs/libecryptfs.la $(PAM_LIBS) $(LIBGCRYPT_LIBS)
+libpam_ecryptfs_la_LDFLAGS = $(AM_LDFLAGS) -module -avoid-version
