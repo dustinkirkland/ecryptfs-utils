@@ -255,7 +255,8 @@ int ecryptfs_run_proc_daemon(struct ecryptfs_proc_ctx *proc_ctx)
 {
 	struct ecryptfs_message *emsg = NULL;
 	struct ecryptfs_ctx ctx;
-	int msg_seq, msg_type;
+	int msg_seq;
+	uint8_t msg_type;
 	int error_count = 0;
 	int rc;
 
