@@ -36,7 +36,7 @@
 #include "../include/ecryptfs.h"
 
 int ecryptfs_send_netlink(struct ecryptfs_nl_ctx *nl_ctx,
-			  struct ecryptfs_message *emsg, uint16_t msg_type,
+			  struct ecryptfs_message *emsg, uint8_t msg_type,
 			  uint16_t msg_flags, uint32_t msg_seq)
 {
 	struct nlmsghdr *nlh = NULL;
@@ -76,8 +76,9 @@ out:
 	return rc;
 }
 
-int ecryptfs_recv_netlink(int sk_fd, struct ecryptfs_message **emsg,
-			  int *msg_seq, int *msg_type)
+int ecryptfs_recv_netlink(struct ecryptfs_nl_ctx *nl_ctx,
+			  struct ecryptfs_message **emsg,
+			  int *msg_seq, uint8_t *msg_type)
 {
 	struct nlmsghdr *nlh = NULL;
 	struct sockaddr_nl nladdr;
@@ -95,8 +96,8 @@ receive:
 		       "netlink message: %s\n", strerror(errno));
 		goto out;
 	}
-	rc = recvfrom(sk_fd, nlh, buf_len, flags, (struct sockaddr*)&nladdr,
-		      &nladdr_len);
+	rc = recvfrom(nl_ctx->socket_fd, nlh, buf_len, flags,
+		      (struct sockaddr*)&nladdr, &nladdr_len);
 	if (rc < 0) {
 		rc = -errno;
 		syslog(LOG_ERR, "Failed to receive netlink header; errno = "
@@ -181,7 +182,8 @@ int ecryptfs_run_netlink_daemon(struct ecryptfs_nl_ctx *nl_ctx)
 {
 	struct ecryptfs_message *emsg = NULL;
 	struct ecryptfs_ctx ctx;
-	int msg_seq, msg_type;
+	int msg_seq;
+	uint8_t msg_type;
 	int error_count = 0;
 	int rc;
 
@@ -192,8 +194,7 @@ int ecryptfs_run_netlink_daemon(struct ecryptfs_nl_ctx *nl_ctx)
 		goto out;
 	}
 receive:
-	rc = ecryptfs_recv_netlink(nl_ctx->socket_fd, &emsg, &msg_seq,
-				   &msg_type);
+	rc = ecryptfs_recv_netlink(nl_ctx, &emsg, &msg_seq, &msg_type);
 	if (rc < 0) {
 		syslog(LOG_ERR, "Error while receiving eCryptfs netlink "
 		       "message; errno = [%d]; errno msg = [%s]\n", errno,
@@ -227,7 +228,7 @@ receive:
 			goto free_emsg;
 		}
 		reply->index = emsg->index;
-		rc = ecryptfs_send_netlink(nl_ctx->socket_fd, reply,
+		rc = ecryptfs_send_netlink(nl_ctx, reply,
 					   ECRYPTFS_MSG_RESPONSE, 0,
 					   msg_seq);
 		if (rc < 0) {

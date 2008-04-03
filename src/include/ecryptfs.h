@@ -486,7 +486,7 @@ ecryptfs_generate_key_payload(struct ecryptfs_auth_tok *auth_tok,
 int parse_options_file(int fd, struct ecryptfs_name_val_pair *head);
 int free_name_val_pairs(struct ecryptfs_name_val_pair *pair);
 int ecryptfs_send_netlink(struct ecryptfs_nl_ctx *nl_ctx,
-			  struct ecryptfs_message *emsg, uint16_t msg_type,
+			  struct ecryptfs_message *emsg, uint8_t msg_type,
 			  uint16_t msg_flags, uint32_t msg_seq);
 void ecryptfs_release_netlink(struct ecryptfs_nl_ctx *nl_ctx);
 int ecryptfs_init_netlink_daemon(void);
