@@ -239,13 +239,13 @@ out:
 }
 
 static int write_failure_packet(size_t tag,
-				struct ecryptfs_netlink_message **reply)
+				struct ecryptfs_message **reply)
 {
 	unsigned char *data;
 	size_t i = 0;
 	int rc = 0;
 
-	*reply = malloc(sizeof(struct ecryptfs_netlink_message) + 2);
+	*reply = malloc(sizeof(struct ecryptfs_message) + 2);
 	if (!*reply) {
 		rc = -errno;
 		syslog(LOG_ERR, "Failed to allocate memory: %s\n",
@@ -261,7 +261,7 @@ out:
 }
 
 static int write_tag_65_packet(unsigned char *key, size_t key_size,
-			       struct ecryptfs_netlink_message **reply)
+			       struct ecryptfs_message **reply)
 {
 	unsigned char *data;
 	size_t data_len;
@@ -270,7 +270,7 @@ static int write_tag_65_packet(unsigned char *key, size_t key_size,
 	int rc = 0;
 
 	data_len = key_size + 4;
-	*reply = malloc(sizeof(struct ecryptfs_netlink_message) + data_len);
+	*reply = malloc(sizeof(struct ecryptfs_message) + data_len);
 	if (!*reply) {
 		rc = -errno;
 		syslog(LOG_ERR, "Failed to allocate memory: %s\n",
@@ -295,7 +295,7 @@ out:
 
 static int
 write_tag_67_packet(char *key, size_t key_size,
-		    struct ecryptfs_netlink_message **reply)
+		    struct ecryptfs_message **reply)
 {
 	unsigned char *data;
 	size_t data_len;
@@ -304,7 +304,7 @@ write_tag_67_packet(char *key, size_t key_size,
 	int rc = 0;
 
 	data_len = key_size + 4;
-	*reply = malloc(sizeof(struct ecryptfs_netlink_message) + data_len);
+	*reply = malloc(sizeof(struct ecryptfs_message) + data_len);
 	if (!*reply) {
 		rc = -errno;
 		syslog(LOG_ERR, "Failed to allocate memory: %s\n",
@@ -328,8 +328,8 @@ out:
 }
 
 int parse_packet(struct ecryptfs_ctx *ctx,
-		 struct ecryptfs_netlink_message *emsg,
-		 struct ecryptfs_netlink_message **reply)
+		 struct ecryptfs_message *emsg,
+		 struct ecryptfs_message **reply)
 {
 	struct ecryptfs_auth_tok *auth_tok = NULL;
 	size_t i = 0;

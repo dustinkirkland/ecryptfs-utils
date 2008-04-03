@@ -1,7 +1,7 @@
 /**
  * Header file for eCryptfs userspace tools.
  * 
- * Copyright (C) 2004-2006 International Business Machines Corp.
+ * Copyright (C) 2004-2008 International Business Machines Corp.
  *   Author(s): Michael A. Halcrow <mahalcro@us.ibm.com>
  *
  * The structs here are shared between kernel and userspace, so if you
@@ -220,7 +220,7 @@ struct ecryptfs_daemon_info {
 	char socket_file_full_path[PATH_MAX];
 };
 
-struct ecryptfs_netlink_message {
+struct ecryptfs_message {
 	uint32_t index;
 	uint32_t data_len;
 	uint8_t data[];
@@ -445,8 +445,8 @@ create_subdirectory(char *file, char *home, struct ecryptfs_key_mod *key_mod);
 int ecryptfs_get_loaded_ciphers(struct ecryptfs_cipher_elem *cipher_list_head);
 int ecryptfs_add_crypto_modules(struct ecryptfs_cipher_elem *cipher_list_head);
 int parse_packet(struct ecryptfs_ctx *ctx,
-		 struct ecryptfs_netlink_message *emsg,
-		 struct ecryptfs_netlink_message **reply);
+		 struct ecryptfs_message *emsg,
+		 struct ecryptfs_message **reply);
 int ecryptfs_find_key_mod(struct ecryptfs_key_mod **key_mod,
 			  struct ecryptfs_ctx *ctx, char *key_mod_alias);
 int
@@ -461,7 +461,7 @@ ecryptfs_generate_key_payload(struct ecryptfs_auth_tok *auth_tok,
 			      size_t blob_size);
 int parse_options_file(int fd, struct ecryptfs_name_val_pair *head);
 int free_name_val_pairs(struct ecryptfs_name_val_pair *pair);
-int ecryptfs_send_netlink(int sk_fd, struct ecryptfs_netlink_message *emsg,
+int ecryptfs_send_netlink(int sk_fd, struct ecryptfs_message *emsg,
 			  uint16_t msg_type, uint16_t msg_flags,
 			  uint32_t msg_seq);
 void ecryptfs_release_netlink(int sk_fd);

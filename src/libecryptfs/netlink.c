@@ -35,7 +35,7 @@
 #include "config.h"
 #include "../include/ecryptfs.h"
 
-int ecryptfs_send_netlink(int sk_fd, struct ecryptfs_netlink_message *emsg,
+int ecryptfs_send_netlink(int sk_fd, struct ecryptfs_message *emsg,
 			  uint16_t msg_type, uint16_t msg_flags,
 			  uint32_t msg_seq)
 {
@@ -76,7 +76,7 @@ out:
 	return rc;
 }
 
-int ecryptfs_recv_netlink(int sk_fd, struct ecryptfs_netlink_message **emsg,
+int ecryptfs_recv_netlink(int sk_fd, struct ecryptfs_message **emsg,
 			  int *msg_seq, int *msg_type)
 {
 	struct nlmsghdr *nlh = NULL;
@@ -146,7 +146,9 @@ int ecryptfs_init_netlink(int *sk_fd)
 	struct sockaddr_nl src_addr;
 	int rc;
 
+	syslog(LOG_ERR, "%s: Called\n", __FUNCTION__);
 	(*sk_fd) = socket(PF_NETLINK, SOCK_RAW, NETLINK_ECRYPTFS);
+	syslog(LOG_ERR, "%s: 1\n", __FUNCTION__);
 	if (!(*sk_fd)) {
 		rc = -errno;
 		syslog(LOG_ERR, "Failed to create the eCryptfs "
@@ -157,7 +159,9 @@ int ecryptfs_init_netlink(int *sk_fd)
 	src_addr.nl_family = AF_NETLINK;
 	src_addr.nl_pid = getpid();
 	src_addr.nl_groups = 0;
+	syslog(LOG_ERR, "%s: 2\n", __FUNCTION__);
 	rc = bind(*sk_fd, (struct sockaddr *)&src_addr, sizeof(src_addr));
+	syslog(LOG_ERR, "%s: 3\n", __FUNCTION__);
 	if (rc) {
 		rc = -errno;
 		syslog(LOG_ERR, "Failed to bind the eCryptfs netlink "
@@ -191,7 +195,7 @@ out:
 
 int ecryptfs_run_netlink_daemon(int sk_fd)
 {
-	struct ecryptfs_netlink_message *emsg = NULL;
+	struct ecryptfs_message *emsg = NULL;
 	struct ecryptfs_ctx ctx;
 	int msg_seq, msg_type;
 	int error_count = 0;
@@ -229,7 +233,7 @@ receive:
 		rc = 0;
 		goto out;
 	} else if (msg_type == ECRYPTFS_NLMSG_REQUEST) {
-		struct ecryptfs_netlink_message *reply = NULL;
+		struct ecryptfs_message *reply = NULL;
 
 		rc = parse_packet(&ctx, emsg, &reply);
 		if (rc) {
