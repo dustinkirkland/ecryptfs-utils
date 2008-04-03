@@ -318,7 +318,8 @@ int parse_packet(struct ecryptfs_ctx *ctx,
 					  auth_tok, key, key_size))) {
 			syslog(LOG_ERR, "Failed to decrypt key; rc = [%d]\n",
 			       rc);
-			rc = write_failure_packet(ECRYPTFS_TAG_65_PACKET,reply);
+			rc = write_failure_packet(ECRYPTFS_TAG_65_PACKET,
+						  reply);
 			goto write_failure;
 		}
 		if ((rc = write_tag_65_packet(key_out, key_out_size, reply))) {

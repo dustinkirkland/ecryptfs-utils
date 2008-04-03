@@ -141,6 +141,15 @@ out:
 	return rc;
 }
 
+/**
+ * ecryptfs_send_message
+ * @mctx: Parent context for eCryptfs messaging with the kernel
+ * @msg: Message to send (struct ecryptfs_message with data appended)
+ * @msg_type: Message type to send
+ * @msg_flags: Flags for sending message
+ * @msg_seq: Message sequence number
+ * 
+ */
 int ecryptfs_send_message(struct ecryptfs_messaging_ctx *mctx,
 			  struct ecryptfs_message *msg,
 			  unsigned char msg_type, uint16_t msg_flags,
@@ -150,8 +159,8 @@ int ecryptfs_send_message(struct ecryptfs_messaging_ctx *mctx,
 
 	switch (mctx->type) {
 	case ECRYPTFS_MESSAGING_TYPE_NETLINK:
-		rc = ecryptfs_send_netlink(&mctx->ctx.nl_ctx, NULL,
-					   ECRYPTFS_MSG_HELO, 0, 0);
+		rc = ecryptfs_send_netlink(&mctx->ctx.nl_ctx, msg, msg_type,
+					   msg_flags, msg_seq);
 		if (rc) {
 			syslog(LOG_ERR, "%s: Failed to register netlink daemon "
 			       "with the eCryptfs kernel module; rc = [%d]\n",
@@ -160,8 +169,8 @@ int ecryptfs_send_message(struct ecryptfs_messaging_ctx *mctx,
 		}
 		break;
 	case ECRYPTFS_MESSAGING_TYPE_PROC:
-		rc = ecryptfs_send_proc(&mctx->ctx.proc_ctx, NULL,
-					ECRYPTFS_MSG_HELO, 0, 0);
+		rc = ecryptfs_send_proc(&mctx->ctx.proc_ctx, msg, msg_type,
+					msg_flags, msg_seq);
 		if (rc) {
 			syslog(LOG_ERR, "%s: Failed to register proc daemon "
 			       "with the eCryptfs kernel module; rc = [%d]\n",
