@@ -35,9 +35,9 @@
 #include "config.h"
 #include "../include/ecryptfs.h"
 
-int ecryptfs_send_netlink(int sk_fd, struct ecryptfs_message *emsg,
-			  uint16_t msg_type, uint16_t msg_flags,
-			  uint32_t msg_seq)
+int ecryptfs_send_netlink(struct ecryptfs_nl_ctx *nl_ctx,
+			  struct ecryptfs_message *emsg, uint16_t msg_type,
+			  uint16_t msg_flags, uint32_t msg_seq)
 {
 	struct nlmsghdr *nlh = NULL;
 	struct sockaddr_nl dst_addr;
@@ -63,8 +63,8 @@ int ecryptfs_send_netlink(int sk_fd, struct ecryptfs_message *emsg,
 	nlh->nlmsg_flags = msg_flags;
 	if (payload_len)
 		memcpy(NLMSG_DATA(nlh), emsg, payload_len);
-	rc = sendto(sk_fd, nlh, nlh->nlmsg_len, 0, (struct sockaddr *)&dst_addr,
-		    sizeof(dst_addr));
+	rc = sendto(nl_ctx->socket_fd, nlh, nlh->nlmsg_len, 0,
+		    (struct sockaddr *)&dst_addr, sizeof(dst_addr));
 	if (rc < 0) {
 		rc = -errno;
 		syslog(LOG_ERR, "Failed to send eCryptfs netlink "
@@ -141,27 +141,24 @@ out:
 	return rc;
 }
 
-int ecryptfs_init_netlink(int *sk_fd)
+int ecryptfs_init_netlink(struct ecryptfs_nl_ctx *nl_ctx)
 {
 	struct sockaddr_nl src_addr;
 	int rc;
 
-	syslog(LOG_ERR, "%s: Called\n", __FUNCTION__);
-	(*sk_fd) = socket(PF_NETLINK, SOCK_RAW, NETLINK_ECRYPTFS);
-	syslog(LOG_ERR, "%s: 1\n", __FUNCTION__);
-	if (!(*sk_fd)) {
+	nl_ctx->socket_fd = socket(PF_NETLINK, SOCK_RAW, NETLINK_ECRYPTFS);
+	if (nl_ctx->socket_fd == -1) {
 		rc = -errno;
 		syslog(LOG_ERR, "Failed to create the eCryptfs "
-		       "netlink socket: %s\n", strerror(errno));
+		       "netlink socket: [%s]\n", strerror(errno));
 		goto out;
 	}
 	memset(&src_addr, 0, sizeof(src_addr));
 	src_addr.nl_family = AF_NETLINK;
 	src_addr.nl_pid = getpid();
 	src_addr.nl_groups = 0;
-	syslog(LOG_ERR, "%s: 2\n", __FUNCTION__);
-	rc = bind(*sk_fd, (struct sockaddr *)&src_addr, sizeof(src_addr));
-	syslog(LOG_ERR, "%s: 3\n", __FUNCTION__);
+	rc = bind(nl_ctx->socket_fd, (struct sockaddr *)&src_addr,
+		  sizeof(src_addr));
 	if (rc) {
 		rc = -errno;
 		syslog(LOG_ERR, "Failed to bind the eCryptfs netlink "
@@ -174,26 +171,13 @@ out:
 	return rc;
 }
 
-void ecryptfs_release_netlink(int sk_fd)
+void ecryptfs_release_netlink(struct ecryptfs_nl_ctx *nl_ctx)
 {
-	close(sk_fd);
-	syslog(LOG_DEBUG, "eCryptfs netlink socket was successfully "
-	       "released\n");
+	if (nl_ctx->socket_fd)
+		close(nl_ctx->socket_fd);
 }
 
-int init_netlink_daemon(void)
-{
-	int null_fd;
-	int rc;
-
-	syslog(LOG_INFO, "Starting eCryptfs userspace netlink daemon "
-	       "[%u]\n", getpid());
-	rc = 0;
-out:
-	return rc;
-}
-
-int ecryptfs_run_netlink_daemon(int sk_fd)
+int ecryptfs_run_netlink_daemon(struct ecryptfs_nl_ctx *nl_ctx)
 {
 	struct ecryptfs_message *emsg = NULL;
 	struct ecryptfs_ctx ctx;
@@ -202,14 +186,14 @@ int ecryptfs_run_netlink_daemon(int sk_fd)
 	int rc;
 
 	memset(&ctx, 0, sizeof(struct ecryptfs_ctx));
-
 	if ((rc = ecryptfs_register_key_modules(&ctx))) {
 		syslog(LOG_ERR, "Failed to register key modules; rc = [%d]\n",
 		       rc);
 		goto out;
 	}
 receive:
-	rc = ecryptfs_recv_netlink(sk_fd, &emsg, &msg_seq, &msg_type);
+	rc = ecryptfs_recv_netlink(nl_ctx->socket_fd, &emsg, &msg_seq,
+				   &msg_type);
 	if (rc < 0) {
 		syslog(LOG_ERR, "Error while receiving eCryptfs netlink "
 		       "message; errno = [%d]; errno msg = [%s]\n", errno,
@@ -222,17 +206,17 @@ receive:
 			rc = -EIO;
 			goto out;
 		}
-	} else if (msg_type == ECRYPTFS_NLMSG_HELO) {
+	} else if (msg_type == ECRYPTFS_MSG_HELO) {
 		syslog(LOG_DEBUG, "Received eCryptfs netlink HELO "
 		       "message from the kernel\n");
 		error_count = 0;
-	} else if (msg_type == ECRYPTFS_NLMSG_QUIT) {
+	} else if (msg_type == ECRYPTFS_MSG_QUIT) {
 		syslog(LOG_DEBUG, "Received eCryptfs netlink QUIT "
 		       "message from the kernel\n");
 		free(emsg);
 		rc = 0;
 		goto out;
-	} else if (msg_type == ECRYPTFS_NLMSG_REQUEST) {
+	} else if (msg_type == ECRYPTFS_MSG_REQUEST) {
 		struct ecryptfs_message *reply = NULL;
 
 		rc = parse_packet(&ctx, emsg, &reply);
@@ -243,8 +227,8 @@ receive:
 			goto free_emsg;
 		}
 		reply->index = emsg->index;
-		rc = ecryptfs_send_netlink(sk_fd, reply,
-					   ECRYPTFS_NLMSG_RESPONSE, 0,
+		rc = ecryptfs_send_netlink(nl_ctx->socket_fd, reply,
+					   ECRYPTFS_MSG_RESPONSE, 0,
 					   msg_seq);
 		if (rc < 0) {
 			syslog(LOG_ERR, "Failed to send netlink "

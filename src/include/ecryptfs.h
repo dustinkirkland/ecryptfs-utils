@@ -91,10 +91,11 @@
 #endif
 #define MAX_NAME_SIZE 128
 #define MAX_KEY_MOD_VALUE_SIZE 4096
-#define ECRYPTFS_NLMSG_HELO 100
-#define ECRYPTFS_NLMSG_QUIT 101
-#define ECRYPTFS_NLMSG_REQUEST 102
-#define ECRYPTFS_NLMSG_RESPONSE 103
+#define ECRYPTFS_MSG_HELO 100
+#define ECRYPTFS_MSG_QUIT 101
+#define ECRYPTFS_MSG_REQUEST 102
+#define ECRYPTFS_MSG_RESPONSE 103
+#define ECRYPTFS_MSG_MAX_SIZE 1024
 #define ECRYPTFS_NETLINK_ERROR_COUNT_THRESHOLD 8
 #define ECRYPTFS_MAX_KEY_MOD_NAME_BYTES 16
 
@@ -277,7 +278,7 @@ struct key_mod_param {
 
 struct ecryptfs_ctx_ops {
 	int (*prompt)(char *prompt_type, char *prompt, char *input,
-		int input_size);
+		      int input_size);
 };
 
 /**
@@ -402,6 +403,29 @@ struct cipher_descriptor {
 	struct cipher_descriptor *next;
 };
 
+struct ecryptfs_nl_ctx {
+	int socket_fd;
+};
+
+struct ecryptfs_proc_ctx {
+	char *proc_filename;
+	int proc_fd;
+};
+
+struct ecryptfs_messaging_ctx {
+#define ECRYPTFS_MESSAGING_TYPE_NETLINK 0x00000001
+#define ECRYPTFS_MESSAGING_TYPE_PROC    0x00000002
+	uint32_t type;
+#define ECRYPTFS_MESSAGING_STATE_LISTENING 0x00000001
+	uint32_t state;
+	union {
+		struct ecryptfs_proc_ctx proc_ctx;
+		struct ecryptfs_nl_ctx nl_ctx;
+	} ctx;
+};
+
+#define ECRYPTFS_DEFAULT_MESSAGING_TYPE ECRYPTFS_MESSAGING_TYPE_PROC
+
 int ecryptfs_get_kernel_ciphers(struct cipher_descriptor *cd_head);
 int ecryptfs_get_module_ciphers(struct cipher_descriptor *cd_head);
 int ecryptfs_sort_ciphers(struct cipher_descriptor *cd_head);
@@ -461,13 +485,13 @@ ecryptfs_generate_key_payload(struct ecryptfs_auth_tok *auth_tok,
 			      size_t blob_size);
 int parse_options_file(int fd, struct ecryptfs_name_val_pair *head);
 int free_name_val_pairs(struct ecryptfs_name_val_pair *pair);
-int ecryptfs_send_netlink(int sk_fd, struct ecryptfs_message *emsg,
-			  uint16_t msg_type, uint16_t msg_flags,
-			  uint32_t msg_seq);
-void ecryptfs_release_netlink(int sk_fd);
-int init_netlink_daemon(void);
-int ecryptfs_run_netlink_daemon(int sk_fd);
-int ecryptfs_init_netlink(int *sk_fd);
+int ecryptfs_send_netlink(struct ecryptfs_nl_ctx *nl_ctx,
+			  struct ecryptfs_message *emsg, uint16_t msg_type,
+			  uint16_t msg_flags, uint32_t msg_seq);
+void ecryptfs_release_netlink(struct ecryptfs_nl_ctx *nl_ctx);
+int ecryptfs_init_netlink_daemon(void);
+int ecryptfs_run_netlink_daemon(struct ecryptfs_nl_ctx *nl_ctx);
+int ecryptfs_init_netlink(struct ecryptfs_nl_ctx *nl_ctx);
 int ecryptfs_nvp_list_union(struct ecryptfs_name_val_pair *dst,
 			    struct ecryptfs_name_val_pair *src,
 			    struct ecryptfs_name_val_pair *allowed_duplicates);
@@ -499,6 +523,20 @@ int ecryptfs_generate_sig_from_key_data(unsigned char *sig,
 					size_t key_data_len);
 int ecryptfs_fill_in_dummy_ops(struct ecryptfs_key_mod_ops *key_mod_ops);
 int ecryptfs_register_key_modules(struct ecryptfs_ctx* ctx);
+int ecryptfs_write_packet_length(char *dest, size_t size,
+				 size_t *packet_size_length);
+int ecryptfs_parse_packet_length(unsigned char *data, size_t *size,
+				 size_t *length_size);
+int ecryptfs_get_proc_mount_point(char **proc_mount_point);
+int ecryptfs_send_message(struct ecryptfs_messaging_ctx *mctx,
+			  struct ecryptfs_message *msg,
+			  unsigned char msg_type, uint16_t msg_flags,
+			  uint32_t msg_seq);
+int ecryptfs_send_proc(struct ecryptfs_proc_ctx *proc_ctx,
+		       struct ecryptfs_message *msg, uint8_t msg_type,
+		       uint16_t msg_flags, uint32_t msg_seq);
+void ecryptfs_release_proc(struct ecryptfs_proc_ctx *proc_ctx);
+int ecryptfs_run_proc_daemon(struct ecryptfs_proc_ctx *proc_ctx);
 
 /* TEMP TEMP TEMP - BEGIN
  * until context will be forwarded into key modules */

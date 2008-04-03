@@ -44,7 +44,7 @@
 /**
  * Pulling ourselves up by the bootstraps...
  */
-static int get_proc_mount_point(char **proc_mount_point)
+int ecryptfs_get_proc_mount_point(char **proc_mount_point)
 {
 	FILE *fp;
 	struct mntent *mntent;
@@ -160,7 +160,7 @@ int ecryptfs_get_loaded_ciphers(struct ecryptfs_cipher_elem *cipher_list_head)
 		rc = -EINVAL;
 		goto out;
 	}
-	rc = get_proc_mount_point(&proc_mount_point);
+	rc = ecryptfs_get_proc_mount_point(&proc_mount_point);
 	if (rc) {
 		syslog(LOG_WARNING, "Error attempting to find proc mount "
 		       "point in [/etc/mtab]. Defaulting to [/proc].\n");
@@ -351,7 +351,7 @@ int ecryptfs_get_kernel_ciphers(struct cipher_descriptor *cd_head)
 	char *tmp = NULL;
 	int rc;
 
-	rc = get_proc_mount_point(&proc_mount_point);
+	rc = ecryptfs_get_proc_mount_point(&proc_mount_point);
 	if (rc) {
 		syslog(LOG_WARNING, "Error attempting to find proc mount "
 		       "point in [/etc/mtab]. Defaulting to [/proc].\n");

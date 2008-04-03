@@ -29,11 +29,12 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <getopt.h>
+#include <pthread.h>
 #include <sys/resource.h>
 #include "config.h"
 #include "../include/ecryptfs.h"
 
-static int ecryptfs_socket = 0;
+
 static char *pidfile = NULL;
 static char *prompt_prog = NULL;
 
@@ -149,22 +150,26 @@ out:
 	return rc;
 }
 
+struct ecryptfs_messaging_ctx mctx;
+pthread_mutex_t mctx_mux;
 
-static void ecryptfsd_exit(int retval)
+static void ecryptfsd_exit(struct ecryptfs_messaging_ctx *mctx, int retval)
 {
+	int rc = 0;
+
 	if (pidfile != NULL) {
 		unlink(pidfile);
 		free(pidfile);
  		pidfile = NULL;
 	}
-	if (!ecryptfs_socket)
-		goto out;
-	if (ecryptfs_send_netlink(ecryptfs_socket, NULL,
-				  ECRYPTFS_NLMSG_QUIT, 0, 0) < 0) {
-		ecryptfs_syslog(LOG_ERR, "Failed to unregister netlink "
-				"daemon with the eCryptfs kernel module\n");
-	}
-	ecryptfs_release_netlink(ecryptfs_socket);
+	rc = ecryptfs_send_message(&mctx, NULL, ECRYPTFS_MSG_QUIT, 0, 0);
+	if (rc)
+		syslog(LOG_ERR, "%s: Error attempting to send quit message to "
+		       "kernel; rc = [%d]\n", __FUNCTION__, rc);
+	rc = ecryptfs_messaging_exit(mctx);
+	if (rc)
+		syslog(LOG_ERR, "%s: Error attempting to shut down messaging; "
+		       "rc = [%d]\n", __FUNCTION__, rc);
 out:
 	ecryptfs_syslog(LOG_INFO, "Closing eCryptfs userspace netlink "
 			"daemon [%u]\n", getpid());
@@ -221,7 +226,9 @@ void daemonize(void)
 
 void sigterm_handler(int sig)
 {
-	ecryptfsd_exit(0);
+	pthread_mutex_lock(&mctx_mux);
+	ecryptfsd_exit(&mctx, 0);
+	pthread_mutex_unlock(&mctx_mux);
 }
 
 void usage(const char * const me, const struct option * const options,
@@ -244,6 +251,8 @@ void usage(const char * const me, const struct option * const options,
 	}
 	printf("\n");
 }
+
+
 
 int main(int argc, char **argv)
 {
@@ -342,28 +351,31 @@ int main(int argc, char **argv)
 		syslog(LOG_ERR, "Failed to attach handler to SIGINT");
 		goto daemon_out;
 	}
- 	/* TODO: eCryptfs context via daemon */
  	cryptfs_get_ctx_opts()->prompt = prompt_callback;
-	rc = init_netlink_daemon();
+	pthread_mutex_init(&mctx_mux, NULL);
+	pthread_mutex_lock(&mctx_mux);
+	rc = ecryptfs_init_messaging(&mctx);
 	if (rc) {
-		syslog(LOG_ERR,
-		       "Error initializing netlink daemon; rc = [%d]\n", rc);
+		syslog(LOG_ERR, "%s: Failed to initialize messaging; rc = "
+		       "[%d]\n", __FUNCTION__, rc);
+		pthread_mutex_unlock(&mctx_mux);
 		goto daemon_out;
 	}
-	rc = ecryptfs_init_netlink(&ecryptfs_socket);
+	rc = ecryptfs_send_message(&mctx, NULL, ECRYPTFS_MSG_HELO, 0, 0);
 	if (rc) {
-		syslog(LOG_ERR, "Failed to run netlink daemon\n");
+		syslog(LOG_ERR, "%s: Error attempting to send message to "
+		       "eCryptfs kernel module via transport of type "
+		       "[0x%.8x]; rc = [%d]\n", mctx.type, rc);
+		pthread_mutex_unlock(&mctx_mux);
 		goto daemon_out;
 	}
-	rc = ecryptfs_send_netlink(ecryptfs_socket, NULL,
-				   ECRYPTFS_NLMSG_HELO, 0, 0);
-	if (rc < 0) {
-		syslog(LOG_ERR, "Failed to register netlink daemon with the "
-		       "eCryptfs kernel module\n");
-		goto daemon_out;
-	}
-	rc = ecryptfs_run_netlink_daemon(ecryptfs_socket);
+	mctx.state |= ECRYPTFS_MESSAGING_STATE_LISTENING;
+	pthread_mutex_unlock(&mctx_mux);
+	rc = ecryptfs_run_daemon(&mctx);
+	pthread_mutex_lock(&mctx_mux);
+	mctx.state &= ~ECRYPTFS_MESSAGING_STATE_LISTENING;
+	pthread_mutex_unlock(&mctx_mux);
 daemon_out:
-	ecryptfsd_exit(rc);
+	ecryptfsd_exit(&mctx, rc);
 	return rc;
 }

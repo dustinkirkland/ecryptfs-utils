@@ -4,8 +4,10 @@ pkgconfig_DATA=libecryptfs.pc
 libecryptfs_la_SOURCES = \
 	main.c \
 	cipher_list.c \
+	messaging.c \
+	packets.c \
 	netlink.c \
-	netlink_packets.c \
+	proc.c \
 	sysfs.c \
 	key_management.c \
 	decision_graph.c \
