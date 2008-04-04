@@ -162,7 +162,7 @@ static void ecryptfsd_exit(struct ecryptfs_messaging_ctx *mctx, int retval)
 		free(pidfile);
  		pidfile = NULL;
 	}
-	rc = ecryptfs_send_message(&mctx, NULL, ECRYPTFS_MSG_QUIT, 0, 0);
+	rc = ecryptfs_send_message(mctx, NULL, ECRYPTFS_MSG_QUIT, 0, 0);
 	if (rc)
 		syslog(LOG_ERR, "%s: Error attempting to send quit message to "
 		       "kernel; rc = [%d]\n", __FUNCTION__, rc);
