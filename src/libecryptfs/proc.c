@@ -56,12 +56,20 @@ int ecryptfs_send_proc(struct ecryptfs_proc_ctx *proc_ctx,
 	 *  Octet 0: Type
 	 *  Octets 1-4: network byte order msg_ctx->counter
 	 *  Octets 5-N0: Size of struct ecryptfs_message to follow
-	 *  Octets N0-N1: struct ecryptfs_message (including data) */
-	packet_len = (sizeof(*msg) + msg->data_len);
-	rc = ecryptfs_write_packet_length(packet_len_str, packet_len,
-					  &packet_len_size);
-	if (rc)
-		goto out;
+	 *  Octets N0-N1: struct ecryptfs_message (including data)
+	 *
+	 *  Octets 5-N1 not written if the packet type does not
+	 *  include a message */
+	if (msg) {
+		packet_len = (sizeof(*msg) + msg->data_len);
+		rc = ecryptfs_write_packet_length(packet_len_str, packet_len,
+						  &packet_len_size);
+		if (rc)
+			goto out;
+	} else {
+		packet_len_size = 0;
+		packet_len = 0;
+	}
 	proc_msg_data_size = (1 + 4 + packet_len_size + packet_len);
 	proc_msg_data = malloc(proc_msg_data_size);
 	if (!proc_msg_data) {
@@ -73,9 +81,11 @@ int ecryptfs_send_proc(struct ecryptfs_proc_ctx *proc_ctx,
 	proc_msg_data[i++] = msg_type;
 	memcpy(&proc_msg_data[i], (void *)&msg_seq_be32, 4);
 	i += 4;
-	memcpy(&proc_msg_data[i], packet_len_str, packet_len_size);
-	i += packet_len_size;
-	memcpy(&proc_msg_data[i], (void *)msg, packet_len);
+	if (msg) {
+		memcpy(&proc_msg_data[i], packet_len_str, packet_len_size);
+		i += packet_len_size;
+		memcpy(&proc_msg_data[i], (void *)msg, packet_len);
+	}
 	written = write(proc_ctx->proc_fd, proc_msg_data, proc_msg_data_size);
 	if (written == -1) {
 		rc = -EIO;
@@ -113,16 +123,16 @@ int ecryptfs_recv_proc(struct ecryptfs_proc_ctx *proc_ctx,
 			  ECRYPTFS_MSG_MAX_SIZE);
 	if (read_bytes == -1) {
 		rc = -EIO;
-		syslog(LOG_ERR, "%s: Error attempting to read message from "
+	syslog(LOG_ERR, "%s: Error attempting to read message from "
 		       "proc handle; errno msg = [%m]\n", __FUNCTION__, errno);
 		goto out;
 	}
-	if (read_bytes < (1 + 4 + 1 + sizeof(**msg))) {
+	if (read_bytes < (1 + 4)) {
 		rc = -EINVAL;
 		syslog(LOG_ERR, "%s: Received invalid packet from kernel; "
 		       "read_bytes = [%d]; minimum possible packet site is "
 		       "[%d]\n", __FUNCTION__, read_bytes,
-		       (1 + 4 + 1 + sizeof(**msg)));
+		       (1 + 4));
 		goto out;
 	}
 	i = 0;
@@ -130,11 +140,17 @@ int ecryptfs_recv_proc(struct ecryptfs_proc_ctx *proc_ctx,
 	memcpy((void *)&msg_seq_be32, &proc_msg_data[i], 4);
 	i += 4;
 	(*msg_seq) = ntohl(msg_seq_be32);
-	rc = ecryptfs_parse_packet_length(&proc_msg_data[i], &packet_len,
-					  &packet_len_size);
-	if (rc)
-		goto out;
-	i += packet_len_size;
+	if ((*msg_type) == ECRYPTFS_MSG_REQUEST) {
+		rc = ecryptfs_parse_packet_length(&proc_msg_data[i],
+						  &packet_len,
+						  &packet_len_size);
+		if (rc)
+			goto out;
+		i += packet_len_size;
+	} else {
+		packet_len_size = 0;
+		packet_len = 0;
+	}
 	proc_msg_data_size = (1 + 4 + packet_len_size + packet_len);
 	if (proc_msg_data_size != read_bytes) {
 		rc = -EINVAL;
