@@ -8,15 +8,25 @@
 
 int main()
 {
+	ssize_t ssize;
 	struct ecryptfs_proc_ctx proc_ctx;
+	char buf[65536];
 	int fd;
 	int rc;
 
-/*	rc = ecryptfs_init_proc(&proc_ctx); */
-	printf("opening\n");
-	fd = open("/proc/fs/ecryptfs/ctl", O_RDONLY);
-	printf("ioctl'ing\n");
-	rc = ioctl(fd, SIOCSIFMAP);
-	if (rc)
+	rc = ecryptfs_init_proc(&proc_ctx);
+	if (rc) {
 		printf("%s: [%d]\n", __FUNCTION__, rc);
+		goto out;
+	}
+	ssize = read(proc_ctx.proc_fd, buf, 65536);
+	if (ssize == -1) {
+		printf("%s: ssize == -1; errno msg = [%m]\n", __FUNCTION__,
+		       errno);
+	} else {
+		printf("%s: Read [%d] bytes\n", __FUNCTION__, ssize);
+	}
+	ecryptfs_release_proc(&proc_ctx);
+out:
+	return rc;
 }
