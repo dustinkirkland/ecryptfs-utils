@@ -257,54 +257,70 @@ void usage(const char * const me, const struct option * const options,
 int main(int argc, char **argv)
 {
 	static struct option long_options[] = {
-		{ "pidfile\0\tSet pid file name", required_argument, NULL, 'p' },
-		{ "foreground\0\t\tDon't fork into background", no_argument, NULL, 'f' },
-		{ "chroot\0\t\tChroot to directory", required_argument, NULL, 'C' },
-   		{ "prompt-prog\0Program to execute for user prompt", required_argument, NULL, 'R' },
-		{ "version\0\t\t\tShow version information", no_argument, NULL, 'V' },
-		{ "help\0\t\t\tShow usage information", no_argument, NULL, 'h' },
-		{ NULL, 0, NULL, 0 }
+		{"pidfile\0\tSet pid file name", required_argument, NULL, 'p'},
+		{"foreground\0\t\tDon't fork into background", no_argument,
+		 NULL, 'f'},
+		{"chroot\0\t\tChroot to directory", required_argument, NULL,
+		 'C'},
+   		{"prompt-prog\0Program to execute for user prompt",
+		 required_argument, NULL, 'R'},
+		{"version\0\t\t\tShow version information", no_argument, NULL,
+		 'V'},
+		{"channel\0Communications channel (netlink or procfs)",
+		  required_argument, NULL, 'd'},
+		{"help\0\t\t\tShow usage information", no_argument, NULL, 'h'},
+		{NULL, 0, NULL, 0}
 	};
-	static char *short_options = "p:f:C:R:Vh";
+	static char *short_options = "p:f:C:R:V:d:h";
 	int long_options_ret;
-	struct rlimit core = { 0, 0 };
+	struct rlimit core = {0, 0};
 	int foreground = 0;
 	char *chrootdir = NULL;
 	char *tty = NULL;
+	uint32_t channel_type = ECRYPTFS_DEFAULT_MESSAGING_TYPE;
 	int rc = 0;
-
-	while ((long_options_ret = getopt_long (argc, argv, short_options,
-						long_options, NULL)) != -1) {
+	
+	while ((long_options_ret = getopt_long(argc, argv, short_options,
+					       long_options, NULL)) != -1) {
 		switch (long_options_ret) {
-			case 'p':
-				pidfile = strdup(optarg);
+		case 'p':
+			pidfile = strdup(optarg);
 			break;
-			case 'f':
-				foreground = 1;
+		case 'f':
+			foreground = 1;
 			break;
-			case 'C':
-				chrootdir = strdup(optarg);
+		case 'C':
+			chrootdir = strdup(optarg);
 			break;
- 			case 'R':
- 				prompt_prog = strdup(optarg);
+		case 'R':
+			prompt_prog = strdup(optarg);
   			break;
-			case 'V':
-				printf(("%s (%s) %s\n"
-					"\n"
-					"This is free software.  You may redistribute copies of it under the terms of\n"
-					"the GNU General Public License <http://www.gnu.org/licenses/gpl.html>.\n"
-					"There is NO WARRANTY, to the extent permitted by law.\n"
-					),
-					basename(argv[0]),
-					PACKAGE_NAME,
-					PACKAGE_VERSION
-				);
+		case 'V':
+			printf(("%s (%s) %s\n"
+				"\n"
+				"This is free software.  You may "
+				"redistribute copies of it under the "
+				"terms of\n"
+				"the GNU General Public License "
+				"<http://www.gnu.org/licenses/"
+				"gpl.html>.\n"
+				"There is NO WARRANTY, to the extent "
+				"permitted by law.\n"),
+			       basename(argv[0]),
+			       PACKAGE_NAME,
+			       PACKAGE_VERSION);
 			break;
-			case 'h':
-			default:
-				usage(basename(argv[0]), long_options,
-				      short_options);
-				exit(1);
+		case 'd':
+			if (strcmp(optarg, "netlink") == 0)
+				channel_type = ECRYPTFS_MESSAGING_TYPE_NETLINK;
+			else if (strcmp(optarg, "procfs") == 0)
+				channel_type = ECRYPTFS_MESSAGING_TYPE_PROC;
+			break;
+		case 'h':
+		default:
+			usage(basename(argv[0]), long_options,
+			      short_options);
+			exit(1);
 			break;
 		}
 	}
@@ -354,7 +370,7 @@ int main(int argc, char **argv)
  	cryptfs_get_ctx_opts()->prompt = prompt_callback;
 	pthread_mutex_init(&mctx_mux, NULL);
 	pthread_mutex_lock(&mctx_mux);
-	rc = ecryptfs_init_messaging(&mctx);
+	rc = ecryptfs_init_messaging(&mctx, channel_type);
 	if (rc) {
 		syslog(LOG_ERR, "%s: Failed to initialize messaging; rc = "
 		       "[%d]\n", __FUNCTION__, rc);
