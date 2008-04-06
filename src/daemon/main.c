@@ -278,6 +278,7 @@ int main(int argc, char **argv)
 	char *chrootdir = NULL;
 	char *tty = NULL;
 	uint32_t channel_type = ECRYPTFS_DEFAULT_MESSAGING_TYPE;
+	int messaging_type_specified = 0;
 	int rc = 0;
 	
 	while ((long_options_ret = getopt_long(argc, argv, short_options,
@@ -311,6 +312,7 @@ int main(int argc, char **argv)
 			       PACKAGE_VERSION);
 			break;
 		case 'd':
+			messaging_type_specified = 1;
 			if (strcmp(optarg, "netlink") == 0)
 				channel_type = ECRYPTFS_MESSAGING_TYPE_NETLINK;
 			else if (strcmp(optarg, "procfs") == 0)
@@ -322,6 +324,21 @@ int main(int argc, char **argv)
 			      short_options);
 			exit(1);
 			break;
+		}
+	}
+	if (!messaging_type_specified) {
+		uint32_t version;
+
+		rc = ecryptfs_get_version(&version);
+		if (rc) {
+			syslog(LOG_WARNING, "%s: Unable to retrieve versioning "
+			       "info from kernel module; falling back on "
+			       "default values\n", __FUNCTION__);
+		} else {
+			if (version & ECRYPTFS_VERSIONING_PROCFS)
+				channel_type = ECRYPTFS_MESSAGING_TYPE_PROC;
+			else
+				channel_type = ECRYPTFS_MESSAGING_TYPE_NETLINK;
 		}
 	}
 	tty = ttyname(0); /* We may need the tty name later */
