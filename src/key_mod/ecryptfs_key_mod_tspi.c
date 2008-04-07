@@ -258,6 +258,8 @@ ecryptfs_tspi_encrypt(char *to, size_t *to_size, char *from, size_t from_size,
 		goto out;
 	}
 	(*to_size) = encdata_size;
+	if (to)
+		memcpy(to, encdata, (*to_size));
 	Tspi_Context_FreeMemory(h_encrypt_ctx, encdata);
 out:
 	pthread_mutex_unlock(&encrypt_lock);
