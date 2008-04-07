@@ -275,8 +275,13 @@ perform the File Encryption Key (FEK) encryption and decryption. The
 key module could do RSA. Or, it could retrieve an employee's key from
 a Domino server. Or, it could unseal the key protected by a Trusted
 Computing chip, which will only honor the unseal request if the
-machine is booted into a trusted state. This TPM-based protection is
-actually on the work queue for this year.
+machine is booted into a trusted state.
+</p>
+
+<p>
+A key module now ships in ecryptfs-utils to interface with
+cryptographic tokens via PKCS#11. There is also a key module to
+interface with a TPM chip.
 </p>
 
 <a name="ecryptfsd">
