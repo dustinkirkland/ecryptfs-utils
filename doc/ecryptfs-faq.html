@@ -80,6 +80,9 @@ to recover my data?</a></li>
 <li><a href="#compare">How does eCryptfs compare with other Linux disk
 encryption solutions?</a></li>
 
+<li><a href="#daemon-crash">Why does the eCryptfs daemon crash my
+kernel?</a></li>
+
 <li><a href="#baddir">&quot;<code>Error mounting eCryptfs; rc = [-2];
 strerr = [No such file or directory]</code>&quot;</a></li>
 
@@ -202,14 +205,15 @@ cipher, like <code>aes</code>.
 <p><h3>Q. On what filesystems can I expect eCryptfs to function?</h3></p>
 
 <p>
-eCryptfs has been well tested on ext3 and jfs. eCryptfs on xfs may be
-problematic because xfs can take up most of the available space for
-the call stack. eCryptfs currently has some degree of functionality on
-CIFS, and the eCryptfs development team is working with a member of
-the CIFS development team to get the kinks worked out. eCryptfs is
-broken on NFS for all kernels. Unionfs is also affected, and the
-Unionfs team is making good progress at getting the issues with
-stacking on NFS resolved.
+eCryptfs has been well tested on EXT3, and it should work well on
+other popular local filesystems such as JFS, XFS, ReiserFS, and so
+forth. Changes in the 2.6.24 kernel make eCryptfs more functional on
+NFS and CIFS, although there is still a little more work to do in
+order to make eCryptfs function as well on networked filesystems as it
+currently works on local filesystems. There is a <a
+href="http://downloads.sourceforge.net/ecryptfs/ecryptfs-fix-nfs.txt">patch</a>
+to help resolve an unlink bug with eCryptfs on NFS; this patch will
+eventually make it upstream once it is well tested.
 </p>
 
 <a name="stack">
@@ -220,7 +224,7 @@ stacking on NFS resolved.
 eCryptfs is a stacked filesystem. This implies that eCryptfs adds on
 top of whatever call stack exists with current filesystems. Each
 process in the Linux kernel has a fixed maximum stack size (4k+4k or
-8k). Some filesystems (such as xfs) push the limit of the stack by
+8k). Some filesystems (such as XFS) push the limit of the stack by
 themselves; adding eCryptfs on top may cause a stack overflow on these
 filesystems. If you wish to use eCryptfs on XFS, I recommend that you
 first perform stress tests to help determine whether your specific
@@ -656,6 +660,31 @@ in userspace libraries, but the frequent context switching impacts
 performance. In addition, EncFS uses FUSE, which suffers from the fact
 that shared writable memory mappings must be entirely disabled in
 order to avoid deadlock on some page swap events.
+</p>
+
+<a name="daemon-crash">
+
+<p><h3>Why does the eCryptfs daemon crash my kernel?</h3></p>
+
+<p>
+For currently unknown reasons, the kernel will crash when the
+userspace daemon initiates communications with the eCryptfs kernel
+module via the netlink interface. We first noticed this problem with
+kernel release 2.6.24, but there has been one report of a
+distro-modified version of release 2.6.23 also being affected.
+</p>
+
+<p>
+To resolve the issue, there is a <a
+href="http://downloads.sourceforge.net/ecryptfs/ecryptfs-procfs-kernel-20080406.txt">patch</a>
+to migrate eCryptfs from using netlink for kernel-daemon
+communications to using a procfs handle instead. We anticipate that
+this patch will find its way into kernel release 2.6.26. In addition
+to this patch, you will need ecryptfs-utils release 42 or
+greater. Until release 42 is made, you can obtain the most up-to-date
+ecryptfs-utils from the <a
+href="http://git.kernel.org/?p=linux/kernel/git/mhalcrow/ecryptfs-utils.git;a=summary">kernel.org
+GIT repository</a>.
 </p>
 
 <a name="baddir">
