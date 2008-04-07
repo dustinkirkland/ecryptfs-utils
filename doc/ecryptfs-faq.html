@@ -497,10 +497,10 @@ creating a new file, unmounting, clearing the user session keyring
 access the newly created file. This minimizes the likelihood that you
 will mistype a passphrase and create files that you will not be able
 to later recover. When mounting in passphrase mode, make sure that the
-ecryptfs_sig value matches between mounts. Future versions of eCryptfs
-will store a cache of previous ecryptfs_sig values and warn the user
-if a mount passphrase does not match any passphrases used for previous
-mounts.
+ecryptfs_sig value matches between mounts. To help avoid the pitfall
+of mistyping a passphrase on mount, eCryptfs stores a cache of
+previous ecryptfs_sig values and warns the user if a mount passphrase
+does not match any passphrases used for previous mounts.
 </p>
 
 <a name="lostkey">
