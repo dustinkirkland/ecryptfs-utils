@@ -83,6 +83,11 @@ encryption solutions?</a></li>
 <li><a href="#daemon-crash">Why does the eCryptfs daemon crash my
 kernel?</a></li>
 
+<li><a href="#no-ecryptfsac">Once one user can access an eCryptfs
+file, any users with permission can also access the file. Should not
+eCryptfs require all users to have the key in order to access the
+files?</a></li>
+
 <li><a href="#baddir">&quot;<code>Error mounting eCryptfs; rc = [-2];
 strerr = [No such file or directory]</code>&quot;</a></li>
 
@@ -690,6 +695,47 @@ greater. Until release 42 is made, you can obtain the most up-to-date
 ecryptfs-utils from the <a
 href="http://git.kernel.org/?p=linux/kernel/git/mhalcrow/ecryptfs-utils.git;a=summary">kernel.org
 GIT repository</a>.
+</p>
+
+<a name="no-ecryptfsac">
+
+<p><h3>Once one user can access an eCryptfs file, any users with
+permission can also access the file. Should not eCryptfs require all
+users to have the key in order to access the files?</h3></p>
+
+<p>
+eCryptfs deliberately makes no attempt to re-implement the
+discretionary and mandatory access control mechanisms already present
+in the Linux kernel. eCryptfs will simply require that a File
+Encryption Key (FEK) be associated with any given inode in order to
+decrypt the contents of the file on disk. This prevents an attacker
+from accessing the file contents outside the context of the trusted
+host environment; for instance, by removing the storage device or by
+booting a live CD. This is the only type of unauthorized access that
+eCryptfs is intended to prevent.
+</p>
+
+<p>
+Once eCryptfs has associated that FEK with the inode, it does not
+impose any additional restrictions on who or what can access the
+files, deferring to the standard user/group/other permissions,
+capabilities, SE Linux type enforcement, and so forth to regulate
+access to the files. eCryptfs maintains no pedigree regarding how the
+FEK found its way to the inode, so it has no way of knowing that any
+particular UID should or should not be able to open the file, nor
+should eCryptfs do such a thing.
+</p>
+
+<p>
+Having eCryptfs impose additional access control onto the decrypted
+file contents in a trusted host environment would provide no
+additional security while introducing unintended usability issues. For
+instance, a user may wish to share his decrypted files with certain
+other users on the system without having to share his key with them or
+add their keys to a set of keys wrapping the inode's FEK. Users expect
+to be able to accomplish such a task via users, groups, capabilities,
+and types, and eCryptfs defers access control decisions on trusted
+host environments to these existing access control mechanisms.
 </p>
 
 <a name="baddir">
