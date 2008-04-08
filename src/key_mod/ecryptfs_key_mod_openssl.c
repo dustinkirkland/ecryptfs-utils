@@ -765,7 +765,7 @@ static struct param_node ssl_param_nodes[] = {
 	 .val = NULL,
 	 .display_opts = NULL,
 	 .default_val = NULL,
-	 .flags = 0,
+	 .flags = ECRYPTFS_PARAM_FLAG_ECHO_INPUT,
 	 .num_transitions = 1,
 	 .tl = {{.val = "default", /* The decision graph code will
 				    * just follow a "default"
