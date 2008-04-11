@@ -113,7 +113,7 @@ struct ecryptfs_version_str_map_elem {
 	{ECRYPTFS_VERSIONING_PLAINTEXT_PASSTHROUGH, "plaintext passthrough"},
 	{ECRYPTFS_VERSIONING_POLICY, "policy"},
 	{ECRYPTFS_VERSIONING_XATTR, "metadata in extended attribute"},
-	{ECRYPTFS_VERSIONING_MISCDEV, "miscdev daemon interface"},
+	{ECRYPTFS_VERSIONING_MISCDEV, "/dev/misc/ecryptfs daemon interface"},
 	{ECRYPTFS_VERSIONING_HMAC, "hmac"},
 	{ECRYPTFS_VERSIONING_FILENAME_ENCRYPTION, "filename encryption"},
 	{ECRYPTFS_VERSIONING_GCM, "gcm cipher block chaining"},
