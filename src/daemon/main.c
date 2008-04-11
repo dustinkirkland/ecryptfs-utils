@@ -266,7 +266,7 @@ int main(int argc, char **argv)
 		 required_argument, NULL, 'R'},
 		{"version\0\t\t\tShow version information", no_argument, NULL,
 		 'V'},
-		{"channel\0Communications channel (netlink or procfs)",
+		{"channel\0\tCommunications channel (netlink or miscdev)",
 		  required_argument, NULL, 'd'},
 		{"help\0\t\t\tShow usage information", no_argument, NULL, 'h'},
 		{NULL, 0, NULL, 0}
@@ -315,8 +315,8 @@ int main(int argc, char **argv)
 			messaging_type_specified = 1;
 			if (strcmp(optarg, "netlink") == 0)
 				channel_type = ECRYPTFS_MESSAGING_TYPE_NETLINK;
-			else if (strcmp(optarg, "procfs") == 0)
-				channel_type = ECRYPTFS_MESSAGING_TYPE_PROC;
+			else if (strcmp(optarg, "miscdev") == 0)
+				channel_type = ECRYPTFS_MESSAGING_TYPE_MISCDEV;
 			break;
 		case 'h':
 		default:
@@ -335,8 +335,8 @@ int main(int argc, char **argv)
 			       "info from kernel module; falling back on "
 			       "default values\n", __FUNCTION__);
 		} else {
-			if (version & ECRYPTFS_VERSIONING_PROCFS)
-				channel_type = ECRYPTFS_MESSAGING_TYPE_PROC;
+			if (version & ECRYPTFS_VERSIONING_MISCDEV)
+				channel_type = ECRYPTFS_MESSAGING_TYPE_MISCDEV;
 			else
 				channel_type = ECRYPTFS_MESSAGING_TYPE_NETLINK;
 		}

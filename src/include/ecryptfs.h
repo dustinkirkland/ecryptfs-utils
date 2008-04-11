@@ -68,7 +68,7 @@
 #define ECRYPTFS_VERSIONING_POLICY                0x00000008
 #define ECRYPTFS_VERSIONING_XATTR                 0x00000010
 #define ECRYPTFS_VERSIONING_MULTKEY               0x00000020
-#define ECRYPTFS_VERSIONING_PROCFS                0x00000040
+#define ECRYPTFS_VERSIONING_MISCDEV               0x00000040
 #define ECRYPTFS_VERSIONING_HMAC                  0x00000080
 #define ECRYPTFS_VERSIONING_FILENAME_ENCRYPTION   0x00000100
 #define ECRYPTFS_VERSIONING_GCM                   0x00000200
@@ -411,19 +411,21 @@ struct ecryptfs_nl_ctx {
 	int socket_fd;
 };
 
-struct ecryptfs_proc_ctx {
-	char *proc_filename;
-	int proc_fd;
+#define ECRYPTFS_DEFAULT_MISCDEV_FULLPATH "/dev/misc/ecryptfs"
+
+struct ecryptfs_miscdev_ctx {
+	char *miscdev_filename;
+	int miscdev_fd;
 };
 
 struct ecryptfs_messaging_ctx {
 #define ECRYPTFS_MESSAGING_TYPE_NETLINK 0x00000001
-#define ECRYPTFS_MESSAGING_TYPE_PROC    0x00000002
+#define ECRYPTFS_MESSAGING_TYPE_MISCDEV 0x00000002
 	uint32_t type;
 #define ECRYPTFS_MESSAGING_STATE_LISTENING 0x00000001
 	uint32_t state;
 	union {
-		struct ecryptfs_proc_ctx proc_ctx;
+		struct ecryptfs_miscdev_ctx miscdev_ctx;
 		struct ecryptfs_nl_ctx nl_ctx;
 	} ctx;
 };
@@ -538,11 +540,11 @@ int ecryptfs_send_message(struct ecryptfs_messaging_ctx *mctx,
 			  struct ecryptfs_message *msg,
 			  unsigned char msg_type, uint16_t msg_flags,
 			  uint32_t msg_seq);
-int ecryptfs_send_proc(struct ecryptfs_proc_ctx *proc_ctx,
-		       struct ecryptfs_message *msg, uint8_t msg_type,
-		       uint16_t msg_flags, uint32_t msg_seq);
-void ecryptfs_release_proc(struct ecryptfs_proc_ctx *proc_ctx);
-int ecryptfs_run_proc_daemon(struct ecryptfs_proc_ctx *proc_ctx);
+int ecryptfs_send_miscdev(struct ecryptfs_miscdev_ctx *miscdev_ctx,
+			  struct ecryptfs_message *msg, uint8_t msg_type,
+			  uint16_t msg_flags, uint32_t msg_seq);
+void ecryptfs_release_miscdev(struct ecryptfs_miscdev_ctx *miscdev_ctx);
+int ecryptfs_run_miscdev_daemon(struct ecryptfs_miscdev_ctx *miscdev_ctx);
 
 /* TEMP TEMP TEMP - BEGIN
  * until context will be forwarded into key modules */

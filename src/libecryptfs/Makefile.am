@@ -7,7 +7,7 @@ libecryptfs_la_SOURCES = \
 	messaging.c \
 	packets.c \
 	netlink.c \
-	proc.c \
+	miscdev.c \
 	sysfs.c \
 	key_management.c \
 	decision_graph.c \

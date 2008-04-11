@@ -110,9 +110,9 @@ int ecryptfs_init_messaging(struct ecryptfs_messaging_ctx *mctx, uint32_t type)
 		mctx->type = ECRYPTFS_MESSAGING_TYPE_NETLINK;
 		rc = ecryptfs_init_netlink(&mctx->ctx.nl_ctx);
 		break;
-	case ECRYPTFS_MESSAGING_TYPE_PROC:
-		mctx->type = ECRYPTFS_MESSAGING_TYPE_PROC;
-		rc = ecryptfs_init_proc(&mctx->ctx.proc_ctx);
+	case ECRYPTFS_MESSAGING_TYPE_MISCDEV:
+		mctx->type = ECRYPTFS_MESSAGING_TYPE_MISCDEV;
+		rc = ecryptfs_init_miscdev(&mctx->ctx.miscdev_ctx);
 		break;
 	default:
 		rc = -EINVAL;
@@ -130,8 +130,8 @@ int ecryptfs_messaging_exit(struct ecryptfs_messaging_ctx *mctx)
 	case ECRYPTFS_MESSAGING_TYPE_NETLINK:
 		ecryptfs_release_netlink(&mctx->ctx.nl_ctx);
 		break;
-	case ECRYPTFS_MESSAGING_TYPE_PROC:
-		ecryptfs_release_proc(&mctx->ctx.proc_ctx);
+	case ECRYPTFS_MESSAGING_TYPE_MISCDEV:
+		ecryptfs_release_miscdev(&mctx->ctx.miscdev_ctx);
 		break;
 	default:
 		rc = -EINVAL;
@@ -168,11 +168,11 @@ int ecryptfs_send_message(struct ecryptfs_messaging_ctx *mctx,
 
 		}
 		break;
-	case ECRYPTFS_MESSAGING_TYPE_PROC:
-		rc = ecryptfs_send_proc(&mctx->ctx.proc_ctx, msg, msg_type,
-					msg_flags, msg_seq);
+	case ECRYPTFS_MESSAGING_TYPE_MISCDEV:
+		rc = ecryptfs_send_miscdev(&mctx->ctx.miscdev_ctx, msg,
+					   msg_type, msg_flags, msg_seq);
 		if (rc) {
-			syslog(LOG_ERR, "%s: Failed to register proc daemon "
+			syslog(LOG_ERR, "%s: Failed to register miscdev daemon "
 			       "with the eCryptfs kernel module; rc = [%d]\n",
 			       __FUNCTION__, rc);
 		}
@@ -195,8 +195,8 @@ int ecryptfs_run_daemon(struct ecryptfs_messaging_ctx *mctx)
 		if (rc)
 			goto out;
 		break;
-	case ECRYPTFS_MESSAGING_TYPE_PROC:
-		rc = ecryptfs_run_proc_daemon(&mctx->ctx.proc_ctx);
+	case ECRYPTFS_MESSAGING_TYPE_MISCDEV:
+		rc = ecryptfs_run_miscdev_daemon(&mctx->ctx.miscdev_ctx);
 		if (rc)
 			goto out;
 		break;

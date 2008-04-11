@@ -38,21 +38,21 @@
 #include "config.h"
 #include "../include/ecryptfs.h"
 
-int ecryptfs_send_proc(struct ecryptfs_proc_ctx *proc_ctx,
-		       struct ecryptfs_message *msg, uint8_t msg_type,
-		       uint16_t msg_flags, uint32_t msg_seq)
+int ecryptfs_send_miscdev(struct ecryptfs_miscdev_ctx *miscdev_ctx,
+			  struct ecryptfs_message *msg, uint8_t msg_type,
+			  uint16_t msg_flags, uint32_t msg_seq)
 {
-	uint32_t proc_msg_data_size;
+	uint32_t miscdev_msg_data_size;
 	uint32_t packet_len_size;
 	uint32_t packet_len;
 	uint32_t msg_seq_be32;
 	uint32_t i;
 	ssize_t written;
 	char packet_len_str[3];
-	char *proc_msg_data;
+	char *miscdev_msg_data;
 	int rc;
 
-	/* procfs packet format:
+	/* miscdevfs packet format:
 	 *  Octet 0: Type
 	 *  Octets 1-4: network byte order msg_ctx->counter
 	 *  Octets 5-N0: Size of struct ecryptfs_message to follow
@@ -70,61 +70,61 @@ int ecryptfs_send_proc(struct ecryptfs_proc_ctx *proc_ctx,
 		packet_len_size = 0;
 		packet_len = 0;
 	}
-	proc_msg_data_size = (1 + 4 + packet_len_size + packet_len);
-	proc_msg_data = malloc(proc_msg_data_size);
-	if (!proc_msg_data) {
+	miscdev_msg_data_size = (1 + 4 + packet_len_size + packet_len);
+	miscdev_msg_data = malloc(miscdev_msg_data_size);
+	if (!miscdev_msg_data) {
 		rc = -ENOMEM;
 		goto out;
 	}
 	msg_seq_be32 = htonl(msg_seq);
 	i = 0;
-	proc_msg_data[i++] = msg_type;
-	memcpy(&proc_msg_data[i], (void *)&msg_seq_be32, 4);
+	miscdev_msg_data[i++] = msg_type;
+	memcpy(&miscdev_msg_data[i], (void *)&msg_seq_be32, 4);
 	i += 4;
 	if (msg) {
-		memcpy(&proc_msg_data[i], packet_len_str, packet_len_size);
+		memcpy(&miscdev_msg_data[i], packet_len_str, packet_len_size);
 		i += packet_len_size;
-		memcpy(&proc_msg_data[i], (void *)msg, packet_len);
+		memcpy(&miscdev_msg_data[i], (void *)msg, packet_len);
 	}
-	written = write(proc_ctx->proc_fd, proc_msg_data, proc_msg_data_size);
+	written = write(miscdev_ctx->miscdev_fd, miscdev_msg_data, miscdev_msg_data_size);
 	if (written == -1) {
 		rc = -EIO;
-		syslog(LOG_ERR, "Failed to send eCryptfs proc message; "
+		syslog(LOG_ERR, "Failed to send eCryptfs miscdev message; "
 		       "errno msg = [%m]\n", errno);
 	}
-	free(proc_msg_data);
+	free(miscdev_msg_data);
 out:
 	return rc;
 }
 
 /**
- * ecryptfs_recv_proc
+ * ecryptfs_recv_miscdev
  * @msg: Allocated in this function; callee must deallocate
  */
-int ecryptfs_recv_proc(struct ecryptfs_proc_ctx *proc_ctx,
-		       struct ecryptfs_message **msg, uint32_t *msg_seq,
-		       uint8_t *msg_type)
+int ecryptfs_recv_miscdev(struct ecryptfs_miscdev_ctx *miscdev_ctx,
+			  struct ecryptfs_message **msg, uint32_t *msg_seq,
+			  uint8_t *msg_type)
 {
 	ssize_t read_bytes;
-	uint32_t proc_msg_data_size;
+	uint32_t miscdev_msg_data_size;
 	uint32_t packet_len_size;
 	uint32_t packet_len;
 	uint32_t msg_seq_be32;
 	uint32_t i;
-	char *proc_msg_data;
+	char *miscdev_msg_data;
 	int rc;
 
-	proc_msg_data = malloc(ECRYPTFS_MSG_MAX_SIZE);
-	if (!proc_msg_data) {
+	miscdev_msg_data = malloc(ECRYPTFS_MSG_MAX_SIZE);
+	if (!miscdev_msg_data) {
 		rc = -ENOMEM;
 		goto out;
 	}
-	read_bytes = read(proc_ctx->proc_fd, proc_msg_data,
+	read_bytes = read(miscdev_ctx->miscdev_fd, miscdev_msg_data,
 			  ECRYPTFS_MSG_MAX_SIZE);
 	if (read_bytes == -1) {
 		rc = -EIO;
 	syslog(LOG_ERR, "%s: Error attempting to read message from "
-		       "proc handle; errno msg = [%m]\n", __FUNCTION__, errno);
+		       "miscdev handle; errno msg = [%m]\n", __FUNCTION__, errno);
 		goto out;
 	}
 	if (read_bytes < (1 + 4)) {
@@ -136,12 +136,12 @@ int ecryptfs_recv_proc(struct ecryptfs_proc_ctx *proc_ctx,
 		goto out;
 	}
 	i = 0;
-	(*msg_type) = proc_msg_data[i++];
-	memcpy((void *)&msg_seq_be32, &proc_msg_data[i], 4);
+	(*msg_type) = miscdev_msg_data[i++];
+	memcpy((void *)&msg_seq_be32, &miscdev_msg_data[i], 4);
 	i += 4;
 	(*msg_seq) = ntohl(msg_seq_be32);
 	if ((*msg_type) == ECRYPTFS_MSG_REQUEST) {
-		rc = ecryptfs_parse_packet_length(&proc_msg_data[i],
+		rc = ecryptfs_parse_packet_length(&miscdev_msg_data[i],
 						  &packet_len,
 						  &packet_len_size);
 		if (rc)
@@ -151,8 +151,8 @@ int ecryptfs_recv_proc(struct ecryptfs_proc_ctx *proc_ctx,
 		packet_len_size = 0;
 		packet_len = 0;
 	}
-	proc_msg_data_size = (1 + 4 + packet_len_size + packet_len);
-	if (proc_msg_data_size != read_bytes) {
+	miscdev_msg_data_size = (1 + 4 + packet_len_size + packet_len);
+	if (miscdev_msg_data_size != read_bytes) {
 		rc = -EINVAL;
 		syslog(LOG_ERR, "%s: Invalid packet. (1 + 4 + "
 		       "packet_len_size=[%d] + packet_len=[%d])=[%d] != "
@@ -166,108 +166,39 @@ int ecryptfs_recv_proc(struct ecryptfs_proc_ctx *proc_ctx,
 		rc = -ENOMEM;
 		goto out;
 	}
-	memcpy((void *)(*msg), (void *)&proc_msg_data[i], packet_len);
+	memcpy((void *)(*msg), (void *)&miscdev_msg_data[i], packet_len);
 out:
-	free(proc_msg_data);
+	free(miscdev_msg_data);
 	return rc;
 }
 
-int ecryptfs_init_proc(struct ecryptfs_proc_ctx *proc_ctx)
+int ecryptfs_init_miscdev(struct ecryptfs_miscdev_ctx *miscdev_ctx)
 {
-	char *ctl_fullpath;
-	char *proc_mount_point;
-	int ctl_fd;
-	uid_t euid;
-	int rc;
+	int rc = 0;
 
-	rc = ecryptfs_get_proc_mount_point(&proc_mount_point);
-	if (rc)
-		goto out;
-	rc = asprintf(&ctl_fullpath, "%s/fs/ecryptfs/ctl", proc_mount_point);
-	if (rc == -1) {
-		rc = -ENOMEM;
-		goto out;
-	}
-	ctl_fd = open(ctl_fullpath, O_RDONLY);
-	if (ctl_fd == -1) {
-		rc = -EIO;
-		syslog(LOG_ERR, "%s: Error whilst attempting to open [%s]; "
-		       "errno msg = [%m]\n", __FUNCTION__, ctl_fullpath, errno);
-		goto out_free;
-	}
-	rc = ioctl(ctl_fd, SIOCSIFMAP);
-	close(ctl_fd);
-	if (rc == -1) {
-		rc = -EIO;
-		syslog(LOG_ERR, "%s: Error whilst attempting to ioctl [%s]; "
-		       "errno msg = [%m]\n", __FUNCTION__, ctl_fullpath, errno);
-		goto out_free;
-	}
-	euid = geteuid();
-	rc = asprintf(&proc_ctx->proc_filename, "%s/fs/ecryptfs/%d",
-		      proc_mount_point, euid);
-	if (rc == -1) {
-		rc = -ENOMEM;
-		goto out;
-	}
-	rc = 0;
-	proc_ctx->proc_fd = open(proc_ctx->proc_filename, O_RDWR);
-	if (proc_ctx->proc_fd == -1) {
+	miscdev_ctx->miscdev_fd = open(ECRYPTFS_DEFAULT_MISCDEV_FULLPATH,
+				       O_RDWR);
+	if (miscdev_ctx->miscdev_fd == -1) {
 		rc = -EIO;
 		syslog(LOG_ERR, "%s: Error whilst attempting to open [%s]; "
 		       "errno msg = [%m]\n", __FUNCTION__,
-		       proc_ctx->proc_filename, errno);
+		       ECRYPTFS_DEFAULT_MISCDEV_FULLPATH);
 	}
-out_free:
-	free(ctl_fullpath);
 out:
 	return rc;
 }
 
-void ecryptfs_release_proc(struct ecryptfs_proc_ctx *proc_ctx)
+void ecryptfs_release_miscdev(struct ecryptfs_miscdev_ctx *miscdev_ctx)
 {
-	char *ctl_fullpath;
-	char *proc_mount_point;
-	int ctl_fd;
-	uid_t euid;
-	int rc;
-
-	close(proc_ctx->proc_fd);
-	rc = ecryptfs_get_proc_mount_point(&proc_mount_point);
-	if (rc)
-		goto out;
-	rc = asprintf(&ctl_fullpath, "%s/fs/ecryptfs/ctl", proc_mount_point);
-	if (rc == -1) {
-		rc = -ENOMEM;
-		goto out;
-	}
-	ctl_fd = open(ctl_fullpath, O_RDONLY);
-	if (ctl_fd == -1) {
-		rc = -EIO;
-		syslog(LOG_ERR, "%s: Error whilst attempting to open [%s]; "
-		       "errno msg = [%m]\n", __FUNCTION__, ctl_fullpath, errno);
-		goto out_free;
-	}
-	rc = ioctl(ctl_fd, SIOCSIFMAP);
-	close(ctl_fd);
-	if (rc == -1) {
-		rc = -EIO;
-		syslog(LOG_ERR, "%s: Error whilst attempting to ioctl [%s]; "
-		       "errno msg = [%m]\n", __FUNCTION__, ctl_fullpath, errno);
-		goto out_free;
-	}
-out_free:
-	free(ctl_fullpath);
-out:
-	return;
+	close(miscdev_ctx->miscdev_fd);
 }
 
-int init_proc_daemon(void)
+int init_miscdev_daemon(void)
 {
 	return 0;
 }
 
-int ecryptfs_run_proc_daemon(struct ecryptfs_proc_ctx *proc_ctx)
+int ecryptfs_run_miscdev_daemon(struct ecryptfs_miscdev_ctx *miscdev_ctx)
 {
 	struct ecryptfs_message *emsg = NULL;
 	struct ecryptfs_ctx ctx;
@@ -284,7 +215,7 @@ int ecryptfs_run_proc_daemon(struct ecryptfs_proc_ctx *proc_ctx)
 		goto out;
 	}
 receive:
-	rc = ecryptfs_recv_proc(proc_ctx, &emsg, &msg_seq, &msg_type);
+	rc = ecryptfs_recv_miscdev(miscdev_ctx, &emsg, &msg_seq, &msg_type);
 	if (rc < 0) {
 		syslog(LOG_ERR, "Error while receiving eCryptfs netlink "
 		       "message; errno = [%d]; errno msg = [%s]\n", errno,
@@ -312,13 +243,13 @@ receive:
 
 		rc = parse_packet(&ctx, emsg, &reply);
 		if (rc) {
-			syslog(LOG_ERR, "Failed to process "
+			syslog(LOG_ERR, "Failed to miscdevess "
 			       "netlink packet\n");
 			free(reply);
 			goto free_emsg;
 		}
 		reply->index = emsg->index;
-		rc = ecryptfs_send_proc(proc_ctx, reply,
+		rc = ecryptfs_send_miscdev(miscdev_ctx, reply,
 					ECRYPTFS_MSG_RESPONSE, 0, msg_seq);
 		if (rc < 0) {
 			syslog(LOG_ERR, "Failed to send netlink "
