@@ -86,7 +86,8 @@ int ecryptfs_send_miscdev(struct ecryptfs_miscdev_ctx *miscdev_ctx,
 		i += packet_len_size;
 		memcpy(&miscdev_msg_data[i], (void *)msg, packet_len);
 	}
-	written = write(miscdev_ctx->miscdev_fd, miscdev_msg_data, miscdev_msg_data_size);
+	written = write(miscdev_ctx->miscdev_fd, miscdev_msg_data,
+			miscdev_msg_data_size);
 	if (written == -1) {
 		rc = -EIO;
 		syslog(LOG_ERR, "Failed to send eCryptfs miscdev message; "
@@ -124,7 +125,7 @@ int ecryptfs_recv_miscdev(struct ecryptfs_miscdev_ctx *miscdev_ctx,
 	if (read_bytes == -1) {
 		rc = -EIO;
 	syslog(LOG_ERR, "%s: Error attempting to read message from "
-		       "miscdev handle; errno msg = [%m]\n", __FUNCTION__, errno);
+	       "miscdev handle; errno msg = [%m]\n", __FUNCTION__, errno);
 		goto out;
 	}
 	if (read_bytes < (1 + 4)) {
@@ -176,13 +177,18 @@ int ecryptfs_init_miscdev(struct ecryptfs_miscdev_ctx *miscdev_ctx)
 {
 	int rc = 0;
 
-	miscdev_ctx->miscdev_fd = open(ECRYPTFS_DEFAULT_MISCDEV_FULLPATH,
+	miscdev_ctx->miscdev_fd = open(ECRYPTFS_DEFAULT_MISCDEV_FULLPATH_0,
 				       O_RDWR);
 	if (miscdev_ctx->miscdev_fd == -1) {
-		rc = -EIO;
-		syslog(LOG_ERR, "%s: Error whilst attempting to open [%s]; "
-		       "errno msg = [%m]\n", __FUNCTION__,
-		       ECRYPTFS_DEFAULT_MISCDEV_FULLPATH);
+		miscdev_ctx->miscdev_fd =
+			open(ECRYPTFS_DEFAULT_MISCDEV_FULLPATH_1, O_RDWR);
+		if (miscdev_ctx->miscdev_fd == -1) {
+			rc = -EIO;
+			syslog(LOG_ERR, "%s: Error whilst attempting to open "
+			       "[%s] or [%s]; errno msg = [%m]\n", __FUNCTION__,
+			       ECRYPTFS_DEFAULT_MISCDEV_FULLPATH_0,
+			       ECRYPTFS_DEFAULT_MISCDEV_FULLPATH_1, errno);
+		}
 	}
 out:
 	return rc;

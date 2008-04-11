@@ -411,7 +411,8 @@ struct ecryptfs_nl_ctx {
 	int socket_fd;
 };
 
-#define ECRYPTFS_DEFAULT_MISCDEV_FULLPATH "/dev/misc/ecryptfs"
+#define ECRYPTFS_DEFAULT_MISCDEV_FULLPATH_0 "/dev/ecryptfs"
+#define ECRYPTFS_DEFAULT_MISCDEV_FULLPATH_1 "/dev/misc/ecryptfs"
 
 struct ecryptfs_miscdev_ctx {
 	char *miscdev_filename;
