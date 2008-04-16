@@ -677,24 +677,19 @@ order to avoid deadlock on some page swap events.
 <p><h3>Why does the eCryptfs daemon crash my kernel?</h3></p>
 
 <p>
-For currently unknown reasons, the kernel will crash when the
-userspace daemon initiates communications with the eCryptfs kernel
-module via the netlink interface. We first noticed this problem with
-kernel release 2.6.24, but there has been one report of a
-distro-modified version of release 2.6.23 also being affected.
+You are probably using a kernel with the netlink interface to the
+userspace daemon. The netlink interface with the userspace daemon is
+buggy and obsolete.
 </p>
 
 <p>
 To resolve the issue, there is a <a
-href="http://downloads.sourceforge.net/ecryptfs/ecryptfs-procfs-kernel-20080406.txt">patch</a>
+href="http://downloads.sourceforge.net/ecryptfs/ecryptfs-miscdev-kernel-20080415-0.txt">patch</a>
 to migrate eCryptfs from using netlink for kernel-daemon
-communications to using a procfs handle instead. We anticipate that
-this patch will find its way into kernel release 2.6.26. In addition
-to this patch, you will need ecryptfs-utils release 42 or
-greater. Until release 42 is made, you can obtain the most up-to-date
-ecryptfs-utils from the <a
-href="http://git.kernel.org/?p=linux/kernel/git/mhalcrow/ecryptfs-utils.git;a=summary">kernel.org
-GIT repository</a>.
+communications to using a device handle instead. This patch has been
+merged into the -mm tree, and we anticipate that this patch will find
+its way into kernel release 2.6.26. In addition to this patch, you
+will need ecryptfs-utils release 44 or greater.
 </p>
 
 <a name="no-ecryptfsac">
