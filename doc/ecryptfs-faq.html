@@ -56,9 +56,6 @@ anyway?</a></li>
 <li><a href="#nonroot">Do I have to be root to mount
 eCryptfs?</a></li>
 
-<li><a href="#features">How can I find out which features are in my
-eCryptfs kernel module?</a></li>
-
 <li><a href="#xattr">How do I store the metadata in the extended
 attribute region of the lower file?</a></li>
 
@@ -87,6 +84,9 @@ kernel?</a></li>
 file, any users with permission can also access the file. Should not
 eCryptfs require all users to have the key in order to access the
 files?</a></li>
+
+<li><a href="#initcipher">&quot;<code>Unable to allocate crypto cipher
+with name [---]; rc = [-2]</code>&quot;</a></li>
 
 <li><a href="#baddir">&quot;<code>Error mounting eCryptfs; rc = [-2];
 strerr = [No such file or directory]</code>&quot;</a></li>
@@ -350,33 +350,6 @@ you. Alternatively, you can write your own application that calls
 <code>ecryptfs_add_key_module_key_to_keyring()</code> in
 <code>libecryptfs.so</code>. Then you will want to mount with the -i
 option to prevent the mount helper from being called.
-</p>
-
-<a name="features">
-
-<p><h3>Q. How can I find out which features are in my eCryptfs kernel
-module?</h3></p>
-
-<p>
-View the contents of <code>fs/ecryptfs/version_str</code> under your
-<code>sysfs</code> mount point (typically <code>/sys</code>). For
-instance:</p>
-
-<p>
-<code>
-# cat /sys/fs/ecryptfs/version_str<br>
-passphrase<br>
-pubkey<br>
-plaintext passthrough<br>
-metadata in extended attribute<br>
-</code>
-</p>
-
-<p>
-In this particular example, the kernel has passphrase support, public
-key support, plaintext passthrough support, and support for storing
-cryptographic metadata in the extended attribute regions of the lower
-files.
 </p>
 
 <a name="xattr">
@@ -731,6 +704,18 @@ add their keys to a set of keys wrapping the inode's FEK. Users expect
 to be able to accomplish such a task via users, groups, capabilities,
 and types, and eCryptfs defers access control decisions on trusted
 host environments to these existing access control mechanisms.
+</p>
+
+<a name="initcipher">
+
+<p><h3>Q. &quot;<code>Unable to allocate crypto cipher with name
+[---]; rc = [-2]</code>&quot;</h3></p>
+
+<p>
+Make sure that you have enabled the kernel crypto API and that you
+have built the ciphers, hashes, and chaining modes that you wish to
+use. This will usually be md5, aes, cbc, and ecb. Also, make sure that
+the requested key size is valid for your cipher.
 </p>
 
 <a name="baddir">
