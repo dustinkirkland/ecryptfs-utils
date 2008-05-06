@@ -310,6 +310,7 @@ int main(int argc, char **argv)
 			       basename(argv[0]),
 			       PACKAGE_NAME,
 			       PACKAGE_VERSION);
+			exit(0);
 			break;
 		case 'd':
 			messaging_type_specified = 1;
