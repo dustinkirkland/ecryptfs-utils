@@ -1,0 +1,14 @@
+#!/bin/sh
+# This script mounts a user's ~/Confidential ecryptfs folder
+#
+# Original by Michael Halcrow, IBM
+# Extracted to a stand-alone script by Dustin Kirkland <kirkland@canonical.com>
+
+
+if [ -f $HOME/.ecryptfs/auto-mount ]; then
+	if ! mount | grep "$HOME/Confidential type ecryptfs"; then
+		mount -i $HOME/Confidential
+	fi
+fi
+
+ecryptfs-zombie-kill

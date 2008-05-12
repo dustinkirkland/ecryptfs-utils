@@ -1,0 +1,146 @@
+#!/bin/sh
+# This script sets up an ecryptfs mount in a user's ~/Confidential, configures
+# fstab, pam, and bash to attach and wrap on login.
+#
+# Originally ecryptfs-setup-pam-wrapped.sh by Michael Halcrow, IBM
+#
+# Ported for use on Ubuntu by Dustin Kirkland <kirkland@canonical.com>
+# Copyright (C) 2008 Canonical Ltd.
+
+usage() {
+	echo 
+	echo "Usage:"
+	echo "# $0 USERNAME [MOUNT-PASSPHRASE] [LOGIN-PASSPHRASE]"
+	echo
+	echo "   Special characters are not allowed in the USERNAME."
+	echo
+	echo "   Be sure to properly escape your parameters according to your"
+	echo "   shell's special character nuances, and also surround the"
+	echo "   parameters by double quotes, if necessary."
+	echo
+	echo "   If you want to avoid MOUNT-PASSPHRASE and/or LOGIN-PASSPHRASE"
+	echo "   from being logged in your shell history, you may either:"
+	echo "     1) export the environment variables MOUNTPASS and LOGINPASS"
+	echo "     2) leave empty and you will be interactively prompted"
+	echo "   BEWARE: They will, however, be displayed on STDOUT, so be"
+	echo "   wary of shoulder surfers."
+	echo
+	exit 1
+}
+
+if ! whoami | grep "^root$" >/dev/null ; then
+	echo "ERROR: Please run this script as root"
+	exit 1
+fi
+
+USERNAME="$1"
+
+if [ -z "$USERNAME" ]; then
+	echo "ERROR: Must provide a username"
+	usage
+else
+	if ! grep "^$USERNAME:" /etc/passwd >/dev/null; then
+		echo "ERROR: User [$USERNAME] does not exist"
+		exit 1
+	fi
+fi
+
+if [ -z "$MOUNTPASS" ]; then
+	if [ -z "$2" ]; then
+		read -p "Enter your mount passphrase: " -r MOUNTPASS
+		if [ -z "$MOUNTPASS" ]; then
+			echo "ERROR: You must provide a mount passphrase"
+			usage
+		fi
+	else
+		MOUNTPASS="$2"
+	fi
+fi
+
+if [ -z "$LOGINPASS" ]; then
+	if [ -z "$2" ]; then
+		read -p "Enter your login passphrase: " -r LOGINPASS
+		if [ -z "$LOGINPASS" ]; then
+			echo "ERROR: You must provide the login passphrase"
+			usage
+		fi
+	else
+		LOGINPASS="$3"
+	fi
+fi
+
+if [ -f "/etc/pam.d/system-auth" ]; then
+	PAM_CONF=/etc/pam.d/system-auth
+elif [ -f "/etc/pam.d/common-auth" ]; then
+	PAM_CONF=/etc/pam.d/common-auth
+else
+	echo "ERROR: Cannot determine location of PAM system/common auth configuration"
+	exit 1
+fi
+
+echo "Using username [$USERNAME]"
+echo "Using mount passphrase [$MOUNTPASS]"
+echo "Using login passphrase [$LOGINPASS]"
+echo "Using pam configuration file [$PAM_CONF]"
+echo
+echo "This script will attempt to set up your system to mount"
+echo "/home/$USERNAME/Confidential with eCryptfs automatically on login,"
+echo "using your login passphrase."
+echo
+
+# Setup confidential directory in home
+modprobe ecryptfs
+mkdir -m 700 -p /home/$USERNAME/Confidential
+chown $USERNAME:$USERNAME /home/$USERNAME/Confidential
+
+# Prune out of fstab, and check for an active mount
+tmpfile=`mktemp`
+grep -v "\/home\/$USERNAME\/Confidential.*,ecryptfs_sig=.*" /etc/fstab > $tmpfile
+chmod --reference /etc/fstab $tmpfile
+chown --reference /etc/fstab $tmpfile
+mv -f $tmpfile /etc/fstab
+umount /home/$USERNAME/Confidential
+if mount | grep "/home/$USERNAME/Confidential type ecryptfs"; then
+	echo "ERROR: /home/$USERNAME/Confidential still mounted after umount"
+	exit 1
+fi
+
+# Setup /etc/fstab
+# BUG: passwd will be momentarily visible in "ps -ef" output
+mount -t ecryptfs /home/$USERNAME/Confidential /home/$USERNAME/Confidential -o key=passphrase:passwd="$MOUNTPASS",ecryptfs_cipher=aes,ecryptfs_key_bytes=16,ecryptfs_passthrough=n,no_sig_cache
+grep ecryptfs_sig /etc/mtab | sed 's/ecryptfs_cipher\=aes,ecryptfs_key_bytes\=16/ecryptfs_cipher\=aes,ecryptfs_key_bytes\=16,user,noauto,/' >> /etc/fstab
+umount /home/$USERNAME/Confidential
+
+# Setup PAM
+tmpfile1=`mktemp`
+grep -v "pam_ecryptfs.so" $PAM_CONF > $tmpfile1
+tmpfile2=`mktemp`
+grep -B 100000 "auth\s.*pam_unix.so" $tmpfile1 | grep -v "auth\s.*pam_unix.so" > $tmpfile2
+echo "password required pam_ecryptfs.so" >> $tmpfile2
+grep "auth\s.*pam_unix.so" $PAM_CONF >> $tmpfile2
+echo "auth required pam_ecryptfs.so unwrap" >> $tmpfile2
+grep -A 100000 "auth\s.*pam_unix.so" $tmpfile1 | grep -v "auth\s.*pam_unix.so" >> $tmpfile2
+rm -f $tmpfile1
+chmod --reference $PAM_CONF $tmpfile2
+chown --reference $PAM_CONF $tmpfile2
+mv -f $tmpfile2 $PAM_CONF
+
+# Setup bash profile and home dir
+if ! grep "ecryptfs-mount-confidential" /home/$USERNAME/.bash_profile >/dev/null; then
+	echo "ecryptfs-mount-confidential" >> /home/$USERNAME/.bash_profile
+	chown $USERNAME:$USERNAME /home/$USERNAME/.bash_profile
+fi
+if ! grep "umount.*/home/$USERNAME/Confidential" /home/$USERNAME/.bash_logout >/dev/null; then
+	echo "umount -l /home/$USERNAME/Confidential" >> /home/$USERNAME/.bash_logout
+	chown $USERNAME:$USERNAME /home/$USERNAME/.bash_logout
+fi
+mkdir -m 700 /home/$USERNAME/.ecryptfs
+chown $USERNAME:$USERNAME /home/$USERNAME/.ecryptfs
+touch /home/$USERNAME/.ecryptfs/auto-mount
+chown $USERNAME:$USERNAME /home/$USERNAME/.ecryptfs/auto-mount
+timestamp=`date +%Y%m%d%H%M%S`
+mv -f /home/$USERNAME/.ecryptfs/wrapped-passphrase /home/$USERNAME/.ecryptfs/wrapped-passphrase.$timestamp
+# BUG: passphrases will be momentarily visible in "ps -ef" output
+/usr/bin/ecryptfs-wrap-passphrase /home/$USERNAME/.ecryptfs/wrapped-passphrase "$MOUNTPASS" "$LOGINPASS"
+chmod 600 /home/$USERNAME/.ecryptfs/wrapped-passphrase
+chown $USERNAME:$USERNAME /home/$USERNAME/.ecryptfs/wrapped-passphrase

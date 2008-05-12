@@ -5,7 +5,9 @@ bin_PROGRAMS=ecryptfs-manager ecryptfs-wrap-passphrase \
 	     ecryptfs-insert-wrapped-passphrase-into-keyring \
 	     ecryptfs-rewrap-passphrase \
 	     ecryptfs-add-passphrase ecryptfs-zombie-kill \
-	     ecryptfs-zombie-list
+	     ecryptfs-zombie-list \
+	     ecryptfs-setup-confidential \
+	     ecryptfs-mount-confidential
 noinst_PROGRAMS=test
 TESTS=test
 
