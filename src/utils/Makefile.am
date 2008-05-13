@@ -1,4 +1,4 @@
-EXTRA_DIST=ecryptfsrc
+EXTRA_DIST=ecryptfsrc ecryptfs-setup-confidential ecryptfs-mount-confidential
 rootsbin_PROGRAMS=mount.ecryptfs
 bin_PROGRAMS=ecryptfs-manager ecryptfs-wrap-passphrase \
 	     ecryptfs-unwrap-passphrase \
