@@ -568,6 +568,12 @@ fill_in_decision_graph_based_on_version_support(struct param_node *root,
 		for (i = 0; i < last_param_node->num_transitions; i++)
 			last_param_node->tl[i].next_token =
 				&passthrough_param_node;
+		rc = asprintf(&passthrough_param_node.suggested_val, "n");
+		if (rc == -1) {
+			rc = -ENOMEM;
+			goto out;
+		}
+		rc = 0;
 		last_param_node = &passthrough_param_node;
 	}
 	if (ecryptfs_supports_hmac(version)) {
