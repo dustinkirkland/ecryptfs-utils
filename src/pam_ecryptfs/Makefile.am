@@ -4,6 +4,7 @@ pam_LTLIBRARIES = libpam_ecryptfs.la
 install-data-hook:
 	rm -f "$(DESTDIR)$(pamdir)/libpam_ecryptfs.la"
 	rm -f "$(DESTDIR)$(pamdir)/libpam_ecryptfs.a"
+	mv -f "$(DESTDIR)$(pamdir)/libpam_ecryptfs.so" "$(DESTDIR)$(pamdir)/pam_ecryptfs.so"
 endif
 
 libpam_ecryptfs_la_SOURCES = pam_ecryptfs.c
