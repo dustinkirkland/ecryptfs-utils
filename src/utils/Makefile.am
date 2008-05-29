@@ -1,4 +1,4 @@
-EXTRA_DIST=ecryptfsrc ecryptfs-setup-confidential ecryptfs-mount-confidential
+EXTRA_DIST=ecryptfsrc ecryptfs-setup-confidential ecryptfs-mount-confidential ecryptfs-umount-confidential
 rootsbin_PROGRAMS=mount.ecryptfs
 bin_PROGRAMS=ecryptfs-manager ecryptfs-wrap-passphrase \
 	     ecryptfs-unwrap-passphrase \
@@ -7,7 +7,8 @@ bin_PROGRAMS=ecryptfs-manager ecryptfs-wrap-passphrase \
 	     ecryptfs-add-passphrase ecryptfs-zombie-kill \
 	     ecryptfs-zombie-list
 bin_SCRIPTS = ecryptfs-setup-confidential \
-	      ecryptfs-mount-confidential
+	      ecryptfs-mount-confidential \
+	      ecryptfs-umount-confidential
 noinst_PROGRAMS=test
 TESTS=test
 
