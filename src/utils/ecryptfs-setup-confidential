@@ -11,18 +11,26 @@
 usage() {
 	echo 
 	echo "Usage:"
-	echo "# $0 USERNAME [MOUNT-PASSPHRASE] [LOGIN-PASSPHRASE]"
+	echo "# $0 [--username USERNAME]"
+	echo "  [--loginpass LOGINPASS] [--mountpass MOUNTPASS]"
+	echo "  [--mountpoint MOUNTPOINT] [--cryptdir CRYPTDIR]"
 	echo
-	echo "   Special characters are not allowed in the USERNAME."
+	echo " --username   Username for encrypted confidential mountpoint"
+	echo " --loginpass  System passphrase for USERNAME, used to wrap MOUNTPASS"
+	echo " --mountpass  Passphrase for mounting the ecryptfs directory"
+	echo " --mountpoint Defaults to ~USERNAME/Confidential, override here"
+	echo " --cryptdir   Defaults to ~USERNAME/.Confidential, override here"
 	echo
 	echo "   Be sure to properly escape your parameters according to your"
 	echo "   shell's special character nuances, and also surround the"
 	echo "   parameters by double quotes, if necessary."
 	echo
-	echo "   If you want to avoid MOUNT-PASSPHRASE and/or LOGIN-PASSPHRASE"
-	echo "   from being logged in your shell history, you may either:"
-	echo "     1) export the environment variables MOUNTPASS and LOGINPASS"
-	echo "     2) leave empty and you will be interactively prompted"
+	echo "   Any of these parameters may be:"
+	echo "     1) exported as environment variables (USERNAME, MOUNTPASS,"
+	echo "        LOGINPASS, MOUNTPOINT, CRYPTDIR)"
+	echo "     2) specified on the command line"
+	echo "     3) left empty and interactively prompted"
+	echo
 	echo "   BEWARE: They will, however, be displayed on STDOUT, so be"
 	echo "   wary of shoulder surfers."
 	echo
@@ -34,39 +42,84 @@ if ! whoami | grep "^root$" >/dev/null ; then
 	exit 1
 fi
 
-USERNAME="$1"
+if [ ! -z "$SUDO_USER" ]; then
+	USERNAME="$SUDO_USER"
+fi
+
+while [ ! -z "$1" ]; do
+	case "$1" in
+		--username)
+                        USERNAME="$2"
+			shift 2
+		;;
+		--loginpass)
+			LOGINPASS="$2"
+			shift 2
+		;;
+		--mountpass)
+			MOUNTPASS="$2"
+			shift 2
+		;;
+		--mountpoint)
+			MOUNTPOINT="$2"
+			shift 2
+		;;
+		--cryptdir)
+			CRYPTDIR="$2"
+			shift 2
+		;;
+		*)
+			usage
+		;;
+	esac
+done
 
 if [ -z "$USERNAME" ]; then
-	echo "ERROR: Must provide a username"
-	usage
-else
-	if ! grep "^$USERNAME:" /etc/passwd >/dev/null; then
-		echo "ERROR: User [$USERNAME] does not exist"
-		exit 1
+	read -p "Enter the username: " -r USERNAME
+	if [ -z "$USERNAME" ]; then
+		echo "ERROR: You must provide a username"
+	fi
+fi
+if ! grep "^$USERNAME:" /etc/passwd >/dev/null; then
+	echo "ERROR: User [$USERNAME] does not exist"
+	exit 1
+fi
+
+HOME=`grep "^$USERNAME:" /etc/passwd | awk -F: '{print $6}'`
+if [ ! -d "$HOME" ]; then
+	echo "ERROR: User home directory [$HOME] does not exist"
+	exit 1
+fi
+
+if [ -z "$LOGINPASS" ]; then
+	read -p "Enter your login passphrase: " -r LOGINPASS
+	if [ -z "$LOGINPASS" ]; then
+		echo "ERROR: You must provide the login passphrase"
+		usage
 	fi
 fi
 
 if [ -z "$MOUNTPASS" ]; then
-	if [ -z "$2" ]; then
-		read -p "Enter your mount passphrase: " -r MOUNTPASS
-		if [ -z "$MOUNTPASS" ]; then
-			echo "ERROR: You must provide a mount passphrase"
-			usage
-		fi
-	else
-		MOUNTPASS="$2"
+	read -p "Enter your mount passphrase: " -r MOUNTPASS
+	if [ -z "$MOUNTPASS" ]; then
+		echo "ERROR: You must provide a mount passphrase"
+		usage
 	fi
 fi
 
-if [ -z "$LOGINPASS" ]; then
-	if [ -z "$2" ]; then
-		read -p "Enter your login passphrase: " -r LOGINPASS
-		if [ -z "$LOGINPASS" ]; then
-			echo "ERROR: You must provide the login passphrase"
-			usage
-		fi
-	else
-		LOGINPASS="$3"
+if [ -z "$MOUNTPOINT" ]; then
+	read -p "Enter the confidential mountpoint [$HOME/Confidential]: " -r MOUNTPOINT
+	if [ -z "$MOUNTPOINT" ]; then
+		MOUNTPOINT="$HOME/Confidential"
+	fi
+fi
+
+if [ -z "$CRYPTDIR" ]; then
+	basename=`basename "$MOUNTPOINT"`
+	dir=`echo "$MOUNTPOINT" | sed "s/$basename$/\.$basename/"`
+	read -p "Enter the encrypted directory [$dir]: " -r CRYPTDIR
+	if [ -z "$CRYPTDIR" ]; then
+		CRYPTDIR="$dir"
 	fi
 fi
 
@@ -79,69 +132,116 @@ else
 	exit 1
 fi
 
+if [ -f "/lib/security/libpam_ecryptfs.so" ]; then
+	PAM_LIB=libpam_ecryptfs.so
+elif [ -f "/lib/security/pam_ecryptfs.so" ]; then
+	PAM_LIB=pam_ecryptfs.so
+else
+	echo "ERROR: Cannot find ecryptfs PAM library"
+	exit 1
+fi
 echo "Using username [$USERNAME]"
 echo "Using mount passphrase [$MOUNTPASS]"
 echo "Using login passphrase [$LOGINPASS]"
+echo "Using mount point [$MOUNTPOINT]"
+echo "Using encrypted dir [$CRYPTDIR]"
 echo "Using pam configuration file [$PAM_CONF]"
 echo
 echo "This script will attempt to set up your system to mount"
-echo "/home/$USERNAME/Confidential with eCryptfs automatically on login,"
+echo "$MOUNTPOINT with eCryptfs automatically on login,"
 echo "using your login passphrase."
 echo
 
+###############################################################################
+
 # Setup confidential directory in home
 modprobe ecryptfs
-mkdir -m 700 -p /home/$USERNAME/Confidential
-chown $USERNAME:$USERNAME /home/$USERNAME/Confidential
+mkdir -m 500 -p "$MOUNTPOINT" 
+mkdir -m 500 -p "$CRYPTDIR"
+chown $USERNAME:$USERNAME "$MOUNTPOINT" "$CRYPTDIR"
+touch "$MOUNTPOINT"/"NOT MOUNTED - Run ecryptfs-mount-confidential to mount this directory"
 
 # Prune out of fstab, and check for an active mount
 tmpfile=`mktemp`
-grep -v "\/home\/$USERNAME\/Confidential.*,ecryptfs_sig=.*" /etc/fstab > $tmpfile
+grep -v "$MOUNTPOINT.*,ecryptfs_sig=.*" /etc/fstab > $tmpfile
 chmod --reference /etc/fstab $tmpfile
 chown --reference /etc/fstab $tmpfile
 mv -f $tmpfile /etc/fstab
-umount /home/$USERNAME/Confidential
-if mount | grep "/home/$USERNAME/Confidential type ecryptfs"; then
-	echo "ERROR: /home/$USERNAME/Confidential still mounted after umount"
+umount "$MOUNTPOINT" 2>/dev/null
+if mount | grep "$MOUNTPOINT type ecryptfs"; then
+	echo "ERROR: $MOUNTPOINT still mounted after umount"
 	exit 1
 fi
 
 # Setup /etc/fstab
 # BUG: passwd will be momentarily visible in "ps -ef" output
-mount -t ecryptfs /home/$USERNAME/Confidential /home/$USERNAME/Confidential -o key=passphrase:passwd="$MOUNTPASS",ecryptfs_cipher=aes,ecryptfs_key_bytes=16,ecryptfs_passthrough=n,no_sig_cache
-grep ecryptfs_sig /etc/mtab | sed 's/ecryptfs_cipher\=aes,ecryptfs_key_bytes\=16/ecryptfs_cipher\=aes,ecryptfs_key_bytes\=16,user,noauto,/' >> /etc/fstab
-umount /home/$USERNAME/Confidential
+mount -t ecryptfs "$CRYPTDIR" "$MOUNTPOINT" -o key=passphrase:passwd="$MOUNTPASS",ecryptfs_cipher=aes,ecryptfs_key_bytes=16,ecryptfs_passthrough=n,no_sig_cache
+grep ecryptfs_sig /etc/mtab | grep "$MOUNTPOINT" | sed 's/ecryptfs_cipher\=aes,ecryptfs_key_bytes\=16/ecryptfs_cipher\=aes,ecryptfs_key_bytes\=16,user,noauto,/' >> /etc/fstab
+umount "$MOUNTPOINT"
 
 # Setup PAM
 tmpfile1=`mktemp`
 grep -v "pam_ecryptfs.so" $PAM_CONF > $tmpfile1
 tmpfile2=`mktemp`
 grep -B 100000 "auth\s.*pam_unix.so" $tmpfile1 | grep -v "auth\s.*pam_unix.so" > $tmpfile2
-echo "password required pam_ecryptfs.so" >> $tmpfile2
+echo "password required $PAM_LIB" >> $tmpfile2
 grep "auth\s.*pam_unix.so" $PAM_CONF >> $tmpfile2
-echo "auth required pam_ecryptfs.so unwrap" >> $tmpfile2
+echo "auth required $PAM_LIB unwrap" >> $tmpfile2
 grep -A 100000 "auth\s.*pam_unix.so" $tmpfile1 | grep -v "auth\s.*pam_unix.so" >> $tmpfile2
 rm -f $tmpfile1
 chmod --reference $PAM_CONF $tmpfile2
 chown --reference $PAM_CONF $tmpfile2
 mv -f $tmpfile2 $PAM_CONF
 
-# Setup bash profile and home dir
-if ! grep "ecryptfs-mount-confidential" /home/$USERNAME/.bash_profile >/dev/null; then
-	echo "ecryptfs-mount-confidential" >> /home/$USERNAME/.bash_profile
-	chown $USERNAME:$USERNAME /home/$USERNAME/.bash_profile
+# Setup bash profile
+if ! grep "ecryptfs-mount-confidential" $HOME/.bash_profile >/dev/null; then
+	echo "ecryptfs-mount-confidential" >> $HOME/.bash_profile
+	chown $USERNAME:$USERNAME $HOME/.bash_profile
 fi
-if ! grep "umount.*/home/$USERNAME/Confidential" /home/$USERNAME/.bash_logout >/dev/null; then
-	echo "umount -l /home/$USERNAME/Confidential" >> /home/$USERNAME/.bash_logout
-	chown $USERNAME:$USERNAME /home/$USERNAME/.bash_logout
+if ! grep "ecryptfs-umount-confidential" $HOME/.bash_logout >/dev/null; then
+	echo "ecryptfs-umount-confidential" >> $HOME/.bash_logout
+	chown $USERNAME:$USERNAME $HOME/.bash_logout
 fi
-mkdir -m 700 /home/$USERNAME/.ecryptfs
-chown $USERNAME:$USERNAME /home/$USERNAME/.ecryptfs
-touch /home/$USERNAME/.ecryptfs/auto-mount
-chown $USERNAME:$USERNAME /home/$USERNAME/.ecryptfs/auto-mount
-timestamp=`date +%Y%m%d%H%M%S`
-mv -f /home/$USERNAME/.ecryptfs/wrapped-passphrase /home/$USERNAME/.ecryptfs/wrapped-passphrase.$timestamp
+
+# Setup gnome desktop autostart
+mkdir -p $HOME/.config/autostart/
+chown -R $USERNAME:$USERNAME $HOME/.config/autostart/
+echo "
+[Desktop Entry]
+Type=Application
+Name=Ecryptfs Mount Confidential
+Exec=/usr/bin/ecryptfs-mount-confidential
+X-GNOME-Autostart-enabled=true
+" > $HOME/.config/autostart/ecryptfs-mount-confidential.desktop
+chown $USERNAME:$USERNAME $HOME/.config/autostart/ecryptfs-mount-confidential.desktop
+
+
+# Setup ~/.ecryptfs directory
+mkdir -m 700 $HOME/.ecryptfs 2>/dev/null
+chown $USERNAME:$USERNAME $HOME/.ecryptfs
+touch $HOME/.ecryptfs/auto-mount
+chown $USERNAME:$USERNAME $HOME/.ecryptfs/auto-mount
+# Backup any existing wrapped-passphrase
+if [ -z "$HOME/.ecryptfs/wrapped-passphrase" ]; then
+	timestamp=`date +%Y%m%d%H%M%S`
+	mv -f $HOME/.ecryptfs/wrapped-passphrase $HOME/.ecryptfs/wrapped-passphrase.$timestamp
+fi
 # BUG: passphrases will be momentarily visible in "ps -ef" output
-/usr/bin/ecryptfs-wrap-passphrase /home/$USERNAME/.ecryptfs/wrapped-passphrase "$MOUNTPASS" "$LOGINPASS"
-chmod 600 /home/$USERNAME/.ecryptfs/wrapped-passphrase
-chown $USERNAME:$USERNAME /home/$USERNAME/.ecryptfs/wrapped-passphrase
+ecryptfs-wrap-passphrase $HOME/.ecryptfs/wrapped-passphrase "$MOUNTPASS" "$LOGINPASS"
+chmod 400 $HOME/.ecryptfs/wrapped-passphrase
+chown $USERNAME:$USERNAME $HOME/.ecryptfs/wrapped-passphrase
+
+# Setup .ecryptfsrc to store the confidential mountpoint
+tmpfile1=`mktemp $HOME/.ecryptfsrc.XXXXXX`
+chmod 400 $tmpfile1
+chown $USERNAME:$USERNAME $tmpfile1
+grep -v "CONFIDENTIAL=" $HOME/.ecryptfsrc > $tmpfile1
+echo "CONFIDENTIAL=\"$MOUNTPOINT\"" >> $tmpfile1
+mv -f $tmpfile1 $HOME/.ecryptfsrc
+
+echo
+echo "Done."
+echo
+echo "$USERNAME should log in and check the output of the 'mount' command."
+echo
+exit 0
