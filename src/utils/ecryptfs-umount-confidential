@@ -1,0 +1,19 @@
+#!/bin/sh
+# This script unmounts a user's confidential ecryptfs folder, and makes
+# both the mountpoint and underlying encrypted directories read-only.
+#
+# Original by Michael Halcrow, IBM
+# Extracted to a stand-alone script by Dustin Kirkland <kirkland@canonical.com>
+
+CONFIDENTIAL="$HOME/Confidential"
+. $HOME/.ecryptfsrc 2>/dev/null || /bin/true
+if mount | grep -q "$CONFIDENTIAL type ecryptfs"; then
+	username=`whoami`
+	count=`who | grep "^$username " | wc -l`
+	if [ $count -le 1 ]; then
+		ENCRYPTED_DIR=`grep " $CONFIDENTIAL " /etc/fstab | awk '{print $1}'`
+		umount -l "$CONFIDENTIAL" && chmod 500 "$CONFIDENTIAL" "$ENCRYPTED_DIR"
+	fi
+fi
+
+ecryptfs-zombie-kill
