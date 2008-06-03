@@ -744,8 +744,8 @@ static struct param_node ecryptfs_openssl_gen_key_param_nodes[] = {
 #define SSL_FILE_PASSWD_TOK 4
 #define SSL_FD_PASSWD_TOK 5
 static struct param_node ssl_param_nodes[] = {
-	{.num_mnt_opt_names = 1,
-	 .mnt_opt_names = {"keysource"},
+	{.num_mnt_opt_names = 2,
+	 .mnt_opt_names = {"openssl_keysource", "keysource"},
 	 .prompt = "Key source",
 	 .val_type = VAL_STR,
 	 .val = NULL,
@@ -758,8 +758,8 @@ static struct param_node ssl_param_nodes[] = {
 		 .next_token = &ssl_param_nodes[SSL_KEY_FILE_TOK],
 		 .trans_func = NULL}}}, /* Add more options here later */
 
-	{.num_mnt_opt_names = 1,
-	 .mnt_opt_names = {"keyfile"},
+	{.num_mnt_opt_names = 2,
+	 .mnt_opt_names = {"openssl_keyfile", "keyfile"},
 	 .prompt = "PEM key file",
 	 .val_type = VAL_STR,
 	 .val = NULL,
@@ -774,8 +774,9 @@ static struct param_node ssl_param_nodes[] = {
 		 .next_token = &ssl_param_nodes[SSL_PASSPHRASE_METHOD_TOK],
 		 .trans_func = tf_ssl_keyfile}}},
 
-	{.num_mnt_opt_names = 1,
-	 .mnt_opt_names = {"passwd_specification_method"},
+	{.num_mnt_opt_names = 2,
+	 .mnt_opt_names = {"openssl_passwd_specification_method",
+			   "passwd_specification_method"},
 	 .prompt = "Method of providing the passphrase",
 	 .val_type = VAL_STR,
 	 .val = NULL,
@@ -790,22 +791,22 @@ static struct param_node ssl_param_nodes[] = {
 		   | ECRYPTFS_PARAM_FLAG_ECHO_INPUT
 		   | ECRYPTFS_ALLOW_IMPLICIT_TRANSITION),
 	 .num_transitions = 3,
-	 .tl = {{.val = "passwd",
+	 .tl = {{.val = "openssl_passwd",
 		 .pretty_val = "passwd: Enter on Console",
 		 .next_token = &ssl_param_nodes[SSL_USER_PROVIDED_PASSWD_TOK],
 		 .trans_func = NULL},
-		{.val = "passwd_file",
+		{.val = "openssl_passwd_file",
 		 .pretty_val = "passwd_file: File Containing Passphrase",
 		 .next_token = &ssl_param_nodes[SSL_FILE_PASSWD_TOK],
 		 .trans_func = NULL},
-		{.val = "passwd_fd",
+		{.val = "openssl_passwd_fd",
 		 .pretty_val = ("passwd_fd: File Descriptor for File "
 				"Containing Passphrase"),
 		 .next_token = &ssl_param_nodes[SSL_FD_PASSWD_TOK],
 		 .trans_func = NULL}}},
 
-	{.num_mnt_opt_names = 1,
-	 .mnt_opt_names = {"passwd"},
+	{.num_mnt_opt_names = 2,
+	 .mnt_opt_names = {"openssl_passwd", "passwd"},
 	 .prompt = "Passphrase",
 	 .val_type = VAL_STR,
 	 .val = NULL,
@@ -818,8 +819,8 @@ static struct param_node ssl_param_nodes[] = {
 		 .next_token = NULL,
 		 .trans_func = tf_ssl_passwd}}},
 
-	{.num_mnt_opt_names = 1,
-	 .mnt_opt_names = {"passwd_file"},
+	{.num_mnt_opt_names = 2,
+	 .mnt_opt_names = {"openssl_passwd_file", "passwd_file"},
 	 .prompt = "Passphrase File",
 	 .val_type = VAL_STR,
 	 .val = NULL,
@@ -832,8 +833,8 @@ static struct param_node ssl_param_nodes[] = {
 		 .next_token = NULL,
 		 .trans_func = tf_ssl_passwd_file}}},
 
-	{.num_mnt_opt_names = 1,
-	 .mnt_opt_names = {"passwd_fd"},
+	{.num_mnt_opt_names = 2,
+	 .mnt_opt_names = {"openssl_passwd_fd", "passwd_fd"},
 	 .prompt = "Passphrase File Descriptor",
 	 .val_type = VAL_STR,
 	 .val = NULL,
