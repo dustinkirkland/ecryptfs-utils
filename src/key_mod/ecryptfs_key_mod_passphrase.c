@@ -30,7 +30,6 @@
 #include "../include/ecryptfs.h"
 #include "../include/decision_graph.h"
 
-
 static int tf_passwd(struct ecryptfs_ctx *ctx, struct param_node *node,
 		     struct val_node **head, void **foo)
 {
@@ -56,9 +55,9 @@ static int tf_pass_file(struct ecryptfs_ctx *ctx, struct param_node *node,
 		goto out;
 	}
 	memset(file_head, 0, sizeof(struct ecryptfs_name_val_pair));
-	if (strcmp(node->mnt_opt_names[0], "passfile") == 0) {
+	if (strcmp(node->mnt_opt_names[0], "passphrase_passfile") == 0) {
 		fd = open(node->val, O_RDONLY);
-	} else if (strcmp(node->mnt_opt_names[0], "passfd") == 0) {
+	} else if (strcmp(node->mnt_opt_names[0], "passphrase_passfd") == 0) {
 		fd = strtol(node->val, NULL, 0);
 	} else {
 		syslog(LOG_ERR, "%s: Invalid file descriptor qualifier\n",
@@ -76,7 +75,8 @@ static int tf_pass_file(struct ecryptfs_ctx *ctx, struct param_node *node,
 	close(fd);
 	walker = file_head->next;
 	while (walker) {
-		if (strcmp(walker->name, "passwd") == 0) {
+		if (strcmp(walker->name, "passphrase_passwd") == 0
+		    || strcmp(walker->name, "passwd") == 0) {
 			asprintf(&tmp_val, "%s", walker->value);
 			stack_push(head, tmp_val);
 			break;
@@ -96,15 +96,6 @@ out:
 	free(node->val);
 	node->val = NULL;
 	return rc;
-}
-
-#warning pass_env not implemented
-static int tf_pass_env(struct ecryptfs_ctx *ctx, struct param_node *node,
-		       struct val_node **head, void **foo)
-{
-	stack_push(head, node->val);
-	node->val = NULL;
-	return DEFAULT_TOK;
 }
 
 static int tf_salt(struct ecryptfs_ctx *ctx, struct param_node *node,
@@ -153,51 +144,39 @@ out:
 	return DEFAULT_TOK;
 }
 
-#define PASSPHRASE_TOK 0
-#define PASSWD_TOK 1
-#define PASS_FILE_TOK 2
-#define PASS_ENV_TOK 3
-#define PASS_FD_TOK 4
-#define PASS_STDIN_TOK 5
-#define DEFAULT_PASS_TOK 6
-#define SALT_TOK 7
+#define ECRYPTFS_PASSPHRASE_TOK 0
+#define ECRYPTFS_PASSWD_TOK 1
+#define ECRYPTFS_PASS_FILE_TOK 2
+#define ECRYPTFS_PASS_FD_TOK 3
+#define ECRYPTFS_SALT_TOK 4
 struct param_node passphrase_param_nodes[] = {
+	/* ECRYPTFS_PASSPHRASE_TOK = 0 */
 	{.num_mnt_opt_names = 1,
 	 .mnt_opt_names = {"passphrase_type"},
-	 .prompt = "Passphrase type",
+	 .prompt = "Method for providing the passphrase",
 	 .val_type = VAL_STR,
 	 .val = NULL,
 	 .display_opts = NULL,
-	 .default_val = "file",
+	 .default_val = "passphrase_passwd",
 	 .flags = ECRYPTFS_PARAM_FLAG_NO_VALUE,
-	 .num_transitions = 6,
-	 .tl = {{.val = "passwd",
-		 .pretty_val = "",
-		 .next_token = &passphrase_param_nodes[PASSWD_TOK],
+	 .num_transitions = 3,
+	 .tl = {{.val = "passphrase_passwd",
+		 .pretty_val = "Provide passphrase directly",
+		 .next_token = &passphrase_param_nodes[ECRYPTFS_PASSWD_TOK],
 		 .trans_func = NULL},
-		{.val = "passfile",
-		 .pretty_val = "Passphrase File",
-		 .next_token = &passphrase_param_nodes[PASS_FILE_TOK],
+		{.val = "passphrase_passwd_file",
+		 .pretty_val = "File containing passphrase (only use secure "
+		 "media)",
+		 .next_token = &passphrase_param_nodes[ECRYPTFS_PASS_FILE_TOK],
 		 .trans_func = NULL},
-		{.val = "passenv",
-		 .pretty_val = "Passphrase ENV",
-		 .next_token = &passphrase_param_nodes[PASS_ENV_TOK],
-		 .trans_func = NULL},
-		{.val = "passfd",
-		 .pretty_val = "Passphrase File Descriptor",
-		 .next_token = &passphrase_param_nodes[PASS_FD_TOK],
-		 .trans_func = NULL},
-		{.val = "passstdin",
-		 .pretty_val = "Passphrase stdin",
-		 .next_token = &passphrase_param_nodes[PASS_STDIN_TOK],
-		 .trans_func = NULL},
-		{.val = "default",
-		 .pretty_val = "default",
-		 .next_token = &passphrase_param_nodes[DEFAULT_PASS_TOK],
+		{.val = "passphrase_passwd_fd",
+		 .pretty_val = "File descriptor for file containing passphrase",
+		 .next_token = &passphrase_param_nodes[ECRYPTFS_PASS_FD_TOK],
 		 .trans_func = NULL}}},
 
-	{.num_mnt_opt_names = 1,
-	 .mnt_opt_names = {"passwd"},
+	/* ECRYPTFS_PASSWD_TOK = 1 */
+	{.num_mnt_opt_names = 2,
+	 .mnt_opt_names = {"passphrase_passwd", "passwd"},
 	 .prompt = "Passphrase",
 	 .val_type = VAL_STR,
 	 .val = NULL,
@@ -205,16 +184,18 @@ struct param_node passphrase_param_nodes[] = {
 	 .default_val = NULL,
 	 .flags = ECRYPTFS_PARAM_FLAG_MASK_OUTPUT,
 	 .num_transitions = 2,
-	 .tl = {{.val = "salt",
+	 .tl = {{.val = "passphrase_salt",
 		 .pretty_val = "salt",
-		 .next_token = &passphrase_param_nodes[SALT_TOK],
+		 .next_token = &passphrase_param_nodes[ECRYPTFS_SALT_TOK],
 		 .trans_func = tf_passwd},
 		{.val = "default",
 		 .pretty_val = "default",
-		 .next_token = &passphrase_param_nodes[SALT_TOK],
+		 .next_token = &passphrase_param_nodes[ECRYPTFS_SALT_TOK],
 		 .trans_func = tf_passwd}}},
-	{.num_mnt_opt_names = 1,
-	 .mnt_opt_names = {"passfile"},
+
+	/* ECRYPTFS_PASS_FILE_TOK = 2 */
+	{.num_mnt_opt_names = 2,
+	 .mnt_opt_names = {"passphrase_passfile", "passfile"},
 	 .prompt = "Passphrase File",
 	 .val_type = VAL_STR,
 	 .val = NULL,
@@ -222,35 +203,18 @@ struct param_node passphrase_param_nodes[] = {
 	 .default_val = NULL,
 	 .flags = ECRYPTFS_PARAM_FLAG_MASK_OUTPUT,
 	 .num_transitions = 2,
-	 .tl = {{.val = "salt",
+	 .tl = {{.val = "passphrase_salt",
 		 .pretty_val = "salt",
-		 .next_token = &passphrase_param_nodes[SALT_TOK],
+		 .next_token = &passphrase_param_nodes[ECRYPTFS_SALT_TOK],
 		 .trans_func = tf_pass_file},
 		{.val = "default",
 		 .pretty_val = "default",
-		 .next_token = &passphrase_param_nodes[SALT_TOK],
+		 .next_token = &passphrase_param_nodes[ECRYPTFS_SALT_TOK],
 		 .trans_func = tf_pass_file}}},
 
-	{.num_mnt_opt_names = 1,
-	 .mnt_opt_names = {"passenv"},
-	 .prompt = "Passphrase Environmental Variable",
-	 .val_type = VAL_STR,
-	 .val = NULL,
-	 .display_opts = NULL,
-	 .default_val = NULL,
-	 .flags = ECRYPTFS_PARAM_FLAG_MASK_OUTPUT,
-	 .num_transitions = 2,
-	 .tl = {{.val = "salt",
-		 .pretty_val = "salt",
-		 .next_token = &passphrase_param_nodes[SALT_TOK],
-		 .trans_func = tf_pass_env},
-		{.val = "default",
-		 .pretty_val = "default",
-		 .next_token = &passphrase_param_nodes[SALT_TOK],
-		 .trans_func = tf_pass_env}}},
-
-	{.num_mnt_opt_names = 1,
-	 .mnt_opt_names = {"passfd"},
+	/* ECRYPTFS_PASS_FD_TOK = 3 */
+	{.num_mnt_opt_names = 2,
+	 .mnt_opt_names = {"passphrase_passfd", "passfd"},
 	 .prompt = "Passphrase File Discriptor",
 	 .val_type = VAL_STR,
 	 .val = NULL,
@@ -260,52 +224,17 @@ struct param_node passphrase_param_nodes[] = {
 	 .num_transitions = 2,
 	 .tl = {{.val = "salt",
 		 .pretty_val = "salt",
-		 .next_token = &passphrase_param_nodes[SALT_TOK],
+		 .next_token = &passphrase_param_nodes[ECRYPTFS_SALT_TOK],
 		 .trans_func = tf_pass_file},
 		{.val = "default",
 		 .pretty_val = "default",
-		 .next_token = &passphrase_param_nodes[SALT_TOK],
+		 .next_token = &passphrase_param_nodes[ECRYPTFS_SALT_TOK],
 		 .trans_func = tf_pass_file}}},
 
-	{.num_mnt_opt_names = 1,
-	 .mnt_opt_names = {"passstdin"},
-	 .prompt = "Passphrase",
-	 .val_type = VAL_STR,
-	 .val = NULL,
-	 .display_opts = NULL,
-	 .default_val = NULL,
-	 .flags = VERIFY_VALUE | STDIN_REQUIRED,
-	 .num_transitions = 2,
-	 .tl = {{.val = "salt",
-		 .pretty_val = "salt",
-		 .next_token = &passphrase_param_nodes[SALT_TOK],
-		 .trans_func = tf_passwd},
-		{.val = "default",
-		 .pretty_val = "default",
-		 .next_token = &passphrase_param_nodes[SALT_TOK],
-		 .trans_func = tf_passwd}}},
-
-	{.num_mnt_opt_names = 1,
-	 .mnt_opt_names = {"defaultpass"},
-	 .prompt = "Passphrase",
-	 .val_type = VAL_STR,
-	 .val = NULL,
-	 .display_opts = NULL,
-	 .default_val = NULL,
-	 .flags = VERIFY_VALUE,
-	 .num_transitions = 2,
-	 .tl = {{.val = "salt",
-		 .pretty_val = "salt",
-		 .next_token = &passphrase_param_nodes[SALT_TOK],
-		 .trans_func = tf_passwd},
-		{.val = "default",
-		 .pretty_val = "default",
-		 .next_token = &passphrase_param_nodes[SALT_TOK],
-		 .trans_func = tf_passwd}}},
-
-	{.num_mnt_opt_names = 1,
-	 .mnt_opt_names = {"salt"},
-	 .prompt = "Salt",
+	/* ECRYPTFS_SALT_TOK = 4 */
+	{.num_mnt_opt_names = 2,
+	 .mnt_opt_names = {"passphrase_salt", "salt"},
+	 .prompt = "Salt (hexadecimal representation)",
 	 .val_type = VAL_HEX,
 	 .val = NULL,
 	 .display_opts = NULL,
@@ -316,7 +245,6 @@ struct param_node passphrase_param_nodes[] = {
 		 .pretty_val = NULL,
 		 .next_token = NULL,
 		 .trans_func = tf_salt}}},
-
 };
 
 struct transition_node passphrase_transition = {

@@ -790,7 +790,7 @@ int ecryptfs_insert_params(struct ecryptfs_name_val_pair *nvp,
 		}
 	}
 out:
-		return rc;
+	return rc;
 }
 
 /**
