@@ -782,6 +782,10 @@ static struct param_node ssl_param_nodes[] = {
 	 .display_opts = NULL,
 	 .default_val = NULL,
 	 .suggested_val = "passwd",
+	 /* An implicit transition takes place if one of the key
+	  * module parameters that are the target of one of the
+	  * transition nodes already exists in the provided parameter
+	  * list. The provided parameter list */
 	 .flags = (DISPLAY_TRANSITION_NODE_VALS | ECRYPTFS_DISPLAY_PRETTY_VALS
 		   | ECRYPTFS_PARAM_FLAG_ECHO_INPUT
 		   | ECRYPTFS_ALLOW_IMPLICIT_TRANSITION),

@@ -161,9 +161,8 @@ Currently supported aliases and attributes parsed by the mount helper include:
  key=openssl:
      keyfile=/path/to/key
      passwd=<passphrase>
-     passfile=/path/to/file
-     passfd=<file descriptor>
-     passstdin (default)
+     passwd_file=/path/to/file
+     passwd_fd=<file descriptor>
 
 The following general attributes are valid kernel mount options,
 and may also be acted upon by the mount helper, mount.ecryptfs:
@@ -194,7 +193,7 @@ and may also be acted upon by the mount helper, mount.ecryptfs:
  ecryptfs_xattr_metadata
 	When set, newly created files will have their cryptographic
 	metadata stored in the extended attribute region of the file rather
-	than the header.
+	than the header (requires kernel support).
 
  ecryptfs_encrypted_view
 	When set, this option causes eCryptfs to present applications a
@@ -204,7 +203,7 @@ and may also be acted upon by the mount helper, mount.ecryptfs:
 
  ecryptfs_hmac
         When set, eCryptfs will include HMAC integrity enforcement to
-        its files.
+        its files (requires kernel support).
 
  ecryptfs_debug=<value>
 	A value greater than 0 enables kernel debug messages, see NOTES
