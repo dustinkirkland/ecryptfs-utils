@@ -271,7 +271,7 @@ int main(int argc, char **argv)
 		{"help\0\t\t\tShow usage information", no_argument, NULL, 'h'},
 		{NULL, 0, NULL, 0}
 	};
-	static char *short_options = "p:f:C:R:V:d:h";
+	static char *short_options = "p:fC:R:Vd:h";
 	int long_options_ret;
 	struct rlimit core = {0, 0};
 	int foreground = 0;
@@ -327,6 +327,7 @@ int main(int argc, char **argv)
 			break;
 		}
 	}
+	openlog(argv[0], LOG_PID | (foreground ? LOG_PERROR : 0), 0);
 	if (!messaging_type_specified) {
 		uint32_t version;
 
