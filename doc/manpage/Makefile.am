@@ -8,18 +8,17 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-EXTRA_DIST=ecryptfs.pod
+MAINTAINERCLEANFILES = $(srcdir)/Makefile.in
+DISTCLEANFILES = ecryptfs.7
 
-man_MANS = ecryptfs.7
+dist_noinst_DATA = ecryptfs.pod
 dist_man_MANS = \
 	ecryptfs-manager.8 \
 	mount.ecryptfs.8 \
-	ecryptfsd.8
+	ecryptfsd.8 \
+	ecryptfs.7
 
-ecryptfs.7: ecryptfs.pod 
+ecryptfs.7: $(srcdir)/ecryptfs.pod
 	$(POD2MAN)					\
 	--center="eCryptfs" --section=7			\
-	--release=$(PACKAGE_VERSION) ecryptfs.pod > ecryptfs.7
-
-local-clean:
-	-rm -fr ecryptfs.7
+	--release=$(PACKAGE_VERSION) $(srcdir)/ecryptfs.pod > ecryptfs.7

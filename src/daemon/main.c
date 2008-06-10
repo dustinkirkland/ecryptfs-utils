@@ -30,6 +30,7 @@
 #include <fcntl.h>
 #include <getopt.h>
 #include <pthread.h>
+#include <sys/wait.h>
 #include <sys/resource.h>
 #include "config.h"
 #include "../include/ecryptfs.h"
@@ -96,7 +97,7 @@ prompt_callback(char *prompt_type, char *prompt, char *input, int input_size) {
 	fds[1] = -1;
 
 	while (
-		(r=waitpid (pid, &status, __WNOTHREAD)) == 0 ||
+		(r=waitpid (pid, &status, 0)) == 0 ||
 		(r == -1 && errno == EINTR)
 	);
 

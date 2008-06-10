@@ -8,4 +8,6 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
+MAINTAINERCLEANFILES = $(srcdir)/Makefile.in
+
 SUBDIRS = key_mod libecryptfs utils daemon include pam_ecryptfs

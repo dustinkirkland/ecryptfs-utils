@@ -1,5 +1,7 @@
+MAINTAINERCLEANFILES = $(srcdir)/Makefile.in
+
 lib_LTLIBRARIES = libecryptfs.la
-pkgconfig_DATA=libecryptfs.pc
+pkgconfig_DATA = libecryptfs.pc
 
 libecryptfs_la_SOURCES = \
 	main.c \

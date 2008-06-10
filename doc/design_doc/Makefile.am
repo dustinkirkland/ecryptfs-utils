@@ -1,3 +1,4 @@
+MAINTAINERCLEANFILES = $(srcdir)/Makefile.in
 
 #
 # Please note that "make dist" will also distribute

@@ -1,3 +1,5 @@
+MAINTAINERCLEANFILES = $(srcdir)/Makefile.in
+
 SUBDIRS = manpage design_doc beginners_guide
 
 dist_doc_DATA =

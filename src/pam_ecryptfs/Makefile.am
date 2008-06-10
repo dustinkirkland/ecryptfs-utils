@@ -1,13 +1,17 @@
-if BUILD_PAM
-pam_LTLIBRARIES = libpam_ecryptfs.la
+MAINTAINERCLEANFILES = $(srcdir)/Makefile.in
 
-install-data-hook:
-	rm -f "$(DESTDIR)$(pamdir)/libpam_ecryptfs.la"
-	rm -f "$(DESTDIR)$(pamdir)/libpam_ecryptfs.a"
-	mv -f "$(DESTDIR)$(pamdir)/libpam_ecryptfs.so" "$(DESTDIR)$(pamdir)/pam_ecryptfs.so"
+if BUILD_PAM
+pam_LTLIBRARIES = pam_ecryptfs.la
+
+# Needed until libtool-2
+install-data-hook:	install-pamLTLIBRARIES
+	rm -f "$(DESTDIR)$(pamdir)/pam_ecryptfs.la"
+	rm -f "$(DESTDIR)$(pamdir)/pam_ecryptfs.a"
+uninstall-local:
+	rm -f "$(DESTDIR)$(pamdir)/pam_ecryptfs.so"
 endif
 
-libpam_ecryptfs_la_SOURCES = pam_ecryptfs.c
-libpam_ecryptfs_la_CFLAGS = $(AM_CFLAGS) $(LIBGCRYPT_CFLAGS)
-libpam_ecryptfs_la_LIBADD = $(top_srcdir)/src/libecryptfs/libecryptfs.la $(PAM_LIBS) $(LIBGCRYPT_LIBS)
-libpam_ecryptfs_la_LDFLAGS = $(AM_LDFLAGS) -module -avoid-version
+pam_ecryptfs_la_SOURCES = pam_ecryptfs.c
+pam_ecryptfs_la_CFLAGS = $(AM_CFLAGS) $(LIBGCRYPT_CFLAGS)
+pam_ecryptfs_la_LIBADD = $(top_builddir)/src/libecryptfs/libecryptfs.la $(PAM_LIBS) $(LIBGCRYPT_LIBS)
+pam_ecryptfs_la_LDFLAGS = $(AM_LDFLAGS) -module -avoid-version -shared
