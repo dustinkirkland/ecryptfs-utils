@@ -25,9 +25,9 @@ final-hook: \
 	-rm -fr final
 	-mkdir final
 	-cp $(FILENAME)_html/*png final/
-	cp $(FILENAME)_html/*html final/
-	cp $(FILENAME)_html/*css final/
-	cp $(FILENAME).pdf final/
+	-cp $(FILENAME)_html/*html final/
+	-cp $(FILENAME)_html/*css final/
+	-cp $(FILENAME).pdf final/
 
 
 $(FILENAME).tar.gz-hook: \
@@ -52,16 +52,16 @@ final:	\
 		$(FILENAME).tar.gz-hook
 
 $(FILENAME).pdf: $(FILENAME).ps
-	$(PS2PDF) $(FILENAME).ps $(FILENAME).pdf
+	-$(PS2PDF) $(FILENAME).ps $(FILENAME).pdf
 
 $(FILENAME).ps: $(FILENAME).dvi
-	$(DVIPS) -f $(FILENAME).dvi -t letter > $(FILENAME).ps
+	-$(DVIPS) -f $(FILENAME).dvi -t letter > $(FILENAME).ps
 
 $(FILENAME)_html: $(FILENAME).tex
-	$(LATEX2HTML) -split 0 -nonavigation -notop_navigation -noinfo \
+	-$(LATEX2HTML) -split 0 -nonavigation -notop_navigation -noinfo \
 		-mkdir -dir $(FILENAME)_html $(FILENAME).tex
 
 $(FILENAME).dvi: $(FILENAME).tex
-	$(LATEX) $(FILENAME).tex
-	$(LATEX) $(FILENAME).tex
+	-$(LATEX) $(FILENAME).tex
+	-$(LATEX) $(FILENAME).tex
 
