@@ -180,15 +180,18 @@ int ecryptfs_init_miscdev(struct ecryptfs_miscdev_ctx *miscdev_ctx)
 	miscdev_ctx->miscdev_fd = open(ECRYPTFS_DEFAULT_MISCDEV_FULLPATH_0,
 				       O_RDWR);
 	if (miscdev_ctx->miscdev_fd == -1) {
-		miscdev_ctx->miscdev_fd =
-			open(ECRYPTFS_DEFAULT_MISCDEV_FULLPATH_1, O_RDWR);
-		if (miscdev_ctx->miscdev_fd == -1) {
-			rc = -EIO;
-			syslog(LOG_ERR, "%s: Error whilst attempting to open "
-			       "[%s] or [%s]; errno msg = [%m]\n", __FUNCTION__,
-			       ECRYPTFS_DEFAULT_MISCDEV_FULLPATH_0,
-			       ECRYPTFS_DEFAULT_MISCDEV_FULLPATH_1, errno);
-		}
+		syslog(LOG_ERR, "%s: Error whilst attempting to open "
+		       "[%s]; errno msg = [%m]\n", __FUNCTION__,
+		       ECRYPTFS_DEFAULT_MISCDEV_FULLPATH_0, errno);
+	} else
+		goto out;
+	miscdev_ctx->miscdev_fd = open(ECRYPTFS_DEFAULT_MISCDEV_FULLPATH_1,
+				       O_RDWR);
+	if (miscdev_ctx->miscdev_fd == -1) {
+		syslog(LOG_ERR, "%s: Error whilst attempting to open "
+		       "[%s]; errno msg = [%m]\n", __FUNCTION__,
+		       ECRYPTFS_DEFAULT_MISCDEV_FULLPATH_1, errno);
+		rc = -EIO;
 	}
 out:
 	return rc;

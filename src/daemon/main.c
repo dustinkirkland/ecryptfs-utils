@@ -172,8 +172,7 @@ static void ecryptfsd_exit(struct ecryptfs_messaging_ctx *mctx, int retval)
 		syslog(LOG_ERR, "%s: Error attempting to shut down messaging; "
 		       "rc = [%d]\n", __FUNCTION__, rc);
 out:
-	ecryptfs_syslog(LOG_INFO, "Closing eCryptfs userspace netlink "
-			"daemon [%u]\n", getpid());
+	ecryptfs_syslog(LOG_INFO, "Closing eCryptfs userspace daemon\n");
 	exit(retval);
 }
 
@@ -401,7 +400,7 @@ int main(int argc, char **argv)
 	if (rc) {
 		syslog(LOG_ERR, "%s: Error attempting to send message to "
 		       "eCryptfs kernel module via transport of type "
-		       "[0x%.8x]; rc = [%d]\n", mctx.type, rc);
+		       "[0x%.8x]; rc = [%d]\n", __FUNCTION__, mctx.type, rc);
 		pthread_mutex_unlock(&mctx_mux);
 		goto daemon_out;
 	}
