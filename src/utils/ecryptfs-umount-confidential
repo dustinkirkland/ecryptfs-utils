@@ -5,8 +5,7 @@
 # Original by Michael Halcrow, IBM
 # Extracted to a stand-alone script by Dustin Kirkland <kirkland@canonical.com>
 
-CONFIDENTIAL="$HOME/Confidential"
-. $HOME/.ecryptfsrc 2>/dev/null || /bin/true
+CONFIDENTIAL="$HOME/Private"
 if mount | grep -q "$CONFIDENTIAL type ecryptfs"; then
 	username=`whoami`
 	count=`who | grep "^$username " | wc -l`
