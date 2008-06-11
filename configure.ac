@@ -83,6 +83,13 @@ AC_ARG_ENABLE(
 test "${enable_docs_gen}" = "yes" && enable_docs="yes"
 
 AC_ARG_ENABLE(
+	[tests],
+	[AS_HELP_STRING([--enable-tests],[Enable system specific tests])],
+	,
+	[enable_tests="no"]
+)
+
+AC_ARG_ENABLE(
 	[mudflap],
 	[AS_HELP_STRING([--enable-mudflap],[Build with -fmudflap gcc option])],
 	[
@@ -131,9 +138,15 @@ AC_GNU_SOURCE
 
 AC_PROG_CC
 AC_MINIX
-AC_PROG_LIBTOOL
 AM_PROG_CC_C_O
 PKG_PROG_PKG_CONFIG
+
+ifdef(
+	[LT_INIT],
+	[LT_INIT],
+	[AC_PROG_LIBTOOL]
+)
+
 AC_PATH_PROGS([POD2MAN], [pod2man])
 test -z "${POD2MAN}" && AC_MSG_ERROR([I couldn't find pod2man; make sure it's installed and in your path])
 
@@ -296,7 +309,7 @@ AM_CONDITIONAL([BUILD_PAM], [test "${enable_pam}" = "yes"])
 AM_CONDITIONAL([BUILD_GUI], [test "${enable_gui}" = "yes"])
 AM_CONDITIONAL([BUILD_DOCS], [test "${enable_docs}" = "yes"])
 AM_CONDITIONAL([BUILD_DOCS_GEN], [test "${enable_docs_gen}" = "yes"])
-AM_CONDITIONAL([ENABLE_TESTS], [test -z "${DISTCHECK_HACK}"])
+AM_CONDITIONAL([ENABLE_TESTS], [test "${enable_tests}" = "yes"])
 
 # workaround for <autoconf-2.60
 if test -z "${docdir}"; then
@@ -308,7 +321,12 @@ if test -z "${htmldir}"; then
 	AC_SUBST([htmldir])
 fi
 # end workaround
-
+# workaround for <automake-1.10
+if test -z "${MKDIR_P}"; then
+	MKDIR_P="\$(mkdir_p)"
+	AC_SUBST([MKDIR_P])
+fi
+# end workaround
 
 AC_CONFIG_FILES([
 	Makefile

@@ -9,6 +9,7 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 AUTOMAKE_OPTIONS=foreign dist-bzip2
+ACLOCAL_AMFLAGS = -I m4
 
 MAINTAINERCLEANFILES = \
 	config.log config.status \
@@ -24,3 +25,6 @@ MAINTAINERCLEANFILES = \
 SUBDIRS = doc src
 
 dist_doc_DATA = README
+
+dist-hook:
+	$(MKDIR_P) "$(distdir)/m4"
