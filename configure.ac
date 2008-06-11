@@ -296,7 +296,7 @@ AM_CONDITIONAL([BUILD_PAM], [test "${enable_pam}" = "yes"])
 AM_CONDITIONAL([BUILD_GUI], [test "${enable_gui}" = "yes"])
 AM_CONDITIONAL([BUILD_DOCS], [test "${enable_docs}" = "yes"])
 AM_CONDITIONAL([BUILD_DOCS_GEN], [test "${enable_docs_gen}" = "yes"])
-AM_CONDITIONAL([ENABLE_TESTS], [test -n "${DISTCHECK_HACK}"])
+AM_CONDITIONAL([ENABLE_TESTS], [test -z "${DISTCHECK_HACK}"])
 
 # workaround for <autoconf-2.60
 if test -z "${docdir}"; then
@@ -313,8 +313,6 @@ fi
 AC_CONFIG_FILES([
 	Makefile
 	doc/Makefile
-	doc/design_doc/Makefile
-	doc/beginners_guide/Makefile
 	src/Makefile
 	src/libecryptfs/Makefile
 	src/utils/Makefile
