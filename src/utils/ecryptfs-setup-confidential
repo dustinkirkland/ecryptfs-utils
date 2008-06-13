@@ -1,5 +1,5 @@
 #!/bin/sh
-# This script sets up an ecryptfs mount in a user's ~/Confidential, configures
+# This script sets up an ecryptfs mount in a user's ~/Private, configures
 # fstab, pam, and bash to attach and wrap on login.
 #
 # Originally ecryptfs-setup-pam-wrapped.sh by Michael Halcrow, IBM
@@ -11,22 +11,22 @@
 usage() {
 	echo 
 	echo "Usage:"
-	echo "# $0 [--username USERNAME]"
+	echo "# $0 [--username USER]"
 	echo "  [--loginpass LOGINPASS] [--mountpass MOUNTPASS]"
 	echo "  [--mountpoint MOUNTPOINT] [--cryptdir CRYPTDIR]"
 	echo
 	echo " --username   Username for encrypted confidential mountpoint"
-	echo " --loginpass  System passphrase for USERNAME, used to wrap MOUNTPASS"
+	echo " --loginpass  System passphrase for USER, used to wrap MOUNTPASS"
 	echo " --mountpass  Passphrase for mounting the ecryptfs directory"
-	echo " --mountpoint Defaults to ~USERNAME/Confidential, override here"
-	echo " --cryptdir   Defaults to ~USERNAME/.Confidential, override here"
+	echo " --mountpoint Defaults to ~USER/Private, override here"
+	echo " --cryptdir   Defaults to ~USER/.Private, override here"
 	echo
 	echo "   Be sure to properly escape your parameters according to your"
 	echo "   shell's special character nuances, and also surround the"
 	echo "   parameters by double quotes, if necessary."
 	echo
 	echo "   Any of these parameters may be:"
-	echo "     1) exported as environment variables (USERNAME, MOUNTPASS,"
+	echo "     1) exported as environment variables (USER, MOUNTPASS,"
 	echo "        LOGINPASS, MOUNTPOINT, CRYPTDIR)"
 	echo "     2) specified on the command line"
 	echo "     3) left empty and interactively prompted"
@@ -37,19 +37,19 @@ usage() {
 	exit 1
 }
 
-if ! whoami | grep "^root$" >/dev/null ; then
-	echo "ERROR: Please run this script as root (sudo $0)"
+error() {
+	echo "ERROR: $1"
 	exit 1
-fi
+}
 
 if [ ! -z "$SUDO_USER" ]; then
-	USERNAME="$SUDO_USER"
+	USER="$SUDO_USER"
 fi
 
 while [ ! -z "$1" ]; do
 	case "$1" in
 		--username)
-                        USERNAME="$2"
+                        USER="$2"
 			shift 2
 		;;
 		--loginpass)
@@ -74,28 +74,25 @@ while [ ! -z "$1" ]; do
 	esac
 done
 
-if [ -z "$USERNAME" ]; then
-	read -p "Enter the username: " -r USERNAME
-	if [ -z "$USERNAME" ]; then
-		echo "ERROR: You must provide a username"
+if [ -z "$USER" ]; then
+	read -p "Enter the username: " -r USER
+	if [ -z "$USER" ]; then
+		error "You must provide a username"
 	fi
 fi
-if ! grep "^$USERNAME:" /etc/passwd >/dev/null; then
-	echo "ERROR: User [$USERNAME] does not exist"
-	exit 1
+if ! grep "^$USER:" /etc/passwd >/dev/null; then
+	error "User [$USER] does not exist"
 fi
 
-HOME=`grep "^$USERNAME:" /etc/passwd | awk -F: '{print $6}'`
+HOME=`grep "^$USER:" /etc/passwd | awk -F: '{print $6}'`
 if [ ! -d "$HOME" ]; then
-	echo "ERROR: User home directory [$HOME] does not exist"
-	exit 1
+	error "User home directory [$HOME] does not exist"
 fi
 
 if [ -z "$LOGINPASS" ]; then
 	read -p "Enter your login passphrase: " -r LOGINPASS
 	if [ -z "$LOGINPASS" ]; then
-		echo "ERROR: You must provide the login passphrase"
-		usage
+		error "You must provide the login passphrase"
 	fi
 fi
 
@@ -109,9 +106,9 @@ if [ -z "$MOUNTPASS" ]; then
 fi
 
 if [ -z "$MOUNTPOINT" ]; then
-	read -p "Enter the confidential mountpoint [$HOME/Confidential]: " -r MOUNTPOINT
+	read -p "Enter the confidential mountpoint [$HOME/Private]: " -r MOUNTPOINT
 	if [ -z "$MOUNTPOINT" ]; then
-		MOUNTPOINT="$HOME/Confidential"
+		MOUNTPOINT="$HOME/Private"
 	fi
 fi
 
@@ -129,8 +126,7 @@ if [ -f "/etc/pam.d/system-auth" ]; then
 elif [ -f "/etc/pam.d/common-auth" ]; then
 	PAM_CONF=/etc/pam.d/common-auth
 else
-	echo "ERROR: Cannot determine location of PAM system/common auth configuration"
-	exit 1
+	error "Cannot determine location of PAM system/common auth configuration"
 fi
 
 if [ -f "/lib/security/libpam_ecryptfs.so" ]; then
@@ -138,10 +134,9 @@ if [ -f "/lib/security/libpam_ecryptfs.so" ]; then
 elif [ -f "/lib/security/pam_ecryptfs.so" ]; then
 	PAM_LIB=pam_ecryptfs.so
 else
-	echo "ERROR: Cannot find ecryptfs PAM library"
-	exit 1
+	error "Cannot find ecryptfs PAM library"
 fi
-echo "Using username [$USERNAME]"
+echo "Using username [$USER]"
 echo "Using mount passphrase [$MOUNTPASS]"
 echo "Using login passphrase [$LOGINPASS]"
 echo "Using mount point [$MOUNTPOINT]"
@@ -162,29 +157,37 @@ echo
 ###############################################################################
 
 # Setup confidential directory in home
-modprobe ecryptfs
-mkdir -m 500 -p "$MOUNTPOINT" 
-mkdir -m 500 -p "$CRYPTDIR"
-chown $USERNAME:$USERNAME "$MOUNTPOINT" "$CRYPTDIR"
+sudo modprobe ecryptfs || error "Could not load ecryptfs driver"
+mkdir -m 500 -p "$CRYPTDIR" || error "Could not create crypt directory [$CRYPTDIR]"
+mkdir -m 700 -p "$MOUNTPOINT" || error "Could not create mount directory [$MOUNTPOINT]"
+chmod 700 "$MOUNTPOINT" || error "Could not change permissions on [$MOUNTPOINT]"
 touch "$MOUNTPOINT"/"NOT MOUNTED - Run ecryptfs-mount-confidential to mount this directory"
+chmod 500 "$MOUNTPOINT"
 
-# Prune out of fstab, and check for an active mount
+# Check for an active mount
+sudo umount "$MOUNTPOINT" 2>/dev/null
+if mount | grep "$MOUNTPOINT type ecryptfs"; then
+	error "[$MOUNTPOINT] still mounted after umount"
+fi
+
+# Prune out of fstab
 tmpfile=`mktemp`
 grep -v "$MOUNTPOINT.*,ecryptfs_sig=.*" /etc/fstab > $tmpfile
 chmod --reference /etc/fstab $tmpfile
-chown --reference /etc/fstab $tmpfile
-mv -f $tmpfile /etc/fstab
-umount "$MOUNTPOINT" 2>/dev/null
-if mount | grep "$MOUNTPOINT type ecryptfs"; then
-	echo "ERROR: $MOUNTPOINT still mounted after umount"
-	exit 1
-fi
+sudo chown --reference /etc/fstab $tmpfile || error "Could not update /etc/fstab"
+sudo mv -f $tmpfile /etc/fstab || error "Could not update /etc/fstab"
 
 # Setup /etc/fstab
 # BUG: passwd will be momentarily visible in "ps -ef" output
-mount -t ecryptfs "$CRYPTDIR" "$MOUNTPOINT" -o key=passphrase:passwd="$MOUNTPASS",ecryptfs_cipher=aes,ecryptfs_key_bytes=16,ecryptfs_passthrough=n,no_sig_cache
-grep ecryptfs_sig /etc/mtab | grep "$MOUNTPOINT" | sed 's/ecryptfs_cipher\=aes,ecryptfs_key_bytes\=16/ecryptfs_cipher\=aes,ecryptfs_key_bytes\=16,user,noauto,/' >> /etc/fstab
-umount "$MOUNTPOINT"
+sudo mount -t ecryptfs "$CRYPTDIR" "$MOUNTPOINT" -o key=passphrase:passwd="$MOUNTPASS",ecryptfs_cipher=aes,ecryptfs_key_bytes=16,ecryptfs_passthrough=n,no_sig_cache || error "Could not perform test ecryptfs mount"
+mtab=`cat /etc/mtab | grep "$CRYPTDIR $MOUNTPOINT ecryptfs rw,ecryptfs_sig=" | sed "s/\s0\s0$/,user,noauto 0 0/"`
+tmpfile1=`mktemp`
+cat /etc/fstab > $tmpfile1
+echo "$mtab" >> $tmpfile1
+chmod --reference /etc/fstab $tmpfile1
+sudo chown --reference /etc/fstab $tmpfile1
+sudo mv -f $tmpfile1 /etc/fstab || error "Could not append mount to /etc/fstab"
+sudo umount "$MOUNTPOINT" || error "Could not unmount [$MOUNTPOINT]"
 
 # Setup PAM
 tmpfile1=`mktemp`
@@ -197,37 +200,30 @@ echo "auth required $PAM_LIB unwrap" >> $tmpfile2
 grep -A 100000 "auth\s.*pam_unix.so" $tmpfile1 | grep -v "auth\s.*pam_unix.so" >> $tmpfile2
 rm -f $tmpfile1
 chmod --reference $PAM_CONF $tmpfile2
-chown --reference $PAM_CONF $tmpfile2
-mv -f $tmpfile2 $PAM_CONF
+sudo chown --reference $PAM_CONF $tmpfile2 || error "Could not update PAM configuration"
+sudo mv -f $tmpfile2 $PAM_CONF || error "Could not update PAM configuration"
 
 # Setup bash profile
 if ! grep "ecryptfs-mount-confidential" $HOME/.bash_profile >/dev/null; then
-	echo "ecryptfs-mount-confidential" >> $HOME/.bash_profile
-	chown $USERNAME:$USERNAME $HOME/.bash_profile
+	echo "ecryptfs-mount-confidential" >> $HOME/.bash_profile || error "Could not configure bash profile"
 fi
 if ! grep "ecryptfs-umount-confidential" $HOME/.bash_logout >/dev/null; then
-	echo "ecryptfs-umount-confidential" >> $HOME/.bash_logout
-	chown $USERNAME:$USERNAME $HOME/.bash_logout
+	echo "ecryptfs-umount-confidential" >> $HOME/.bash_logout || error "Could not configure bash logout"
 fi
 
 # Setup gnome desktop autostart
-mkdir -p $HOME/.config/autostart/
-chown -R $USERNAME:$USERNAME $HOME/.config/autostart/
+mkdir -p $HOME/.config/autostart/ 2>/dev/null
 echo "
 [Desktop Entry]
 Type=Application
-Name=Ecryptfs Mount Confidential
+Name=Ecryptfs Mount Private
 Exec=/usr/bin/ecryptfs-mount-confidential
 X-GNOME-Autostart-enabled=true
-" > $HOME/.config/autostart/ecryptfs-mount-confidential.desktop
-chown $USERNAME:$USERNAME $HOME/.config/autostart/ecryptfs-mount-confidential.desktop
-
+" > $HOME/.config/autostart/ecryptfs-mount-confidential.desktop || error "Could not create desktop autostart file"
 
 # Setup ~/.ecryptfs directory
 mkdir -m 700 $HOME/.ecryptfs 2>/dev/null
-chown $USERNAME:$USERNAME $HOME/.ecryptfs
-touch $HOME/.ecryptfs/auto-mount
-chown $USERNAME:$USERNAME $HOME/.ecryptfs/auto-mount
+touch $HOME/.ecryptfs/auto-mount || error "Could not setup ecryptfs auto-mount"
 # Backup any existing wrapped-passphrase
 if [ -z "$HOME/.ecryptfs/wrapped-passphrase" ]; then
 	timestamp=`date +%Y%m%d%H%M%S`
