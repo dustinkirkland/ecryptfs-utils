@@ -9,7 +9,7 @@
 
 if [ -f $HOME/.ecryptfs/auto-mount ]; then
 	CONFIDENTIAL="$HOME/Confidential"
-	. $HOME/.ecryptfsrc 2>/dev/null || /bin/true
+	. $HOME/.ecryptfs/confidential 2>/dev/null || /bin/true
 	if ! mount | grep -q "$CONFIDENTIAL type ecryptfs"; then
 		ENCRYPTED_DIR=`grep " $CONFIDENTIAL " /etc/fstab | awk '{print $1}'`
 		chmod 700 "$CONFIDENTIAL" "$ENCRYPTED_DIR"

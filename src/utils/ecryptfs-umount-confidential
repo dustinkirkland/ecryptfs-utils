@@ -6,6 +6,7 @@
 # Extracted to a stand-alone script by Dustin Kirkland <kirkland@canonical.com>
 
 CONFIDENTIAL="$HOME/Private"
+. $HOME/.ecryptfs/confidential 2>/dev/null || /bin/true
 if mount | grep -q "$CONFIDENTIAL type ecryptfs"; then
 	username=`whoami`
 	count=`who | grep "^$username " | wc -l`

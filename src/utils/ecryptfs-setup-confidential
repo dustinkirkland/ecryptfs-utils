@@ -238,13 +238,13 @@ ecryptfs-wrap-passphrase $HOME/.ecryptfs/wrapped-passphrase "$MOUNTPASS" "$LOGIN
 chmod 400 $HOME/.ecryptfs/wrapped-passphrase
 chown $USERNAME:$USERNAME $HOME/.ecryptfs/wrapped-passphrase
 
-# Setup .ecryptfsrc to store the confidential mountpoint
-tmpfile1=`mktemp $HOME/.ecryptfsrc.XXXXXX`
+# Setup .ecryptfs/confidential to store the confidential mountpoint
+tmpfile1=`mktemp $HOME/.ecryptfs/confidential.XXXXXX`
 chmod 400 $tmpfile1
 chown $USERNAME:$USERNAME $tmpfile1
-grep -v "CONFIDENTIAL=" $HOME/.ecryptfsrc > $tmpfile1
+grep -v "CONFIDENTIAL=" $HOME/.ecryptfs/confidential > $tmpfile1
 echo "CONFIDENTIAL=\"$MOUNTPOINT\"" >> $tmpfile1
-mv -f $tmpfile1 $HOME/.ecryptfsrc
+mv -f $tmpfile1 $HOME/.ecryptfs/confidential
 
 echo
 echo "Done."
