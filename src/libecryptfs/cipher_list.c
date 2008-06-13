@@ -177,7 +177,13 @@ int ecryptfs_get_loaded_ciphers(struct ecryptfs_cipher_elem *cipher_list_head)
 			goto out;
 	}
 	if (!(crypto_file = fopen(crypto_full_path, "r"))) {
-		rc = -EIO;
+		syslog(LOG_WARNING, "%s: Failed to open [%s] for reading; This "
+		       "is not a problem if the Kernel Crypto API is built as "
+		       "a kernel module (called crypto_algapi) and is not "
+		       "loaded. If this is not the case, eCryptfs will not be "
+		       "able to use ciphers that are directly built into the "
+		       "kernel.\n", __FUNCTION__, crypto_full_path);
+		rc = 0;
 		goto out;
 	}
 	while (fgets(buf, MAX_BUF_LEN, crypto_file)) {
@@ -368,12 +374,13 @@ int ecryptfs_get_kernel_ciphers(struct cipher_descriptor *cd_head)
 			goto out;
 	}
 	if (!(crypto_file = fopen(crypto_full_path, "r"))) {
-		syslog(LOG_INFO, "%s: Error attempting to open [%s] for "
-		       "reading; cannot detect loaded ciphers in your kernel. "
-		       "Bailing out. Make sure you have crypto support in your "
-		       "kernel and that /etc/mtab has your /proc mount point."
-		       "\n", __FUNCTION__, crypto_full_path);
-		rc = -EIO;
+		syslog(LOG_WARNING, "%s: Failed to open [%s] for reading; This "
+		       "is not a problem if the Kernel Crypto API is built as "
+		       "a kernel module (called crypto_algapi) and is not "
+		       "loaded. If this is not the case, eCryptfs will not be "
+		       "able to use ciphers that are directly built into the "
+		       "kernel.\n", __FUNCTION__, crypto_full_path);
+		rc = 0;
 		goto out;
 	}
 	while (fgets(buf, MAX_BUF_LEN, crypto_file)) {
