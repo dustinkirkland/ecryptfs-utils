@@ -97,6 +97,9 @@ strerr = [Invalid argument]</code>&quot;</a></li>
 <li><a href="#keyproblem">&quot;<code>ecryptfs_parse_options: Could
 not find key with description: [deadbeaf...]&quot;</code></a></li>
 
+<li><a href="#sigsize">&quot;<code>ecryptfs_parse_packet_set: Expected
+signature of size [8]; read size [7]&quot;</code></a></li>
+
 <li><a href="#nothere">My question isn't answered here.</a></li>
 
 </ul>
@@ -781,6 +784,47 @@ keyring:
 <pre>
 # keyctl link @u @s
 </pre>
+
+<a name="sigsize">
+
+<p><h3>Q. &quot;<code>ecryptfs_parse_packet_set: Expected
+signature of size [8]; read size [7]</code>&quot;</h3></p>
+
+<p>
+Older versions of eCryptfs shipping in older kernels had a minor bug
+where eCryptfs would only write out and read in 7 of the 8 key
+signature characters to the metadata of the lower file. This violates
+the eCryptfs spec, so newer versions of eCryptfs correct this bug and
+refuse to read files that do not conform to the spec.
+</p>
+
+<p>
+The current correctly implemented version of eCryptfs cannot read
+files created with the early nonconformant and buggy release. If you
+have any files created with the earlier version, you will need to boot
+with the earlier version of eCryptfs and copy the decrypted files to
+secure location (e.g., a loopback mount image protected with
+dm-crypt). You will then need to copy the data from the secure
+location into an eCryptfs mount using the most recent kernel release.
+</p>
+
+<p>
+Note that the Versions of eCryptfs from 2.6.24 and on will be able to
+read files created by earlier versions, back through to 2.6.24, as
+indicated in the ecryptfs-utils package README file:
+</p>
+
+<p>
+<i>
+eCryptfs is still in a developmental stage. When you upgrade the
+eCryptfs kernel module, it is possible that the eCryptfs file format
+has been updated. For this reason you should copy your files to an
+unencrypted location and then copy the files back into the new
+eCryptfs mount point to migrate the files.  File format version 3 and
+beyond (in kernel version 2.6.24) is expected to remain readable,
+however.
+</i>
+</p>
 
 <a name="nothere">
 
