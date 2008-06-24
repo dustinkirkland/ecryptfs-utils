@@ -47,6 +47,38 @@
 #define FSTYPE "ecryptfs"
 
 
+int check_username(char *u) {
+/* We follow the username guidelines used by the adduser program.  Quoting its
+ * error message:
+ *   adduser: To avoid problems, the username should consist only of
+ *   letters, digits, underscores, periods, at signs and dashes, and not start
+ *   with a dash (as defined by IEEE Std 1003.1-2001). For compatibility with 
+ *   Samba machine accounts $ is also supported at the end of the username
+ */
+	int i;
+	char c;
+	int len;
+	len = strlen(u);
+	if (u == NULL || len == 0) {
+		fputs("Username is empty\n", stderr);
+		return 1;
+	}
+	for (i=0; i<len; i++) {
+		c = u[i];
+		if ( 	!(c>='a' && c<='z') && !(c>='A' && c<='Z') &&
+			!(c>='0' && c<='9') && 
+			!(c=='_') && !(c=='.') && !(c=='@') && 
+			!(c=='-' && i!=0) && 
+			!(c=='$' && i==(len-1))
+		) {
+			fputs("Username has unsupported characters\n", stderr);
+			return 1;
+		}
+	}
+	return 0;
+}
+
+
 char *fetch_sig(char *pw_dir) {
 /* Read ecryptfs signature from file and validate 
  * Return signature as a string, or NULL on failure
@@ -79,14 +111,14 @@ char *fetch_sig(char *pw_dir) {
 			sig[i] = c;
 			i++;
 		} else {
-			fputs("Invalid hex signature", stderr);
+			fputs("Invalid hex signature\n", stderr);
 			return NULL;
 		}
 	}
 	fclose(fh);
 	/* Check signature length */
 	if (i != KEY_BYTES) {
-		fputs("Invalid hex signature length", stderr);
+		fputs("Invalid hex signature length\n", stderr);
 		return NULL;
 	}
 	sig[KEY_BYTES] = '\0';
@@ -107,23 +139,23 @@ int check_ownerships(int uid, char *dev, char *mnt) {
  */
 	struct stat s;
 	if (stat(dev, &s) != 0) {
-		fputs("Cannot examine encrypted directory", stderr);
+		fputs("Cannot examine encrypted directory\n", stderr);
 		return 1;
 	}
 	if (!S_ISDIR(s.st_mode)) {
-		fputs("Device or mountpoint is not a directory", stderr);
+		fputs("Device or mountpoint is not a directory\n", stderr);
 		return 1;
 	}
 	if (s.st_uid != uid) {
-		fputs("You do not own that encrypted directory", stderr);
+		fputs("You do not own that encrypted directory\n", stderr);
 		return 1;
 	}
 	if (stat(mnt, &s) != 0) {
-		fputs("Cannot examine mount directory", stderr);
+		fputs("Cannot examine mount directory\n", stderr);
 		return 1;
 	}
 	if (s.st_uid != uid) {
-		fputs("You do not own that mount directory", stderr);
+		fputs("You do not own that mount directory\n", stderr);
 		return 1;
 	}
 	return 0;
@@ -277,12 +309,10 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 
-	if (strstr(pwd->pw_name, ",") != NULL) {
+	if (check_username(pwd->pw_name) != 0) {
 		/* Must protect against a crafted user=john,suid from entering
 		 * filesystem options
 		 */
-		fputs("A username with a comma cannot perform mounts/unmounts",
-		      stderr);
 		return 1;
 	}
 
@@ -327,7 +357,7 @@ int main(int argc, char *argv[]) {
 	if (mounting == 1) {
 		/* Mounting, so exit if already mounted */
 		if (is_mounted(dev, mnt, sig, mounting) == 1) {
-			fputs("Already mounted", stderr);
+			fputs("Already mounted\n", stderr);
 			return 1;
 		}
 		/* We must maintain our real uid as the user who called this
@@ -352,7 +382,7 @@ int main(int argc, char *argv[]) {
 	} else {
 		/* Unmounting, so exit if not mounted */
 		if (is_mounted(dev, mnt, sig, mounting) == 0) {
-			fputs("Not currently mounted", stderr);
+			fputs("Not currently mounted\n", stderr);
 			return 1;
 		}
 		/* The key is not needed for unmounting, so we set res=0.
