@@ -3,7 +3,8 @@ MAINTAINERCLEANFILES = $(srcdir)/Makefile.in
 EXTRA_DIST=ecryptfsrc ecryptfs-setup-confidential ecryptfs-mount-confidential ecryptfs-umount-confidential
 
 rootsbin_PROGRAMS=mount.ecryptfs \
-		  mount.ecryptfs_private
+		  mount.ecryptfs_private \
+		  umount.ecryptfs_private
 bin_PROGRAMS=ecryptfs-manager ecryptfs-wrap-passphrase \
 	     ecryptfs-unwrap-passphrase \
 	     ecryptfs-insert-wrapped-passphrase-into-keyring \
@@ -52,6 +53,9 @@ ecryptfs_generate_tpm_key_LDADD = $(TSPI_LIBS)
 
 mount_ecryptfs_private_SOURCES = mount.ecryptfs_private.c
 mount_ecryptfs_private_LDADD = $(KEYUTILS_LIBS)
+
+umount_ecryptfs_private_SOURCES = mount.ecryptfs_private.c
+umount_ecryptfs_private_LDADD = $(KEYUTILS_LIBS)
 
 test_SOURCES = test.c io.c
 test_LDADD = $(top_builddir)/src/libecryptfs/libecryptfs.la
