@@ -189,11 +189,12 @@ PAM_EXTERN int pam_sm_setcred(pam_handle_t *pamh, int flags, int argc,
 	return PAM_SUCCESS;
 }
 
-struct passwd *fetch_pwd(pam_handle_t *pamh)
+static struct passwd *fetch_pwd(pam_handle_t *pamh)
 {
 	long rc;
-	char *username = NULL;
+	const char *username = NULL;
 	struct passwd *pwd = NULL;
+
 	rc = pam_get_user(pamh, &username, NULL);
 	if (rc != PAM_SUCCESS || username == NULL) {
 		syslog(LOG_ERR, "Error getting passwd info for user [%s]; "
@@ -209,7 +210,7 @@ struct passwd *fetch_pwd(pam_handle_t *pamh)
 	return pwd;
 }
 
-int private_dir(pam_handle_t *pamh, int mount)
+static int private_dir(pam_handle_t *pamh, int mount)
 {
 	int rc;
 	struct passwd *pwd = NULL;
@@ -264,11 +265,13 @@ out:
 	return 0;
 }
 
-int mount_private_dir(pamh) {
+static int mount_private_dir(pam_handle_t *pamh)
+{
 	return private_dir(pamh, 1);
 }
 
-int umount_private_dir(pamh) {
+static int umount_private_dir(pam_handle_t *pamh)
+{
 	return private_dir(pamh, 0);
 }
 
@@ -284,7 +287,7 @@ PAM_EXTERN int
 pam_sm_close_session(pam_handle_t *pamh, int flags,
 		     int argc, const char *argv[])
 {
-	umount_private_dir(pamh, 0);
+	umount_private_dir(pamh);
 	return PAM_SUCCESS;
 }
 
