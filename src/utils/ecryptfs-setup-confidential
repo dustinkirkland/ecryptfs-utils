@@ -1,6 +1,5 @@
 #!/bin/sh
-# This script sets up an ecryptfs mount in a user's ~/Private, configures
-# fstab, pam, and bash to attach and wrap on login.
+# This script sets up an ecryptfs mount in a user's ~/Private
 #
 # Originally ecryptfs-setup-pam-wrapped.sh by Michael Halcrow, IBM
 #
@@ -8,18 +7,19 @@
 # Copyright (C) 2008 Canonical Ltd.
 # Copyright (C) 2007-2008 International Business Machines
 
+PRIVATE_DIR="Private"
+
 usage() {
 	echo 
 	echo "Usage:"
 	echo "# $0 [--username USER]"
 	echo "  [--loginpass LOGINPASS] [--mountpass MOUNTPASS]"
-	echo "  [--mountpoint MOUNTPOINT] [--cryptdir CRYPTDIR]"
 	echo
-	echo " --username   Username for encrypted confidential mountpoint"
+	echo " --username   Username for encrypted private mountpoint,"
+	echo "              defaults to yourself"
 	echo " --loginpass  System passphrase for USER, used to wrap MOUNTPASS"
-	echo " --mountpass  Passphrase for mounting the ecryptfs directory"
-	echo " --mountpoint Defaults to ~USER/Private, override here"
-	echo " --cryptdir   Defaults to ~USER/.Private, override here"
+	echo " --mountpass  Passphrase for mounting the ecryptfs directory,"
+	echo "              defaults to a randomly generated 16 bytes"
 	echo
 	echo "   Be sure to properly escape your parameters according to your"
 	echo "   shell's special character nuances, and also surround the"
@@ -27,18 +27,24 @@ usage() {
 	echo
 	echo "   Any of these parameters may be:"
 	echo "     1) exported as environment variables (USER, MOUNTPASS,"
-	echo "        LOGINPASS, MOUNTPOINT, CRYPTDIR)"
+	echo "        LOGINPASS)"
 	echo "     2) specified on the command line"
 	echo "     3) left empty and interactively prompted"
 	echo
-	echo "   BEWARE: They will, however, be displayed on STDOUT, so be"
-	echo "   wary of shoulder surfers."
+	echo "   BEWARE: They will, however, be displayed on STDOUT"
 	echo
 	exit 1
 }
 
 error() {
 	echo "ERROR: $1"
+	exit 1
+}
+
+error_testing() {
+	rm -f "$1" >/dev/null
+	umount.ecryptfs_private >/dev/null
+	error "$2"
 	exit 1
 }
 
@@ -60,88 +66,105 @@ while [ ! -z "$1" ]; do
 			MOUNTPASS="$2"
 			shift 2
 		;;
-		--mountpoint)
-			MOUNTPOINT="$2"
-			shift 2
-		;;
-		--cryptdir)
-			CRYPTDIR="$2"
-			shift 2
-		;;
 		*)
 			usage
 		;;
 	esac
 done
 
+# Prompt for the USER name, if not on the command line and not in the environment
 if [ -z "$USER" ]; then
-	read -p "Enter the username: " -r USER
-	if [ -z "$USER" ]; then
-		error "You must provide a username"
-	fi
-fi
-if ! grep "^$USER:" /etc/passwd >/dev/null; then
-	error "User [$USER] does not exist"
+	while [ true ]; do
+		read -p "Enter the username: " -r USER
+		if [ -z "$USER" ]; then
+			echo "ERROR: You must provide a username"
+			continue
+		else
+			# Verify the USER name is in /etc/passwd
+			if ! grep "^$USER:" /etc/passwd >/dev/null; then
+				echo "ERROR: User [$USER] does not exist"
+				continue
+			fi
+			break
+		fi
+	done
+else
+	# Verify the USER name is in /etc/passwd
+	grep "^$USER:" /etc/passwd >/dev/null || error "User [$USER] does not exist"
 fi
 
+# Obtain the user's home directory from /etc/passwd
 HOME=`grep "^$USER:" /etc/passwd | awk -F: '{print $6}'`
 if [ ! -d "$HOME" ]; then
 	error "User home directory [$HOME] does not exist"
 fi
 
+# Check for active mounts
+MOUNTPOINT="$HOME/$PRIVATE_DIR"
+CRYPTDIR="$HOME/.$PRIVATE_DIR"
+grep -qs "$MOUNTPOINT " /proc/mounts && error "[$MOUNTPOINT] is already mounted"
+grep -qs "$CRYPTDIR " /proc/mounts && error "[$CRYPTDIR] is already mounted"
+
+stty_orig=`stty -g`
+# Prompt for the LOGINPASS, if not on the command line and not in the environment
 if [ -z "$LOGINPASS" ]; then
-	read -p "Enter your login passphrase: " -r LOGINPASS
-	if [ -z "$LOGINPASS" ]; then
-		error "You must provide the login passphrase"
-	fi
+	while [ true ]; do
+		stty -echo
+		read -p "Enter your login passphrase: " -r LOGINPASS
+		stty $stty_orig
+		echo
+		if [ -z "$LOGINPASS" ]; then
+			echo "ERROR: You must provide a login passphrase"
+			continue
+		else 
+			stty -echo
+			read -p "Enter your login passphrase (again): " -r LOGINPASS2
+			stty $stty_orig
+			echo
+			if [ "$LOGINPASS" != "$LOGINPASS2" ]; then
+				echo "ERROR: Login passphrases do not match"
+				continue
+			else
+				break
+			fi
+		fi
+	done
 fi
 
+# Prompt for the MOUNTPASS, if not on the command line and not in the environment
 if [ -z "$MOUNTPASS" ]; then
-	read -p "Enter your mount passphrase [leave blank to generate one]: " -r MOUNTPASS
-	if [ -z "$MOUNTPASS" ]; then
-		# Pull 128 bits of random data from /dev/urandom, and convert
-		# to a string of 32 hex digits
-		MOUNTPASS=`head -c 16 /dev/urandom | od -x | head -n 1 |sed "s/^0000000//" | sed "s/\s*//g"`
-	fi
+	while [ true ]; do
+		stty -echo
+		read -p "Enter your mount passphrase [leave blank to generate one]: " -r MOUNTPASS
+		stty $stty_orig
+		echo
+		if [ -z "$MOUNTPASS" ]; then
+			# Pull 128 bits of random data from /dev/urandom, and convert
+			# to a string of 32 hex digits
+			MOUNTPASS=`head -c 16 /dev/urandom | od -x | head -n 1 |sed "s/^0000000//" | sed "s/\s*//g"`
+			break
+		else
+			stty -echo
+			read -p "Enter your mount passphrase (again): " -r MOUNTPASS2
+			stty $stty_orig
+			echo
+			if [ "$MOUNTPASS" != "$MOUNTPASS2" ]; then
+				echo "ERROR: Mount passphrases do not match"
+				continue
+			else
+				break
+			fi
+		fi
+	done
 fi
 
-if [ -z "$MOUNTPOINT" ]; then
-	read -p "Enter the confidential mountpoint [$HOME/Private]: " -r MOUNTPOINT
-	if [ -z "$MOUNTPOINT" ]; then
-		MOUNTPOINT="$HOME/Private"
-	fi
-fi
-
-if [ -z "$CRYPTDIR" ]; then
-	basename=`basename "$MOUNTPOINT"`
-	dir=`echo "$MOUNTPOINT" | sed "s/$basename$/\.$basename/"`
-	read -p "Enter the encrypted directory [$dir]: " -r CRYPTDIR
-	if [ -z "$CRYPTDIR" ]; then
-		CRYPTDIR="$dir"
-	fi
-fi
-
-if [ -f "/etc/pam.d/system-auth" ]; then
-	PAM_CONF=/etc/pam.d/system-auth
-elif [ -f "/etc/pam.d/common-auth" ]; then
-	PAM_CONF=/etc/pam.d/common-auth
-else
-	error "Cannot determine location of PAM system/common auth configuration"
-fi
-
-if [ -f "/lib/security/libpam_ecryptfs.so" ]; then
-	PAM_LIB=libpam_ecryptfs.so
-elif [ -f "/lib/security/pam_ecryptfs.so" ]; then
-	PAM_LIB=pam_ecryptfs.so
-else
-	error "Cannot find ecryptfs PAM library"
-fi
+echo
+echo
 echo "Using username [$USER]"
 echo "Using mount passphrase [$MOUNTPASS]"
 echo "Using login passphrase [$LOGINPASS]"
 echo "Using mount point [$MOUNTPOINT]"
 echo "Using encrypted dir [$CRYPTDIR]"
-echo "Using pam configuration file [$PAM_CONF]"
 echo
 echo "This script will attempt to set up your system to mount"
 echo "$MOUNTPOINT with eCryptfs automatically on login,"
@@ -156,95 +179,62 @@ echo
 
 ###############################################################################
 
-# Setup confidential directory in home
-sudo modprobe ecryptfs || error "Could not load ecryptfs driver"
-mkdir -m 500 -p "$CRYPTDIR" || error "Could not create crypt directory [$CRYPTDIR]"
+# Setup private directory in home
+mkdir -m 700 -p "$CRYPTDIR" || error "Could not create crypt directory [$CRYPTDIR]"
 mkdir -m 700 -p "$MOUNTPOINT" || error "Could not create mount directory [$MOUNTPOINT]"
-chmod 700 "$MOUNTPOINT" || error "Could not change permissions on [$MOUNTPOINT]"
 touch "$MOUNTPOINT"/"NOT MOUNTED - Run ecryptfs-mount-confidential to mount this directory"
-chmod 500 "$MOUNTPOINT"
-
-# Check for an active mount
-sudo umount "$MOUNTPOINT" 2>/dev/null
-if mount | grep "$MOUNTPOINT type ecryptfs"; then
-	error "[$MOUNTPOINT] still mounted after umount"
-fi
-
-# Prune out of fstab
-tmpfile=`mktemp`
-grep -v "$MOUNTPOINT.*,ecryptfs_sig=.*" /etc/fstab > $tmpfile
-chmod --reference /etc/fstab $tmpfile
-sudo chown --reference /etc/fstab $tmpfile || error "Could not update /etc/fstab"
-sudo mv -f $tmpfile /etc/fstab || error "Could not update /etc/fstab"
-
-# Setup /etc/fstab
-# BUG: passwd will be momentarily visible in "ps -ef" output
-sudo mount -t ecryptfs "$CRYPTDIR" "$MOUNTPOINT" -o key=passphrase:passwd="$MOUNTPASS",ecryptfs_cipher=aes,ecryptfs_key_bytes=16,ecryptfs_passthrough=n,no_sig_cache || error "Could not perform test ecryptfs mount"
-mtab=`cat /etc/mtab | grep "$CRYPTDIR $MOUNTPOINT ecryptfs rw,ecryptfs_sig=" | sed "s/\s0\s0$/,user,noauto 0 0/"`
-tmpfile1=`mktemp`
-cat /etc/fstab > $tmpfile1
-echo "$mtab" >> $tmpfile1
-chmod --reference /etc/fstab $tmpfile1
-sudo chown --reference /etc/fstab $tmpfile1
-sudo mv -f $tmpfile1 /etc/fstab || error "Could not append mount to /etc/fstab"
-sudo umount "$MOUNTPOINT" || error "Could not unmount [$MOUNTPOINT]"
-
-# Setup PAM
-tmpfile1=`mktemp`
-grep -v "pam_ecryptfs.so" $PAM_CONF > $tmpfile1
-tmpfile2=`mktemp`
-grep -B 100000 "auth\s.*pam_unix.so" $tmpfile1 | grep -v "auth\s.*pam_unix.so" > $tmpfile2
-echo "password required $PAM_LIB" >> $tmpfile2
-grep "auth\s.*pam_unix.so" $PAM_CONF >> $tmpfile2
-echo "auth required $PAM_LIB unwrap" >> $tmpfile2
-grep -A 100000 "auth\s.*pam_unix.so" $tmpfile1 | grep -v "auth\s.*pam_unix.so" >> $tmpfile2
-rm -f $tmpfile1
-chmod --reference $PAM_CONF $tmpfile2
-sudo chown --reference $PAM_CONF $tmpfile2 || error "Could not update PAM configuration"
-sudo mv -f $tmpfile2 $PAM_CONF || error "Could not update PAM configuration"
-
-# Setup bash profile
-if ! grep "ecryptfs-mount-confidential" $HOME/.bash_profile >/dev/null; then
-	echo "ecryptfs-mount-confidential" >> $HOME/.bash_profile || error "Could not configure bash profile"
-fi
-if ! grep "ecryptfs-umount-confidential" $HOME/.bash_logout >/dev/null; then
-	echo "ecryptfs-umount-confidential" >> $HOME/.bash_logout || error "Could not configure bash logout"
-fi
-
-# Setup gnome desktop autostart
-mkdir -p $HOME/.config/autostart/ 2>/dev/null
-echo "
-[Desktop Entry]
-Type=Application
-Name=Ecryptfs Mount Private
-Exec=/usr/bin/ecryptfs-mount-confidential
-X-GNOME-Autostart-enabled=true
-" > $HOME/.config/autostart/ecryptfs-mount-confidential.desktop || error "Could not create desktop autostart file"
 
 # Setup ~/.ecryptfs directory
 mkdir -m 700 $HOME/.ecryptfs 2>/dev/null
 touch $HOME/.ecryptfs/auto-mount || error "Could not setup ecryptfs auto-mount"
-# Backup any existing wrapped-passphrase
-if [ -z "$HOME/.ecryptfs/wrapped-passphrase" ]; then
-	timestamp=`date +%Y%m%d%H%M%S`
-	mv -f $HOME/.ecryptfs/wrapped-passphrase $HOME/.ecryptfs/wrapped-passphrase.$timestamp
+
+# Backup any existing wrapped-passphrase or sig files; we DO NOT destroy this
+timestamp=`date +%Y%m%d%H%M%S`
+for i in "$HOME/.ecryptfs/wrapped-passphrase" "$HOME/.ecryptfs/$PRIVATE_DIR.sig"; do
+	if [ -s "$i" ]; then
+		mv -f "$i" "$i.$timestamp" || error "Could not backup existing data [$i]"
+	fi
+done
+
+# Setup wrapped-passphrase file
+u=`umask`
+umask 377
+ecryptfs-wrap-passphrase "$HOME/.ecryptfs/wrapped-passphrase" "$MOUNTPASS" "$LOGINPASS" || error "Could not wrap passphrase"
+umask $u
+
+# Add the passphrase to current keyring
+# On subsequent logins, this should be handled by "pam_ecryptfs.so unwrap"
+response=`ecryptfs-add-passphrase "$MOUNTPASS"`
+if [ $? -ne 0 ]; then
+	error "Could not add passphrase to the current keyring"
 fi
-# BUG: passphrases will be momentarily visible in "ps -ef" output
-ecryptfs-wrap-passphrase $HOME/.ecryptfs/wrapped-passphrase "$MOUNTPASS" "$LOGINPASS"
-chmod 400 $HOME/.ecryptfs/wrapped-passphrase
-chown $USERNAME:$USERNAME $HOME/.ecryptfs/wrapped-passphrase
-
-# Setup .ecryptfs/confidential to store the confidential mountpoint
-tmpfile1=`mktemp $HOME/.ecryptfs/confidential.XXXXXX`
-chmod 400 $tmpfile1
-chown $USERNAME:$USERNAME $tmpfile1
-grep -v "CONFIDENTIAL=" $HOME/.ecryptfs/confidential > $tmpfile1
-echo "CONFIDENTIAL=\"$MOUNTPOINT\"" >> $tmpfile1
-mv -f $tmpfile1 $HOME/.ecryptfs/confidential
+sig=`echo "$response" | grep "Inserted auth tok" | sed "s/^.*\[//" | sed "s/\].*$//"`
+if ! echo "$sig" | egrep -qs "^[0-9a-fA-F]{16,16}$"; then
+	error "Could not obtain the key signature"
+fi
+echo "$sig" > "$HOME/.ecryptfs/$PRIVATE_DIR.sig" || error "Could not create signature file [$HOME/.ecryptfs/$PRIVATE_DIR.sig]"
 
 echo
-echo "Done."
+echo "Done configuring."
 echo
-echo "$USERNAME should log in and check the output of the 'mount' command."
+
+# Now let's perform some basic mount/write/umount/read sanity testing...
+echo "Testing mount/write/umount/read..."
+mount.ecryptfs_private || error "Could not mount private ecryptfs directory"
+temp=`mktemp "$HOME/$PRIVATE_DIR/ecryptfs.test.XXXXXX"` || error_testing "$temp" "Could not create empty file"
+random_data=`head -c 16000 /dev/urandom | od -x` || error_testing "$temp" "Could not generate random data"
+echo "$random_data" > "$temp" || error_testing "$temp" "Could not write encrypted file"
+md5sum1=`md5sum "$temp"` || error_testing "$temp" "Could not read encrypted file"
+umount.ecryptfs_private || error_testing "$temp" "Could not unmount private ecryptfs directory"
+mount.ecryptfs_private || error_testing "$temp" "Could not mount private ecryptfs directory (2)"
+md5sum2=`md5sum "$temp"` || error_testing "$temp" "Could not read encrypted file (2)"
+rm -f "$temp"
+umount.ecryptfs_private || error_testing "$temp" "Could not unmount private ecryptfs directory (2)"
+if [ "$md5sum1" != "$md5sum2" ]; then
+	error "Testing failed."
+else
+	echo "Testing succeeded."
+fi
+
 echo
 exit 0
