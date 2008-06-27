@@ -39,6 +39,8 @@
 #include "config.h"
 #include "../include/ecryptfs.h"
 
+#define PRIVATE_DIR "Private"
+
 static void error(const char *msg)
 {
 	syslog(LOG_ERR, "errno = [%i]; strerror = [%s]\n", errno,
@@ -187,10 +189,94 @@ PAM_EXTERN int pam_sm_setcred(pam_handle_t *pamh, int flags, int argc,
 	return PAM_SUCCESS;
 }
 
+struct passwd *fetch_pwd(pam_handle_t *pamh)
+{
+	long rc;
+	char *username = NULL;
+	struct passwd *pwd = NULL;
+	rc = pam_get_user(pamh, &username, NULL);
+	if (rc != PAM_SUCCESS || username == NULL) {
+		syslog(LOG_ERR, "Error getting passwd info for user [%s]; "
+				"rc = [%ld]\n", username, rc);
+		return NULL;
+	}
+	pwd = getpwnam(username);
+	if (pwd == NULL) {
+		syslog(LOG_ERR, "Error getting passwd info for user [%s]; "
+				"rc = [%ld]\n", username, rc);
+		return NULL;
+	}
+	return pwd;
+}
+
+int private_dir(pam_handle_t *pamh, int mount)
+{
+	int rc;
+	struct passwd *pwd = NULL;
+	char *sigfile = NULL;
+	struct stat s;
+	pid_t pid;
+	struct utmp *u;
+	int count = 0;
+
+	if ((pwd = fetch_pwd(pamh)) == NULL) {
+		/* fetch_pwd() logged a message */
+		return 1;
+	}
+        if (
+	    (asprintf(&sigfile, "%s/.ecryptfs/%s.sig", pwd->pw_dir, 
+	     PRIVATE_DIR) < 0) || sigfile == NULL) {
+		syslog(LOG_ERR, "Error allocating memory for sigfile name");
+		return 1;
+        }
+	if (stat(sigfile, &s) != 0) {
+		syslog(LOG_ERR, "Error allocating memory for sigfile name");
+		return 1;
+	}
+	if (!S_ISREG(s.st_mode)) {
+		/* No sigfile, no need to mount private dir */
+		goto out;
+	}
+	if ((pid = fork()) < 0) {
+		syslog(LOG_ERR, "Error setting up private mount");
+		return 1;
+	} 
+	if (pid == 0) {
+		if (mount == 1) {
+			/* run mount.ecryptfs_private as the user */
+			setresuid(pwd->pw_uid, pwd->pw_uid, pwd->pw_uid);
+			execl("/sbin/mount.ecryptfs_private", 
+			      "mount.ecryptfs_private", NULL);
+		} else {
+			/* run umount.ecryptfs_private as the user */
+			setresuid(pwd->pw_uid, pwd->pw_uid, pwd->pw_uid);
+			execl("/sbin/umount.ecryptfs_private", 
+ 			      "umount.ecryptfs_private", NULL);
+		}
+		return 1;
+	} else {
+		wait(&rc);
+		syslog(LOG_INFO, 
+		       "Mount of private directory return code [%d]", rc);
+		goto out;
+	}
+out:
+	return 0;
+}
+
+int mount_private_dir(pamh) {
+	return private_dir(pamh, 1);
+}
+
+int umount_private_dir(pamh) {
+	return private_dir(pamh, 0);
+}
+
 PAM_EXTERN int
 pam_sm_open_session(pam_handle_t *pamh, int flags,
 		    int argc, const char *argv[])
 {
+	mount_private_dir(pamh);
 	return PAM_SUCCESS;
 }
 
@@ -198,6 +284,7 @@ PAM_EXTERN int
 pam_sm_close_session(pam_handle_t *pamh, int flags,
 		     int argc, const char *argv[])
 {
+	umount_private_dir(pamh, 0);
 	return PAM_SUCCESS;
 }
 
