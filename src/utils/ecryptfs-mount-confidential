@@ -1,19 +1,17 @@
 #!/bin/sh
-# This script mounts a user's confidential ecryptfs folder, and ensures that
-# the permissions on the mountpoint and underlying encrypted directories are
+# This script mounts a user's confidential private folder, and ensures that
+# the permissions on the underlying encrypted directories are
 # private, and readable/writable/executable.
 #
 # Original by Michael Halcrow, IBM
 # Extracted to a stand-alone script by Dustin Kirkland <kirkland@canonical.com>
 
-
-if [ -f $HOME/.ecryptfs/auto-mount ]; then
-	CONFIDENTIAL="$HOME/Private"
-	. $HOME/.ecryptfs/confidential 2>/dev/null || /bin/true
-	if ! mount | grep -q "$CONFIDENTIAL type ecryptfs"; then
-		ENCRYPTED_DIR=`grep " $CONFIDENTIAL ecryptfs " /etc/fstab | awk '{print $1}'`
-		chmod 700 "$CONFIDENTIAL" "$ENCRYPTED_DIR"
-		mount -i "$CONFIDENTIAL"
+PRIVATE_DIR="Private"
+if [ -f "$HOME/.ecryptfs/auto-mount" -a -f "$HOME/.ecryptfs/$PRIVATE_DIR.sig" ]; then
+	if ! egrep -qs "$HOME/[\.]{0,1}$PRIVATE_DIR " /proc/mounts; then
+		chmod 500 "$HOME/$PRIVATE_DIR"
+		chmod 700 "$HOME/.$PRIVATE_DIR"
+		mount.ecryptfs_private
 	fi
 fi
 

@@ -1,18 +1,20 @@
 #!/bin/sh
-# This script unmounts a user's confidential ecryptfs folder, and makes
-# both the mountpoint and underlying encrypted directories read-only.
+# This script unmounts a user's private ecryptfs folder, and makes
+# both the mountpoint and underlying encrypted directories read-only, ONLY IF
+# there are 1 or fewer instances of this user left on the system.
 #
 # Original by Michael Halcrow, IBM
 # Extracted to a stand-alone script by Dustin Kirkland <kirkland@canonical.com>
 
-CONFIDENTIAL="$HOME/Private"
-. $HOME/.ecryptfs/confidential 2>/dev/null || /bin/true
-if mount | grep -q "$CONFIDENTIAL type ecryptfs"; then
-	username=`whoami`
-	count=`who | grep "^$username " | wc -l`
-	if [ $count -le 1 ]; then
-		ENCRYPTED_DIR=`grep " $CONFIDENTIAL " /etc/fstab | awk '{print $1}'`
-		umount -l "$CONFIDENTIAL" && chmod 500 "$CONFIDENTIAL" "$ENCRYPTED_DIR"
+PRIVATE_DIR="Private"
+if [ -f "$HOME/.ecryptfs/auto-mount" -a -f "$HOME/.ecryptfs/$PRIVATE_DIR.sig" ]; then
+	if egrep -qs "$HOME/[\.]{0,1}$PRIVATE_DIR " /proc/mounts; then
+		username=`whoami`
+		count=`who | grep "^$username " | wc -l`
+		if [ $count -le 1 ]; then
+			chmod 500 "$HOME/$PRIVATE_DIR" "$HOME/.$PRIVATE_DIR"
+			umount.ecryptfs_private
+		fi
 	fi
 fi
 
