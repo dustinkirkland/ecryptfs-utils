@@ -52,6 +52,7 @@ int ecryptfs_parse_stat(struct ecryptfs_crypt_stat_user *crypt_stat, char *buf,
 	big_endian = host_is_big_endian();
 	if (!big_endian)
 		file_size = swab64(file_size);
+	crypt_stat->file_size = file_size;
 out:
 	return rc;
 }

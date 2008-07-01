@@ -51,6 +51,7 @@ int main(int argc, const char *argv[])
 		rc = 0;
 		goto out;
 	}
+	printf("Decrypted file size: [%llu]\n", crypt_stat.file_size);
 out:
 	if (fd != -1)
 		close(fd);
