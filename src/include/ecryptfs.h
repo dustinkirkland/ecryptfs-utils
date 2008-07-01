@@ -120,6 +120,8 @@
 #define ECRYPTFS_SALTLESS 1
 #define ECRYPTFS_DEFAULT_NUM_HASH_ITERATIONS 65536
 
+#define ECRYPTFS_FILE_SIZE_BYTES (sizeof(uint64_t))
+
 #define ECRYPTFS_TAG_64_PACKET 0x40
 #define ECRYPTFS_TAG_65_PACKET 0x41
 #define ECRYPTFS_TAG_66_PACKET 0x42
@@ -431,6 +433,14 @@ struct ecryptfs_messaging_ctx {
 	} ctx;
 };
 
+struct ecryptfs_crypt_stat_user {
+	unsigned int file_version;
+	size_t iv_bytes;
+	size_t num_header_bytes_at_front;
+	size_t extent_size; /* Data extent size; default is 4096 */
+	size_t key_size;
+};
+
 #define ECRYPTFS_DEFAULT_MESSAGING_TYPE ECRYPTFS_MESSAGING_TYPE_NETLINK
 
 int ecryptfs_get_kernel_ciphers(struct cipher_descriptor *cd_head);
@@ -546,10 +556,8 @@ int ecryptfs_send_miscdev(struct ecryptfs_miscdev_ctx *miscdev_ctx,
 			  uint16_t msg_flags, uint32_t msg_seq);
 void ecryptfs_release_miscdev(struct ecryptfs_miscdev_ctx *miscdev_ctx);
 int ecryptfs_run_miscdev_daemon(struct ecryptfs_miscdev_ctx *miscdev_ctx);
-
-/* TEMP TEMP TEMP - BEGIN
- * until context will be forwarded into key modules */
 struct ecryptfs_ctx_ops *cryptfs_get_ctx_opts(void);
-/* TEMP TEMP TEMP - END */
+int ecryptfs_parse_stat(struct ecryptfs_crypt_stat_user *crypt_stat, char *buf,
+			size_t buf_size);
 
 #endif

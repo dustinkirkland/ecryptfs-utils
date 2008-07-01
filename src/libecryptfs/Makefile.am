@@ -16,6 +16,7 @@ libecryptfs_la_SOURCES = \
 	cmd_ln_parser.c \
 	module_mgr.c \
 	key_mod.c \
+	ecryptfs-stat.c \
 	$(top_srcdir)/src/key_mod/ecryptfs_key_mod_passphrase.c
 libecryptfs_la_LDFLAGS = \
 	-version-info @LIBECRYPTFS_LT_CURRENT@:@LIBECRYPTFS_LT_REVISION@:@LIBECRYPTFS_LT_AGE@ \
