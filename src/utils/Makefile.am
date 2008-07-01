@@ -9,7 +9,8 @@ bin_PROGRAMS=ecryptfs-manager ecryptfs-wrap-passphrase \
 	     ecryptfs-insert-wrapped-passphrase-into-keyring \
 	     ecryptfs-rewrap-passphrase \
 	     ecryptfs-add-passphrase ecryptfs-zombie-kill \
-	     ecryptfs-zombie-list
+	     ecryptfs-zombie-list \
+	     ecryptfs-stat
 bin_SCRIPTS = ecryptfs-setup-confidential \
 	      ecryptfs-mount-confidential \
 	      ecryptfs-umount-confidential
@@ -52,6 +53,9 @@ ecryptfs_generate_tpm_key_LDADD = $(TSPI_LIBS)
 
 mount_ecryptfs_private_SOURCES = mount.ecryptfs_private.c
 mount_ecryptfs_private_LDADD = $(KEYUTILS_LIBS)
+
+ecryptfs_stat_SOURCES = ecryptfs-stat.c
+ecryptfs_stat_LDADD = $(top_builddir)/src/libecryptfs/libecryptfs.la
 
 test_SOURCES = test.c io.c
 test_LDADD = $(top_builddir)/src/libecryptfs/libecryptfs.la
