@@ -61,4 +61,5 @@ test_SOURCES = test.c io.c
 test_LDADD = $(top_builddir)/src/libecryptfs/libecryptfs.la
 
 install-exec-hook:	install-rootsbinPROGRAMS
-	$(LN_S) -f "mount.ecryptfs_private" "$(DESTDIR)/$(rootsbindir)/umount.ecryptfs_private"
+	-rm -f "$(DESTDIR)/$(rootsbindir)/umount.ecryptfs_private"
+	$(LN_S) "mount.ecryptfs_private" "$(DESTDIR)/$(rootsbindir)/umount.ecryptfs_private"
