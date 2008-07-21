@@ -1034,12 +1034,25 @@ static int tf_pkcs11h_provider_private_mask(struct ecryptfs_ctx *ctx, struct par
 			 struct val_node **mnt_params, void **foo)
 {
 	struct pkcs11h_subgraph_provider_ctx *subgraph_provider_ctx;
-	CK_RV rv = CKR_FUNCTION_FAILED;
 	int rc;
 
 	subgraph_provider_ctx = (struct pkcs11h_subgraph_provider_ctx *)(*foo);
 	sscanf (node->val, "%x", &subgraph_provider_ctx->private_mask);
 
+	rc = DEFAULT_TOK;
+	node->val = NULL;
+out:
+	return rc;
+}
+
+static int tf_pkcs11h_provider_end(struct ecryptfs_ctx *ctx, struct param_node *node,
+			 struct val_node **mnt_params, void **foo)
+{
+	struct pkcs11h_subgraph_provider_ctx *subgraph_provider_ctx;
+	CK_RV rv = CKR_FUNCTION_FAILED;
+	int rc;
+
+	subgraph_provider_ctx = (struct pkcs11h_subgraph_provider_ctx *)(*foo);
 
 	if (
 		(rv = pkcs11h_addProvider (
@@ -1057,7 +1070,7 @@ static int tf_pkcs11h_provider_private_mask(struct ecryptfs_ctx *ctx, struct par
 
 	tf_ecryptfs_pkcs11h_destroy_subgraph_provider_ctx(subgraph_provider_ctx);
 	free(subgraph_provider_ctx);
-	(*foo) = NULL;
+	*foo = NULL;
 	rc = DEFAULT_TOK;
 out:
 	return rc;
@@ -1224,6 +1237,7 @@ static struct param_node pkcs11h_global_param_nodes[] = {
 #define PKCS11H_PROVIER_TOK_PROT_AUTH 3
 #define PKCS11H_PROVIER_TOK_CERT_PRIVATE 4
 #define PKCS11H_PROVIER_TOK_PRIVATE_MASK 5
+#define PKCS11H_PROVIER_TOK_END 6
 static struct param_node pkcs11h_provider_param_nodes[] = {
 
 	{.num_mnt_opt_names = 1,
@@ -1237,7 +1251,7 @@ static struct param_node pkcs11h_provider_param_nodes[] = {
 	 .flags = DISPLAY_TRANSITION_NODE_VALS | ECRYPTFS_PARAM_FLAG_ECHO_INPUT,
 	 .num_transitions = 1,
 	 .tl = {{.val = "name",
-		 .pretty_val = "PKCS#11 Provider Alias",
+		 .pretty_val = NULL,
 		 .next_token = &pkcs11h_provider_param_nodes[PKCS11H_PROVIER_TOK_NAME],
 		 .trans_func = tf_pkcs11h_provider}}},
 
@@ -1248,10 +1262,10 @@ static struct param_node pkcs11h_provider_param_nodes[] = {
 	 .val = NULL,
 	 .display_opts = NULL,
 	 .default_val = NULL,
-	 .flags = ECRYPTFS_PARAM_FLAG_ECHO_INPUT | VERIFY_VALUE,
+	 .flags = ECRYPTFS_PARAM_FLAG_ECHO_INPUT,
 	 .num_transitions = 1,
 	 .tl = {{.val = "library",
-		 .pretty_val = "PKCS#11 Library",
+		 .pretty_val = NULL,
 		 .next_token = &pkcs11h_provider_param_nodes[PKCS11H_PROVIER_TOK_LIBRARY],
 		 .trans_func = tf_pkcs11h_provider_name}}},
 
@@ -1262,10 +1276,10 @@ static struct param_node pkcs11h_provider_param_nodes[] = {
 	 .val = NULL,
 	 .display_opts = NULL,
 	 .default_val = NULL,
-	 .flags = ECRYPTFS_PARAM_FLAG_ECHO_INPUT | VERIFY_VALUE,
+	 .flags = ECRYPTFS_PARAM_FLAG_ECHO_INPUT,
 	 .num_transitions = 1,
-	 .tl = {{.val = "allow-protected-auth",
-		 .pretty_val = "Allow Protected Authentication",
+	 .tl = {{.val = "default",
+		 .pretty_val = NULL,
 		 .next_token = &pkcs11h_provider_param_nodes[PKCS11H_PROVIER_TOK_PROT_AUTH],
 		 .trans_func = tf_pkcs11h_provider_library}}},
 
@@ -1276,10 +1290,10 @@ static struct param_node pkcs11h_provider_param_nodes[] = {
 	 .val = NULL,
 	 .display_opts = NULL,
 	 .default_val = "1",
-	 .flags = ECRYPTFS_PARAM_FLAG_ECHO_INPUT | VERIFY_VALUE,
+	 .flags = ECRYPTFS_PARAM_FLAG_ECHO_INPUT  | ECRYPTFS_ALLOW_IMPLICIT_TRANSITION,
 	 .num_transitions = 1,
-	 .tl = {{.val = "cert-private",
-		 .pretty_val = "Certificate is private object",
+	 .tl = {{.val = "default",
+		 .pretty_val = NULL,
 		 .next_token = &pkcs11h_provider_param_nodes[PKCS11H_PROVIER_TOK_CERT_PRIVATE],
 		 .trans_func = tf_pkcs11h_provider_prot_auth}}},
 
@@ -1290,10 +1304,10 @@ static struct param_node pkcs11h_provider_param_nodes[] = {
 	 .val = NULL,
 	 .display_opts = NULL,
 	 .default_val = "0",
-	 .flags = ECRYPTFS_PARAM_FLAG_ECHO_INPUT | VERIFY_VALUE,
+	 .flags = ECRYPTFS_PARAM_FLAG_ECHO_INPUT,
 	 .num_transitions = 1,
-	 .tl = {{.val = "private-mask",
-		 .pretty_val = "Private Key Mask",
+	 .tl = {{.val = "default",
+		 .pretty_val = NULL,
 		 .next_token = &pkcs11h_provider_param_nodes[PKCS11H_PROVIER_TOK_PRIVATE_MASK],
 		 .trans_func = tf_pkcs11h_provider_cert_private}}},
 
@@ -1304,12 +1318,26 @@ static struct param_node pkcs11h_provider_param_nodes[] = {
 	 .val = NULL,
 	 .display_opts = NULL,
 	 .default_val = "0",
-	 .flags = ECRYPTFS_PARAM_FLAG_ECHO_INPUT | VERIFY_VALUE,
+	 .flags = ECRYPTFS_PARAM_FLAG_ECHO_INPUT,
 	 .num_transitions = 1,
-	 .tl = {{.val = "pkcs11-provider",
-		 .pretty_val = "PKCS#11 Provider",
-		 .next_token = &pkcs11h_provider_param_nodes[PKCS11H_PROVIER_TOK_PROVIDER],
+	 .tl = {{.val = "default",
+		 .pretty_val = NULL,
+		 .next_token = &pkcs11h_provider_param_nodes[PKCS11H_PROVIER_TOK_END],
 		 .trans_func = tf_pkcs11h_provider_private_mask}}},
+
+	{.num_mnt_opt_names = 1,
+	 .mnt_opt_names = {"dummy"},
+	 .prompt = "",
+	 .val_type = VAL_STR,
+	 .val = NULL,
+	 .display_opts = NULL,
+	 .default_val = "",
+	 .flags = ECRYPTFS_PARAM_FLAG_ECHO_INPUT,
+	 .num_transitions = 1,
+	 .tl = {{.val = "default",
+		 .pretty_val = NULL,
+		 .next_token = &pkcs11h_provider_param_nodes[PKCS11H_PROVIER_TOK_PROVIDER],
+		 .trans_func = tf_pkcs11h_provider_end}}},
 };
 
 #define PKCS11H_KEY_TOK_TOK 0
