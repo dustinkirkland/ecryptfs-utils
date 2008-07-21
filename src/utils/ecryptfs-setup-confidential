@@ -183,6 +183,7 @@ echo
 mkdir -m 700 -p "$CRYPTDIR" || error "Could not create crypt directory [$CRYPTDIR]"
 mkdir -m 700 -p "$MOUNTPOINT" || error "Could not create mount directory [$MOUNTPOINT]"
 ln -s /sbin/mount.ecryptfs_private "$MOUNTPOINT"/"THIS DIRECTORY HAS BEEN UNMOUNTED TO PROTECT YOUR DATA --  Run mount.ecryptfs_private to mount again"
+chmod 500 "$MOUNTPOINT"
 
 # Setup ~/.ecryptfs directory
 mkdir -m 700 $HOME/.ecryptfs 2>/dev/null
