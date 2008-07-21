@@ -103,6 +103,11 @@ out:
 	return rc;
 }
 
+/**
+ * set_exit_param_node_for_node
+ *
+ * Sets all NULL next_token's to exit_param_node
+ */
 int set_exit_param_node_for_node(struct param_node *param_node,
 				 struct param_node *exit_param_node,
 				 int recursive)
@@ -127,7 +132,7 @@ out:
 }
 
 /**
- * Sets the exist param node for all NULL transitions throughout an
+ * Sets the exit param node for all NULL transitions throughout an
  * entire graph.
  */
 int ecryptfs_set_exit_param_on_graph(struct param_node *param_node,
@@ -136,6 +141,12 @@ int ecryptfs_set_exit_param_on_graph(struct param_node *param_node,
 	return set_exit_param_node_for_node(param_node, exit_param_node, 1);
 }
 
+/**
+ * set_exit_param_node_for_arr
+ *
+ * Sets the exit param node for all NULL transitions contained in an
+ * array of param nodes.
+ */
 int set_exit_param_node_for_arr(struct param_node param_node_arr[],
 				struct param_node *exit_param_node)
 {
@@ -173,12 +184,19 @@ out:
 
 /**
  * do_transition
- * @ctx:
- * @next:
- * @current:
- * @nvp_head:
- * @mnt_params: Head of mount option stack
- * @foo:
+ * @ctx: The current eCryptfs library context
+ * @next: Set to the param_node that the transition engine determines
+ *        is the next node
+ * @current: The current param_node from which we are transitioning
+ * @nvp_head: The name-value pair list that contains name-value pairs
+ *            specified on the command line or provided via the
+ *            .ecryptfsrc file. Whenever a param node needs a value,
+ *            the decision graph logic first scans this list for a
+ *            corresponding name-value pair
+ * @mnt_params: Head of mount option stack that the callback functions
+ *              for the transition nodes in the param node populate
+ * @foo: An arbitrary data structure that the transition node callback
+ *       functions create, reference, and destroy
  *
  * This function needs to compare transition nodes to options.
  * It is currently comparing them to values provided to options.
