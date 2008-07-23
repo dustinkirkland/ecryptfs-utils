@@ -1,4 +1,4 @@
-.TH ecryptfs-generate-tpm_key 1 2008-07-21 ecryptfs-utils "eCryptfs"
+.TH ecryptfs-generate-tpm-key 1 2008-07-21 ecryptfs-utils "eCryptfs"
 .SH NAME
 ecryptfs-generate-tpm-key \- generate an eCryptfs key for TPM hardware.
 
@@ -6,10 +6,10 @@ ecryptfs-generate-tpm-key \- generate an eCryptfs key for TPM hardware.
 \fBecryptfs-generate-tpm-key \-p PCR \fP [\-p PCR]...
 
 .SH DESCRIPTION
-\fBecryptfs-generate-tpm-key\fP is a utility to generate a sealing (storage) key bound to a specified set of PCRs values in the current TPM's PCR's. The SRk password is assumed to be the SHA1 hash of 0 bytes.
+\fBecryptfs-generate-tpm-key\fP is a utility to generate a sealing (storage) key bound to a specified set of PCRs values in the current TPM's PCR's.
 
 .SH EXAMPLE
-ecryptfs_generate_tpm_key \-p 1 \-p 2 \-p 3
+ecryptfs-generate-tpm-key \-p 0 \-p 2 \-p 3
 
 .SH SEE ALSO
 .PD 0

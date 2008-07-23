@@ -18,8 +18,7 @@ This program will:
 
 The only setuid operationis in this program are the call to \fBumount\fP and updating \fB/etc/mtab\fP.
 
-The system administrator can add the pam_ecryptfs.so module to the PAM stack and automatically perform the unmount on logout:
-  - auth-client-config -p ecryptfs_standard -t pam-auth,pam-session
+The system administrator can add the pam_ecryptfs.so module to the PAM stack and automatically perform the unmount on logout. See \fBpam_ecryptfs\fP(8).
 
 .SH FILES
 \fI~/.Private\fP - underlying directory containing encrypted data
@@ -31,7 +30,7 @@ The system administrator can add the pam_ecryptfs.so module to the PAM stack and
 .SH SEE ALSO
 .PD 0
 .TP
-\fBecryptfs\fP(7), \fBecryptfs-setup-private\fP(1), \fBkeyctl\fP(1), \fBmount\fP(8), \fBmount.ecryptfs_private\fP(1)
+\fBecryptfs\fP(7), \fBecryptfs-setup-private\fP(1), \fBkeyctl\fP(1), \fBmount\fP(8), \fBmount.ecryptfs_private\fP(1), \fBpam_ecryptfs\fP(8)
 
 .TP
 \fI/usr/share/doc/ecryptfs-utils/ecryptfs-faq.html\fP

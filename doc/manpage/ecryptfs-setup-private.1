@@ -38,8 +38,7 @@ Using the values of USER, MOUNTPASS, and LOGINPASS, \fBecryptfs-setup-private\fP
   - Write the passphrase signature to ~/.ecryptfs/Private.sig
   - Test the cryptographic mount with a few reads and writes
 
-The system administrator can add the pam_ecryptfs.so module to the PAM stack which will automatically use the login passphrase to unwrap the mount passphrase, add the passphrase to the user's kernel keyring, and automatically perform the mount:
-  - auth-client-config -p ecryptfs_standard -t pam-auth,pam-session
+The system administrator can add the pam_ecryptfs.so module to the PAM stack which will automatically use the login passphrase to unwrap the mount passphrase, add the passphrase to the user's kernel keyring, and automatically perform the mount. See \fPpam_ecryptfs\fP(8).
 
 .SH FILES
 \fI~/.ecryptfs/auto-mount\fP
@@ -49,6 +48,7 @@ The system administrator can add the pam_ecryptfs.so module to the PAM stack whi
 \fI~/Private\fP - mountpoint containing decrypted data (when mounted)
 
 \fI~/.ecryptfs/Private.sig\fP - file containing signature of mountpoint passphrase
+
 \fI~/.ecryptfs/wrapped-passphrase\fP - file containing the mount passphrase, wrapped with the login passphrase
 
 .SH SEE ALSO

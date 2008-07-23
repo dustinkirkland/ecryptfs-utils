@@ -24,8 +24,7 @@ The only setuid operation in this program is the call to \fBmount\fP(8).
 
 The \fBecryptfs-setup-private\fP(1) utility will create the ~/.Private and ~/Private directories, generate a mount passphrase, wrap the passphrase, and write the ~/.ecryptfs/Private.sig.
 
-The system administrator can add the pam_ecryptfs.so module to the PAM stack which will automatically use the login passphrase to unwrap the mount passphrase, add the passphrase to the user's kernel keyring, and automatically perform the mount:
-  - auth-client-config -p ecryptfs_standard -t pam-auth,pam-session
+The system administrator can add the pam_ecryptfs.so module to the PAM stack which will automatically use the login passphrase to unwrap the mount passphrase, add the passphrase to the user's kernel keyring, and automatically perform the mount. See \fBpam_ecryptfs\fP(8).
 
 .SH FILES
 \fI~/.Private\fP - underlying directory containing encrypted data
@@ -39,7 +38,7 @@ The system administrator can add the pam_ecryptfs.so module to the PAM stack whi
 .SH SEE ALSO
 .PD 0
 .TP
-\fBecryptfs\fP(7), \fBecryptfs-rewrap-passphrase\fP(1), \fBecryptfs-setup-private\fP(1), \fBkeyctl\fP(1), \fBmount\fP(8), \fBumount.ecryptfs_private\fP(1)
+\fBecryptfs\fP(7), \fBecryptfs-rewrap-passphrase\fP(1), \fBecryptfs-setup-private\fP(1), \fBkeyctl\fP(1), \fBmount\fP(8), \fBumount.ecryptfs_private\fP(1), \fBpam_ecryptfs\fP(8)
 
 .TP
 \fI/usr/share/doc/ecryptfs-utils/ecryptfs-faq.html\fP
