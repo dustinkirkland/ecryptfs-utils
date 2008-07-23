@@ -188,6 +188,7 @@ chmod 500 "$MOUNTPOINT"
 # Setup ~/.ecryptfs directory
 mkdir -m 700 $HOME/.ecryptfs 2>/dev/null
 touch $HOME/.ecryptfs/auto-mount || error "Could not setup ecryptfs auto-mount"
+touch $HOME/.ecryptfs/auto-umount || error "Could not setup ecryptfs auto-umount"
 
 # Backup any existing wrapped-passphrase or sig files; we DO NOT destroy this
 timestamp=`date +%Y%m%d%H%M%S`

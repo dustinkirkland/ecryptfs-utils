@@ -7,7 +7,7 @@
 # Extracted to a stand-alone script by Dustin Kirkland <kirkland@canonical.com>
 
 PRIVATE_DIR="Private"
-if [ -f "$HOME/.ecryptfs/auto-mount" -a -f "$HOME/.ecryptfs/$PRIVATE_DIR.sig" ]; then
+if [ -f "$HOME/.ecryptfs/auto-umount" -a -f "$HOME/.ecryptfs/$PRIVATE_DIR.sig" ]; then
 	if egrep -qs "$HOME/[\.]{0,1}$PRIVATE_DIR " /proc/mounts; then
 		username=`whoami`
 		count=`who | grep "^$username " | wc -l`
