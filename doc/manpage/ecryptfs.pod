@@ -80,7 +80,7 @@ debugging purposes.
 =item B<passwd=(passphrase)>
 
 The actual password is password. Since the password is visible to utilities
-(like ’ps’ under Unix) this form should only be used where security is not
+(like 'ps' under Unix) this form should only be used where security is not
 important.
 
 =item B<passwd_file=(filename)>
