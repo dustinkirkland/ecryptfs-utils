@@ -13,10 +13,23 @@ DISTCLEANFILES = ecryptfs.7
 
 dist_noinst_DATA = ecryptfs.pod
 dist_man_MANS = \
-	ecryptfs-manager.8 \
-	mount.ecryptfs.8 \
+	ecryptfs-add-passphrase.1 \
 	ecryptfsd.8 \
-	ecryptfs.7
+	ecryptfs-generate-tpm-key.1 \
+	ecryptfs-insert-wrapped-passphrase-into-keyring.1 \
+	ecryptfs-manager.8 \
+	ecryptfs-mount-private.1 \
+	ecryptfs-rewrap-passphrase.1 \
+	ecryptfs-setup-private.1 \
+	ecryptfs-umount-private.1 \
+	ecryptfs-unwrap-passphrase.1 \
+	ecryptfs-wrap-passphrase.1 \
+	ecryptfs-zombie-kill.1 \
+	ecryptfs-zombie-list.1 \
+	mount.ecryptfs.8 \
+	mount.ecryptfs_private.1 \
+	pam_ecryptfs.8 \
+	umount.ecryptfs_private.1
 
 ecryptfs.7: $(srcdir)/ecryptfs.pod
 	$(POD2MAN)					\
