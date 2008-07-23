@@ -1,0 +1,46 @@
+.TH umount.ecryptfs_private 1 "2008-07-21" ecryptfs-utils "eCryptfs"
+.SH NAME
+umount.ecryptfs_private \- eCryptfs private unmount helper.
+
+.SH SYNOPSIS
+\fBumount.ecryptfs_private\fP
+
+.SH DESCRIPTION
+\fBumount.ecryptfs_private\fP is a mount helper utility for non-root users to unmount a cryptographically mounted private directory, ~/Private.
+
+If, and only if:
+  - the private mount passphrase is in their kernel keyring, and
+  - the current user owns both ~/.Private and ~/Private, and
+  - ~/.Private is currently mounted on ~/Private
+
+This program will:
+  - unmount ~/Private
+
+The only setuid operationis in this program are the call to \fBumount\fP and updating \fB/etc/mtab\fP.
+
+The system administrator can add the pam_ecryptfs.so module to the PAM stack and automatically perform the unmount on logout:
+  - auth-client-config -p ecryptfs_standard -t pam-auth,pam-session
+
+.SH FILES
+\fI~/.Private\fP - underlying directory containing encrypted data
+
+\fI~/Private\fP - mountpoint containing decrypted data (when mounted)
+
+\fI~/.ecryptfs/Private.sig\fP - file containing signature of mountpoint passphrase
+
+.SH SEE ALSO
+.PD 0
+.TP
+\fBecryptfs\fP(7), \fBecryptfs-setup-private\fP(1), \fBkeyctl\fP(1), \fBmount\fP(8), \fBmount.ecryptfs_private\fP(1)
+
+.TP
+\fI/usr/share/doc/ecryptfs-utils/ecryptfs-faq.html\fP
+
+.TP
+\fIhttp://ecryptfs.sourceforge.net/\fP
+.PD
+
+.SH AUTHOR
+This manpage and the \fBumount.ecryptfs_private\fP utility was written by Dustin Kirkland <kirkland@canonical.com> for Ubuntu systems (but may be used by others).  Permission is granted to copy, distribute and/or modify this document under the terms of the GNU General Public License, Version 2 or any later version published by the Free Software Foundation.
+
+On Debian systems, the complete text of the GNU General Public License can be found in /usr/share/common-licenses/GPL.
