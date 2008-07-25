@@ -9,10 +9,10 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 MAINTAINERCLEANFILES = $(srcdir)/Makefile.in
-DISTCLEANFILES = ecryptfs.7
 
 dist_noinst_DATA = ecryptfs.pod
 dist_man_MANS = \
+	ecryptfs.7 \
 	ecryptfs-add-passphrase.1 \
 	ecryptfsd.8 \
 	ecryptfs-generate-tpm-key.1 \
@@ -30,8 +30,3 @@ dist_man_MANS = \
 	mount.ecryptfs_private.1 \
 	pam_ecryptfs.8 \
 	umount.ecryptfs_private.1
-
-ecryptfs.7: $(srcdir)/ecryptfs.pod
-	$(POD2MAN)					\
-	--center="eCryptfs" --section=7			\
-	--release=$(PACKAGE_VERSION) $(srcdir)/ecryptfs.pod > ecryptfs.7
