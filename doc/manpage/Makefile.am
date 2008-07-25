@@ -10,7 +10,6 @@
 
 MAINTAINERCLEANFILES = $(srcdir)/Makefile.in
 
-dist_noinst_DATA = ecryptfs.pod
 dist_man_MANS = \
 	ecryptfs.7 \
 	ecryptfs-add-passphrase.1 \
