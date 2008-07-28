@@ -51,7 +51,20 @@ int main(int argc, const char *argv[])
 		rc = 0;
 		goto out;
 	}
+	printf("File version: [%d]\n", crypt_stat.file_version);
 	printf("Decrypted file size: [%llu]\n", crypt_stat.file_size);
+	if (crypt_stat.flags & ECRYPTFS_METADATA_IN_XATTR)
+		printf("Metadata in the extended attribute region\n");
+	else
+		printf("Metadata in the header region\n");
+	if (crypt_stat.flags & ECRYPTFS_ENCRYPTED)
+		printf("Encrypted\n");
+	else
+		printf("Plaintext\n");
+	if (crypt_stat.flags & ECRYPTFS_ENABLE_HMAC)
+		printf("HMAC enabled\n");
+	else
+		printf("HMAC disabled\n");
 out:
 	if (fd != -1)
 		close(fd);
