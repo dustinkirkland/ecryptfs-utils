@@ -129,8 +129,8 @@ ecryptfs_parse_header_metadata(struct ecryptfs_crypt_stat_user *crypt_stat,
 	    && (crypt_stat->num_header_bytes_at_front
 		< ECRYPTFS_MINIMUM_HEADER_EXTENT_SIZE)) {
 		rc = -EINVAL;
-		syslog(LOG_WARNING, "%s: Invalid header size: [%d]\n",
-		       __FUNCTION__, crypt_stat->num_header_bytes_at_front);
+		printf("%s Invalid header size: [%d]\n", __FUNCTION__,
+		       crypt_stat->num_header_bytes_at_front);
 	}
 	return rc;
 }
@@ -168,10 +168,21 @@ int ecryptfs_parse_stat(struct ecryptfs_crypt_stat_user *crypt_stat, char *buf,
 		rc = -EINVAL;
 		goto out;
 	}
-	rc = 0;
 	buf += MAGIC_ECRYPTFS_MARKER_SIZE_BYTES;
 	rc = ecryptfs_process_flags(crypt_stat, buf, &bytes_read);
+	if (rc) {
+		printf("%s: Invalid header content.\n", __FUNCTION__);
+		goto out;
+	}
 	buf += bytes_read;
+	rc = ecryptfs_parse_header_metadata(crypt_stat, buf, &bytes_read,
+					    ECRYPTFS_VALIDATE_HEADER_SIZE);
+	if (rc) {
+		printf("%s: Invalid header content.\n", __FUNCTION__);
+		goto out;
+	}
+	buf += bytes_read;
+/*	rc = ecryptfs_parse_packet_set(crypt_stat, buf); */
 out:
 	return rc;
 }

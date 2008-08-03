@@ -53,6 +53,8 @@ int main(int argc, const char *argv[])
 	}
 	printf("File version: [%d]\n", crypt_stat.file_version);
 	printf("Decrypted file size: [%llu]\n", crypt_stat.file_size);
+	printf("Number of header bytes at front of file: [%d]\n",
+	       crypt_stat.num_header_bytes_at_front);
 	if (crypt_stat.flags & ECRYPTFS_METADATA_IN_XATTR)
 		printf("Metadata in the extended attribute region\n");
 	else
