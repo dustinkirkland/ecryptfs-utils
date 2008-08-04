@@ -135,6 +135,159 @@ ecryptfs_parse_header_metadata(struct ecryptfs_crypt_stat_user *crypt_stat,
 	return rc;
 }
 
+static int
+ecryptfs_parse_tag_3_packet(struct ecryptfs_crypt_stat_user *crypt_stat,
+			    unsigned char *data,
+			    struct ecryptfs_auth_tok **auth_tok_list_head,
+			    struct ecryptfs_auth_tok **new_auth_tok,
+			    size_t *packet_size, size_t max_packet_size)
+{
+	(*new_auth_tok) = NULL;
+	return 0;
+}
+
+static int
+ecryptfs_parse_tag_11_packet(unsigned char *data, unsigned char *contents,
+			     size_t max_contents_bytes,
+			     size_t *tag_11_contents_size,
+			     size_t *packet_size, size_t max_packet_size)
+{
+	return 0;
+}
+
+static int
+ecryptfs_parse_tag_1_packet(struct ecryptfs_crypt_stat_user *crypt_stat,
+			    unsigned char *data,
+			    struct ecryptfs_auth_tok **auth_tok_list_head,
+			    struct ecryptfs_auth_tok **new_auth_tok,
+			    size_t *packet_size, size_t max_packet_size)
+{
+	(*new_auth_tok) = NULL;
+	return 0;
+}
+
+/**
+ * ecryptfs_parse_packet_set
+ * @crypt_stat: The cryptographic context
+ * @src: Virtual address of region of memory containing the packets
+ *
+ * Returns Zero if a valid authentication token was retrieved and
+ * processed; negative value for file not encrypted or for error
+ * conditions.
+ */
+static int ecryptfs_parse_packet_set(struct ecryptfs_crypt_stat_user *crypt_stat,
+				     unsigned char *src)
+{
+	size_t i = 0;
+	struct ecryptfs_auth_tok *auth_tok;
+	size_t packet_size;
+	struct ecryptfs_auth_tok *new_auth_tok;
+	unsigned char sig_tmp_space[ECRYPTFS_SIG_SIZE];
+	size_t tag_11_contents_size;
+	size_t tag_11_packet_size;
+	int next_packet_is_auth_tok_packet = 1;
+	int rc = 0;
+
+	while (next_packet_is_auth_tok_packet) {
+		size_t max_packet_size = ((4096 - 8) - i);
+
+		switch (src[i]) {
+		case ECRYPTFS_TAG_3_PACKET_TYPE:
+			rc = ecryptfs_parse_tag_3_packet(
+				crypt_stat,
+				(unsigned char *)&src[i],
+				&crypt_stat->ptr_to_auth_tok_list_head,
+				&new_auth_tok, &packet_size, max_packet_size);
+			if (rc) {
+				printf("%s: Error parsing tag 3 packet; "
+				       "rc = [%d]\n", __FUNCTION__, rc);
+				rc = -EINVAL;
+				goto out_wipe_list;
+			}
+			i += packet_size;
+			rc = ecryptfs_parse_tag_11_packet(
+				(unsigned char *)&src[i],
+				sig_tmp_space,
+				ECRYPTFS_SIG_SIZE,
+				&tag_11_contents_size,
+				&tag_11_packet_size,
+				max_packet_size);
+			if (rc) {
+				printf("%s: No valid "
+				       "(ecryptfs-specific) literal "
+				       "packet containing "
+				       "authentication token "
+				       "signature found after "
+				       "tag 3 packet; rc = [%d]\n", __FUNCTION__,
+					rc);
+				rc = -EINVAL;
+				goto out_wipe_list;
+			}
+			i += tag_11_packet_size;
+			if (ECRYPTFS_SIG_SIZE != tag_11_contents_size) {
+				printf("%s: Expected "
+				       "signature of size [%d]; "
+				       "read size [%d]\n", __FUNCTION__,
+				       ECRYPTFS_SIG_SIZE,
+				       tag_11_contents_size);
+				rc = -EINVAL;
+				goto out_wipe_list;
+			}
+			ecryptfs_to_hex(new_auth_tok->token.password.signature,
+					sig_tmp_space, tag_11_contents_size);
+			new_auth_tok->token.password.signature[
+				ECRYPTFS_PASSWORD_SIG_SIZE] = '\0';
+			break;
+		case ECRYPTFS_TAG_1_PACKET_TYPE:
+			rc = ecryptfs_parse_tag_1_packet(
+				crypt_stat,
+				(unsigned char *)&src[i],
+				&crypt_stat->ptr_to_auth_tok_list_head,
+				&new_auth_tok, &packet_size, max_packet_size);
+			if (rc) {
+				printf("%s: Error parsing "
+				       "tag 1 packet; rc = [%d]\n", __FUNCTION__,
+					rc);
+				rc = -EINVAL;
+				goto out_wipe_list;
+			}
+			i += packet_size;
+			break;
+		case ECRYPTFS_TAG_11_PACKET_TYPE:
+			printf("%s: Invalid packet set "
+			       "(Tag 11 not allowed by itself)\n", __FUNCTION__);
+			rc = -EINVAL;
+			goto out_wipe_list;
+			break;
+		default:
+			printf("%s: No packet at offset "
+			       "[%d] of the file header; hex value of "
+			       "character is [0x%.2x]\n", __FUNCTION__, i,
+			       src[i]);
+			next_packet_is_auth_tok_packet = 0;
+		}
+	}
+	if (crypt_stat->ptr_to_auth_tok_list_head == NULL) {
+		printf("%s: No no valid key packets found in header\n",
+		       __FUNCTION__);
+		rc = -EINVAL;
+		goto out;
+	}
+	goto out;
+out_wipe_list:
+	auth_tok = crypt_stat->ptr_to_auth_tok_list_head;
+	while (auth_tok) {
+		struct ecryptfs_auth_tok *next_auth_tok;
+
+		next_auth_tok = auth_tok->next;
+		free(auth_tok);
+		auth_tok = next_auth_tok;
+	}
+	crypt_stat->ptr_to_auth_tok_list_head = NULL;
+out:
+	return rc;
+}
+
 int ecryptfs_parse_stat(struct ecryptfs_crypt_stat_user *crypt_stat, char *buf,
 			size_t buf_size)
 {

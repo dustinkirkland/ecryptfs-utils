@@ -100,6 +100,13 @@
 #endif
 #define MAX_NAME_SIZE 128
 #define MAX_KEY_MOD_VALUE_SIZE 4096
+#define ECRYPTFS_TAG_1_PACKET_TYPE 0x01
+#define ECRYPTFS_TAG_3_PACKET_TYPE 0x8C
+#define ECRYPTFS_TAG_11_PACKET_TYPE 0xED
+#define ECRYPTFS_TAG_64_PACKET_TYPE 0x40
+#define ECRYPTFS_TAG_65_PACKET_TYPE 0x41
+#define ECRYPTFS_TAG_66_PACKET_TYPE 0x42
+#define ECRYPTFS_TAG_67_PACKET_TYPE 0x43
 #define ECRYPTFS_MSG_HELO 100
 #define ECRYPTFS_MSG_QUIT 101
 #define ECRYPTFS_MSG_REQUEST 102
@@ -194,8 +201,11 @@ struct ecryptfs_private_key {
 
 enum ecryptfs_token_types {ECRYPTFS_PASSWORD, ECRYPTFS_PRIVATE_KEY};
 
+struct ecryptfs_auth_tok;
+
 /* May be a password or a private key */
 struct ecryptfs_auth_tok {
+	struct ecryptfs_auth_tok *next;
 	uint16_t version; /* 8-bit major and 8-bit minor */
 	uint16_t token_type;
 #define ECRYPTFS_ENCRYPT_ONLY 0x00000001
@@ -457,6 +467,7 @@ struct ecryptfs_crypt_stat_user {
 	size_t num_header_bytes_at_front;
 	size_t extent_size;
 	size_t key_size;
+	struct ecryptfs_auth_tok *ptr_to_auth_tok_list_head;
 };
 
 #define ECRYPTFS_DEFAULT_MESSAGING_TYPE ECRYPTFS_MESSAGING_TYPE_NETLINK
