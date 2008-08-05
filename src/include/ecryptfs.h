@@ -201,11 +201,10 @@ struct ecryptfs_private_key {
 
 enum ecryptfs_token_types {ECRYPTFS_PASSWORD, ECRYPTFS_PRIVATE_KEY};
 
-struct ecryptfs_auth_tok;
 
-/* May be a password or a private key */
+
+/* This struct must be identical to that as defined in the kernel. */
 struct ecryptfs_auth_tok {
-	struct ecryptfs_auth_tok *next;
 	uint16_t version; /* 8-bit major and 8-bit minor */
 	uint16_t token_type;
 #define ECRYPTFS_ENCRYPT_ONLY 0x00000001
@@ -217,6 +216,11 @@ struct ecryptfs_auth_tok {
 		struct ecryptfs_private_key private_key;
 	} token;
 }  __attribute__ ((packed));
+
+struct ecryptfs_auth_tok_list {
+	struct ecryptfs_auth_tok *auth_tok;
+	struct ecryptfs_auth_tok_list *next;
+};
 
 struct ecryptfs_name_val_pair {
 #define ECRYPTFS_DEFAULT_VALUE_SET	0x00000004
@@ -467,7 +471,7 @@ struct ecryptfs_crypt_stat_user {
 	size_t num_header_bytes_at_front;
 	size_t extent_size;
 	size_t key_size;
-	struct ecryptfs_auth_tok *ptr_to_auth_tok_list_head;
+	struct ecryptfs_auth_tok_list *ptr_to_auth_tok_list_head;
 };
 
 #define ECRYPTFS_DEFAULT_MESSAGING_TYPE ECRYPTFS_MESSAGING_TYPE_NETLINK

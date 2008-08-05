@@ -138,7 +138,7 @@ ecryptfs_parse_header_metadata(struct ecryptfs_crypt_stat_user *crypt_stat,
 static int
 ecryptfs_parse_tag_3_packet(struct ecryptfs_crypt_stat_user *crypt_stat,
 			    unsigned char *data,
-			    struct ecryptfs_auth_tok **auth_tok_list_head,
+			    struct ecryptfs_auth_tok_list **auth_tok_list_head,
 			    struct ecryptfs_auth_tok **new_auth_tok,
 			    size_t *packet_size, size_t max_packet_size)
 {
@@ -158,7 +158,7 @@ ecryptfs_parse_tag_11_packet(unsigned char *data, unsigned char *contents,
 static int
 ecryptfs_parse_tag_1_packet(struct ecryptfs_crypt_stat_user *crypt_stat,
 			    unsigned char *data,
-			    struct ecryptfs_auth_tok **auth_tok_list_head,
+			    struct ecryptfs_auth_tok_list **auth_tok_list_head,
 			    struct ecryptfs_auth_tok **new_auth_tok,
 			    size_t *packet_size, size_t max_packet_size)
 {
@@ -179,7 +179,7 @@ static int ecryptfs_parse_packet_set(struct ecryptfs_crypt_stat_user *crypt_stat
 				     unsigned char *src)
 {
 	size_t i = 0;
-	struct ecryptfs_auth_tok *auth_tok;
+	struct ecryptfs_auth_tok_list *auth_tok_list;
 	size_t packet_size;
 	struct ecryptfs_auth_tok *new_auth_tok;
 	unsigned char sig_tmp_space[ECRYPTFS_SIG_SIZE];
@@ -275,13 +275,14 @@ static int ecryptfs_parse_packet_set(struct ecryptfs_crypt_stat_user *crypt_stat
 	}
 	goto out;
 out_wipe_list:
-	auth_tok = crypt_stat->ptr_to_auth_tok_list_head;
-	while (auth_tok) {
-		struct ecryptfs_auth_tok *next_auth_tok;
+	auth_tok_list = crypt_stat->ptr_to_auth_tok_list_head;
+	while (auth_tok_list) {
+		struct ecryptfs_auth_tok *next_auth_tok_list;
 
-		next_auth_tok = auth_tok->next;
-		free(auth_tok);
-		auth_tok = next_auth_tok;
+		next_auth_tok_list = auth_tok_list->next;
+		free(auth_tok_list->auth_tok);
+		free(auth_tok_list);
+		auth_tok_list = next_auth_tok_list;
 	}
 	crypt_stat->ptr_to_auth_tok_list_head = NULL;
 out:
