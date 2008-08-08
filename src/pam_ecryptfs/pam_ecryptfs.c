@@ -215,6 +215,10 @@ static int private_dir(pam_handle_t *pamh, int mount)
 	int rc;
 	struct passwd *pwd = NULL;
 	char *sigfile = NULL;
+	char *autofile = NULL;
+	char *a;
+	char *automount = "auto-mount";
+	char *autoumount = "auto-umount";
 	struct stat s;
 	pid_t pid;
 	struct utmp *u;
@@ -224,6 +228,17 @@ static int private_dir(pam_handle_t *pamh, int mount)
 		/* fetch_pwd() logged a message */
 		return 1;
 	}
+	if (mount == 1) {
+		a = automount;
+	} else {
+		a = autoumount;
+	}
+	if (
+	    (asprintf(&autofile, "%s/.ecryptfs/%s", pwd->pw_dir, a) < 0)
+	     || autofile == NULL) {
+		syslog(LOG_ERR, "Error allocating memory for autofile name");
+		return 1;
+        }
         if (
 	    (asprintf(&sigfile, "%s/.ecryptfs/%s.sig", pwd->pw_dir, 
 	     PRIVATE_DIR) < 0) || sigfile == NULL) {
@@ -231,7 +246,7 @@ static int private_dir(pam_handle_t *pamh, int mount)
 		return 1;
         }
 	if (stat(sigfile, &s) != 0) {
-		syslog(LOG_ERR, "Error allocating memory for sigfile name");
+		syslog(LOG_ERR, "Sigfile not found");
 		return 1;
 	}
 	if (!S_ISREG(s.st_mode)) {
@@ -244,11 +259,23 @@ static int private_dir(pam_handle_t *pamh, int mount)
 	} 
 	if (pid == 0) {
 		if (mount == 1) {
+			if (stat(autofile, &s) != 0) {
+				/* User does not want to auto-mount */
+				syslog(LOG_INFO,
+					"Skipping automatic eCryptfs mount");
+				return 0;
+			}
 			/* run mount.ecryptfs_private as the user */
 			setresuid(pwd->pw_uid, pwd->pw_uid, pwd->pw_uid);
 			execl("/sbin/mount.ecryptfs_private", 
 			      "mount.ecryptfs_private", NULL);
 		} else {
+			if (stat(autofile, &s) != 0) {
+				/* User does not want to auto-unmount */
+				syslog(LOG_INFO,
+					"Skipping automatic eCryptfs unmount");
+				return 0;
+			}
 			/* run umount.ecryptfs_private as the user */
 			setresuid(pwd->pw_uid, pwd->pw_uid, pwd->pw_uid);
 			execl("/sbin/umount.ecryptfs_private", 
