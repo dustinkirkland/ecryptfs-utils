@@ -54,6 +54,8 @@ Security options  --->
   <M> Enable access key retention support
 
 Cryptographic options  --->
+  <M>   CBC support
+  <M>   ECB support
   <M>   MD5 digest algorithm
   <M>   AES cipher algorithms
 
@@ -78,10 +80,6 @@ BUILD AND INSTALL INSTRUCTIONS
 1) Consult the INSTALL file. In the majority of cases, this step
    should involve the standard procedure for Linux packages:
      % ./configure --prefix=/usr && make && make install
-
-   If you are running a version of eCryptfs that ships as part of
-   kernel version 2.6.18-rc6-mm2 or earlier, you need to pass the
-   --enable-old-auth-tok option to the ./configure script.
 
 2) Make sure that you have sysfs mounted and that a valid entry for
    the sysfs mount point is in your /etc/mtab file.
@@ -152,17 +150,17 @@ passwd=<passphrase>
 Currently supported aliases and attributes parsed by the mount helper include:
 
  key=passphrase:
-     passwd=<passphrase>
-     passfile=/path/to/file
-     passfd=<file descriptor>
-     passstdin (default)
-     salt=<salt value>
+     passphrase_passwd=<passphrase>
+     passphrase_passwd_file=/path/to/file
+     passphrase_passfd=<file descriptor>
+     passphrase_passstdin (default)
+     passphrase_salt=<salt value>
 
  key=openssl:
-     keyfile=/path/to/key
-     passwd=<passphrase>
-     passwd_file=/path/to/file
-     passwd_fd=<file descriptor>
+     openssl_keyfile=/path/to/key
+     openssl_passwd=<passphrase>
+     openssl_passwd_file=/path/to/file
+     openssl_passwd_fd=<file descriptor>
 
 The following general attributes are valid kernel mount options,
 and may also be acted upon by the mount helper, mount.ecryptfs:
@@ -232,11 +230,11 @@ provide sufficient protection of the file itself), you can take the
 following steps:
 
 (Previous mount; specify passphrase on command line)
-mount -t ecryptfs /mnt/dev /mnt/dir -o key=passphrase:passwd=my_password
+mount -t ecryptfs /mnt/dev /mnt/dir -o key=passphrase:passphrase_passwd=my_passphrase
 
-(Next mount; have passphrase read from a passfile)
-echo "passwd=my_password" > ~/my_ecryptfs_password
-mount -t ecryptfs /mnt/dev /mnt/dir -o key=passphrase:passfile=~/my_ecryptfs_password
+(Next mount; have passphrase read from a file)
+echo "passphrase_passwd=my_passphrase" > ~/my_ecryptfs_passphrase
+mount -t ecryptfs /mnt/dev /mnt/dir -o key=passphrase:passphrase_passwd_file=~/my_ecryptfs_passphrase
 
 Saving your unencrypted passphrase to a file on the same disk that
 contains your encrypted files defeats the purpose of using a
