@@ -58,6 +58,8 @@ The filename should be the filename of a file containing an RSA SSL key.
 
 .PP
 
+The following command will layover mount eCryptfs on /secret with a passphrase contained in a file stored on secure media mounted at /mnt/secureusb/.
+
 \fBmount -t ecryptfs -o
 key=passphrase:passphrase_passwd_file=/mnt/secureusb/passwd_file.txt
 /secret /secret\fP
@@ -80,7 +82,7 @@ Where passwd_file.txt contains the contents
 .PD
 
 .SH NOTES
-Do not run eCryptfs in higher verbosity levels unless you are doing so for the sole purpose of development, since secret values will be written out to the system log in that case.
+Do not run eCryptfs in higher verbosity levels unless you are doing so for the sole purpose of development, since secret values will be written out to the system log in that case. Make certain that your eCryptfs mount covers all locations where your applications may write sensitive data. In addition, use dm-crypt to encrypt your swap space with a random key on boot.
 
 .SH BUGS
 Please send bug reports to the lead developer, an eCryptfs mailing list hosted from SourceForge, or to the SourceForge bug tracker for the eCryptfs project. For kernel bugs, please follow the procedure detailed in Documentation/oops-tracing.txt to help us figure out what is happening.
