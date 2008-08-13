@@ -55,8 +55,15 @@ static int tf_pass_file(struct ecryptfs_ctx *ctx, struct param_node *node,
 		goto out;
 	}
 	memset(file_head, 0, sizeof(struct ecryptfs_name_val_pair));
-	if (strcmp(node->mnt_opt_names[0], "passphrase_passfile") == 0) {
+	if (strcmp(node->mnt_opt_names[0], "passphrase_passwd_file") == 0) {
 		fd = open(node->val, O_RDONLY);
+		if (fd == -1) {
+			syslog(LOG_ERR, "%s: Error whilst attempting to open "
+			       "[%s]; errno = [%m]\n", __FUNCTION__, node->val,
+			       errno);
+			rc = MOUNT_ERROR;
+			goto out;
+		}
 	} else if (strcmp(node->mnt_opt_names[0], "passphrase_passfd") == 0) {
 		fd = strtol(node->val, NULL, 0);
 	} else {
@@ -67,7 +74,7 @@ static int tf_pass_file(struct ecryptfs_ctx *ctx, struct param_node *node,
 	}
 	rc = parse_options_file(fd, file_head);
 	if (rc) {
-		syslog(LOG_ERR, "%s: Error parsing passfile for passwd; "
+		syslog(LOG_ERR, "%s: Error parsing file for passwd; "
 		       "rc = [%d]\n", __FUNCTION__, rc);
 		rc = MOUNT_ERROR;
 		goto out;
@@ -158,7 +165,9 @@ struct param_node passphrase_param_nodes[] = {
 	 .val = NULL,
 	 .display_opts = NULL,
 	 .default_val = "passphrase_passwd",
-	 .flags = ECRYPTFS_PARAM_FLAG_NO_VALUE,
+	 .flags = (ECRYPTFS_PARAM_FLAG_NO_VALUE
+		   | ECRYPTFS_ALLOW_IMPLICIT_TRANSITION
+		   | ECRYPTFS_IMPLICIT_OVERRIDE_DEFAULT),
 	 .num_transitions = 3,
 	 .tl = {{.val = "passphrase_passwd",
 		 .pretty_val = "Provide passphrase directly",
@@ -195,7 +204,7 @@ struct param_node passphrase_param_nodes[] = {
 
 	/* ECRYPTFS_PASS_FILE_TOK = 2 */
 	{.num_mnt_opt_names = 2,
-	 .mnt_opt_names = {"passphrase_passfile", "passfile"},
+	 .mnt_opt_names = {"passphrase_passwd_file", "passfile"},
 	 .prompt = "Passphrase File",
 	 .val_type = VAL_STR,
 	 .val = NULL,

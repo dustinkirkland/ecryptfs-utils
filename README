@@ -233,8 +233,8 @@ following steps:
 mount -t ecryptfs /mnt/dev /mnt/dir -o key=passphrase:passphrase_passwd=my_passphrase
 
 (Next mount; have passphrase read from a file)
-echo "passphrase_passwd=my_passphrase" > ~/my_ecryptfs_passphrase
-mount -t ecryptfs /mnt/dev /mnt/dir -o key=passphrase:passphrase_passwd_file=~/my_ecryptfs_passphrase
+echo "passphrase_passwd=my_passphrase" > ~/my_passphrase
+mount -t ecryptfs /mnt/dev /mnt/dir -o key=passphrase:passphrase_passwd_file=~/my_passphrase
 
 Saving your unencrypted passphrase to a file on the same disk that
 contains your encrypted files defeats the purpose of using a

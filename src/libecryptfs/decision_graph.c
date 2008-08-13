@@ -386,7 +386,9 @@ static int alloc_and_get_val(struct ecryptfs_ctx *ctx, struct param_node *node,
 			       "%s: Value retrieved from default_val or from "
 			       "parameter list; returning\n",
 			       __FUNCTION__);
-		goto out;
+		if (!(node->flags & ECRYPTFS_ALLOW_IMPLICIT_TRANSITION
+		      && node->flags & ECRYPTFS_IMPLICIT_OVERRIDE_DEFAULT))
+			goto out;
 	}
 	if (node->flags & ECRYPTFS_ALLOW_IMPLICIT_TRANSITION
 	    && !(node->flags & ECRYPTFS_NO_AUTO_TRANSITION)) {

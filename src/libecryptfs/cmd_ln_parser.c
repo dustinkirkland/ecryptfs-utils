@@ -373,8 +373,11 @@ int parse_options_file(int fd, struct ecryptfs_name_val_pair *head)
 	struct stat filestat;
 
 	rc = fstat(fd, &filestat);
-	if (rc)
+	if (rc) {
+		syslog(LOG_ERR, "%s: fstat returned [%d] on fd [%d]\n",
+		       __FUNCTION__, rc, fd);
 		goto out;
+	}
 	pagesize = getpagesize();
 	file_size = filestat.st_size;
 	if (file_size > MAX_FILE_SIZE) {
@@ -389,6 +392,8 @@ int parse_options_file(int fd, struct ecryptfs_name_val_pair *head)
 	data = mmap((caddr_t)0, file_size, PROT_READ, MAP_PRIVATE, fd, 0);
 	if (data == MAP_FAILED)	{
 		rc = errno;
+		syslog(LOG_ERR, "%s: mmap failed on fd [%d]; rc = [%d]\n",
+		       __FUNCTION__, fd, rc);
 		goto out;
 	}
 	rc = generate_nv_list(head, data);
