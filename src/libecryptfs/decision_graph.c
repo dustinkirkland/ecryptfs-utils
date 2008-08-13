@@ -397,15 +397,17 @@ static int alloc_and_get_val(struct ecryptfs_ctx *ctx, struct param_node *node,
 				rc = retrieve_val(&value_retrieved, nvp_head,
 						  node->tl[i].next_token);
 			if (rc) {
-				syslog(LOG_ERR, "%s: Error attempting to retrieve "
-				       "value; rc = [%d]\n", __FUNCTION__, rc);
+				syslog(LOG_ERR, "%s: Error attempting to "
+				       "retrieve value; rc = [%d]\n",
+				       __FUNCTION__, rc);
 				goto out;
 			}
 			if (value_retrieved) {
 				if (ecryptfs_verbosity)
 					syslog(LOG_INFO,
-					       "%s: Value retrieved from default_val "
-					       "or from parameter list for successive "
+					       "%s: Value retrieved from "
+					       "default_val or from parameter "
+					       "list for successive "
 					       "node at transition slot [%d]; "
 					       "returning\n", __FUNCTION__, i);
 				rc = asprintf(&node->val, "%s",
@@ -465,7 +467,6 @@ static int alloc_and_get_val(struct ecryptfs_ctx *ctx, struct param_node *node,
 				rc = 0;
 				goto out;
 			}
-			/* === Begin add component to prompt === */
 			pe->next = malloc(sizeof(*pe));
 			if (!pe->next) {
 				rc = -ENOMEM;
@@ -479,7 +480,6 @@ static int alloc_and_get_val(struct ecryptfs_ctx *ctx, struct param_node *node,
 				goto out;
 			}
 			rc = 0;
-			/* === End add component to prompt === */
 			for (i = 0; i < node->num_transitions; i++) {
 				pe->next = malloc(sizeof(*pe));
 				if (!pe->next) {

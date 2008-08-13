@@ -33,29 +33,25 @@ This option, when set, will have eCryptfs return the encrypted versions of the l
 .B ecryptfs_xattr
 Store the metadata in the extended attribute of the lower files rather than the header region of the lower files.
 .TP
-.B verbosity=(level)
-Set to '1' in order to get verbose output from the kernel module. As a word of caution, this will cause secret values to be written in the clear to the system log, so this options should only be used for debugging purposes.
-.TP
 
-KEY OPTIONS
+KEY MODULE OPTIONS
+
+Parameters that apply to individual key modules have the alias for the key module in the prefix of the parameter name.
 
 .TP
-.B passwd=(passphrase)
+.B passphrase_passwd=(passphrase)
 The actual password is password. Since the password is visible to utilities (like ps under Unix) this form should only be used where security is not important.
 .TP
-.B passwd_file=(filename)
+.B passphrase_passwd_file=(filename)
 The password should be specified in a file with passwd=(passphrase). It is highly reccomended that the file be stored on a secure medium such as a personal usb key.
 .TP
-.B passwd_fd=(file descriptor)
+.B passphrase_passwd_fd=(file descriptor)
 The password is specified through the specified file descriptor.
 .TP
-.B passstdin
-The user types their passphrase in through stdin.
-.TP
-.B salt=(hex value)
+.B passphrase_salt=(hex value)
 The salt should be specified as a 16 digit hex value.
 .TP
-.B keyfile=(filename)
+.B openssl_keyfile=(filename)
 The filename should be the filename of a file containing an RSA SSL key.
 
 .SH SEE ALSO
@@ -266,35 +262,29 @@ for such things as backup utilities.
 .IX Item "ecryptfs_xattr"
 Store the metadata in the extended attribute of the lower files rather
 than the header region of the lower files.
-.IP "\fBverbosity=(level)\fR" 10
-.IX Item "verbosity=(level)"
-Set to '1' in order to get verbose output from the kernel module. As a
-word of caution, this will cause secret values to be written in the
-clear to the system log, so this options should only be used for
-debugging purposes.
 .Sh "\s-1KEY\s0 \s-1OPTIONS\s0"
 .IX Subsection "KEY OPTIONS"
-.IP "\fBpasswd=(passphrase)\fR" 10
-.IX Item "passwd=(passphrase)"
+.IP "\fBpassphrase_passwd=(passphrase)\fR" 10
+.IX Item "passphrase_passwd=(passphrase)"
 The actual password is password. Since the password is visible to utilities
 (like ’ps’ under Unix) this form should only be used where security is not
 important.
-.IP "\fBpasswd_file=(filename)\fR" 10
-.IX Item "passwd_file=(filename)"
+.IP "\fBpassphrase_passwd_file=(filename)\fR" 10
+.IX Item "passphrase_passwd_file=(filename)"
 The password should be specified in a file with \fBpasswd=(passphrase)\fR. It is
 highly reccomended that the file be stored on a secure medium such as a
 personal usb key.
-.IP "\fBpasswd_fd=(file descriptor)\fR" 10
-.IX Item "passwd_fd=(file descriptor)"
+.IP "\fBpassphrase_passwd_fd=(file descriptor)\fR" 10
+.IX Item "passphrase_passwd_fd=(file descriptor)"
 The password is specified through the specified file descriptor.
-.IP "\fBpassstdin\fR" 10
-.IX Item "passstdin"
+.IP "\fBpassphrase_passstdin\fR" 10
+.IX Item "passphrase_passstdin"
 The user types their passphrase in through stdin.
 .IP "\fBsalt=(hex value)\fR" 10
-.IX Item "salt=(hex value)"
+.IX Item "passphrase_salt=(hex value)"
 The salt should be specified as a 16 digit hex value. 
 .IP "\fBkeyfile=(filename)\fR" 10
-.IX Item "keyfile=(filename)"
+.IX Item "openssl_keyfile=(filename)"
 The filename should be the filename of a file containing an \s-1RSA\s0 \s-1SSL\s0 key.
 .SH "SEE ALSO"
 .IX Header "SEE ALSO"

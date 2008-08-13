@@ -152,8 +152,7 @@ Currently supported aliases and attributes parsed by the mount helper include:
  key=passphrase:
      passphrase_passwd=<passphrase>
      passphrase_passwd_file=/path/to/file
-     passphrase_passfd=<file descriptor>
-     passphrase_passstdin (default)
+     passphrase_passwd_fd=<file descriptor>
      passphrase_salt=<salt value>
 
  key=openssl:

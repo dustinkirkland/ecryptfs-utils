@@ -64,7 +64,7 @@ static int tf_pass_file(struct ecryptfs_ctx *ctx, struct param_node *node,
 			rc = MOUNT_ERROR;
 			goto out;
 		}
-	} else if (strcmp(node->mnt_opt_names[0], "passphrase_passfd") == 0) {
+	} else if (strcmp(node->mnt_opt_names[0], "passphrase_passwd_fd") == 0) {
 		fd = strtol(node->val, NULL, 0);
 	} else {
 		syslog(LOG_ERR, "%s: Invalid file descriptor qualifier\n",
@@ -223,7 +223,7 @@ struct param_node passphrase_param_nodes[] = {
 
 	/* ECRYPTFS_PASS_FD_TOK = 3 */
 	{.num_mnt_opt_names = 2,
-	 .mnt_opt_names = {"passphrase_passfd", "passfd"},
+	 .mnt_opt_names = {"passphrase_passwd_fd", "passfd"},
 	 .prompt = "Passphrase File Discriptor",
 	 .val_type = VAL_STR,
 	 .val = NULL,
