@@ -792,15 +792,15 @@ static struct param_node ssl_param_nodes[] = {
 		   | ECRYPTFS_ALLOW_IMPLICIT_TRANSITION),
 	 .num_transitions = 3,
 	 .tl = {{.val = "openssl_passwd",
-		 .pretty_val = "passwd: Enter on Console",
+		 .pretty_val = "openssl_passwd: Enter on Console",
 		 .next_token = &ssl_param_nodes[SSL_USER_PROVIDED_PASSWD_TOK],
 		 .trans_func = NULL},
 		{.val = "openssl_passwd_file",
-		 .pretty_val = "passwd_file: File Containing Passphrase",
+		 .pretty_val = "openssl_passwd_file: File Containing Passphrase",
 		 .next_token = &ssl_param_nodes[SSL_FILE_PASSWD_TOK],
 		 .trans_func = NULL},
 		{.val = "openssl_passwd_fd",
-		 .pretty_val = ("passwd_fd: File Descriptor for File "
+		 .pretty_val = ("openssl_passwd_fd: File Descriptor for File "
 				"Containing Passphrase"),
 		 .next_token = &ssl_param_nodes[SSL_FD_PASSWD_TOK],
 		 .trans_func = NULL}}},
