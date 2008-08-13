@@ -209,11 +209,6 @@ and may also be acted upon by the mount helper, mount.ecryptfs:
 The following general attributes are parsed only by the mount helper,
 mount.ecryptfs:
 
- verbosity=<value>
-	0: eCryptfs will not prompt the user for unspecified options
-	1: (default) the eCryptfs mount helper will request unspecified
-	   options to be completed
-
  no_sig_cache
         Do not perform any key signature cache checks. By default,
         when mounting, the eCryptfs mount helper will look for the key
@@ -232,8 +227,8 @@ following steps:
 mount -t ecryptfs /mnt/dev /mnt/dir -o key=passphrase:passphrase_passwd=my_passphrase
 
 (Next mount; have passphrase read from a file)
-echo "passphrase_passwd=my_passphrase" > ~/my_passphrase
-mount -t ecryptfs /mnt/dev /mnt/dir -o key=passphrase:passphrase_passwd_file=~/my_passphrase
+echo "passphrase_passwd=my_passphrase" > /mnt/secureusb/my_passphrase
+mount -t ecryptfs /mnt/dev /mnt/dir -o key=passphrase:passphrase_passwd_file=/mnt/secureusb/my_passphrase
 
 Saving your unencrypted passphrase to a file on the same disk that
 contains your encrypted files defeats the purpose of using a

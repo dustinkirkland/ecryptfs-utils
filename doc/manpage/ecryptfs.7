@@ -12,7 +12,7 @@ eCryptfs is a POSIX-compliant enterprise-class stacked cryptographic filesystem 
 
 STANDARD OPTIONS
 .TP
-.B key=(keytype):[Key Options]
+.B key=(keytype):[KEY MODULE OPTIONS]
 Specify the type of key to be used when mounting eCryptfs.
 .TP
 .B ecryptfs_cipher=(cipher)
@@ -36,7 +36,7 @@ Store the metadata in the extended attribute of the lower files rather than the 
 
 KEY MODULE OPTIONS
 
-Parameters that apply to individual key modules have the alias for the key module in the prefix of the parameter name.
+Parameters that apply to individual key modules have the alias for the key module in the prefix of the parameter name. Key modules are pluggable, and which key modules are available on any given system is dependent upon whatever happens to be installed in /usr/lib*/ecryptfs/. By default, this includes, at a minimum, "passphrase" and "openssl."
 
 .TP
 .B passphrase_passwd=(passphrase)
@@ -53,6 +53,19 @@ The salt should be specified as a 16 digit hex value.
 .TP
 .B openssl_keyfile=(filename)
 The filename should be the filename of a file containing an RSA SSL key.
+
+.SH EXAMPLE
+
+.PP
+
+\fBmount -t ecryptfs -o
+key=passphrase:passphrase_passwd_file=/mnt/secureusb/passwd_file.txt
+/secret /secret\fP
+
+.PP
+
+Where passwd_file.txt contains the contents
+\fB"passphrase_passwd=[passphrase]"\fP.
 
 .SH SEE ALSO
 .PD 0
@@ -204,100 +217,3 @@ On Debian systems, the complete text of the GNU General Public License can be fo
 .    ds Ae AE
 .\}
 .rm #[ #] #H #V #F C
-.\" ========================================================================
-.\"
-.IX Title "ECRYPTFS 7"
-.TH ECRYPTFS 7 "2008-04-03" "41" "eCryptfs"
-.SH "NAME"
-eCryptfs \- an enterprise\-class cryptographic filesystem for Linux
-.SH "SYNOPSIS"
-.IX Header "SYNOPSIS"
-\&\fBmount \-t ecryptfs\fR
-[\fI\s-1SRC\s0 \s-1DIR\s0\fR]
-[\fI\s-1DST\s0 \s-1DIR\s0\fR]
-\&\fB\-o\fR
-[\fI\s-1OPTIONS\s0\fR]
-.SH "DESCRIPTION"
-.IX Header "DESCRIPTION"
-eCryptfs is a POSIX-compliant enterprise-class stacked cryptographic
-filesystem for Linux. It is derived from Erez Zadok's Cryptfs, implemented
-through the FiST framework for generating stacked filesystems. eCryptfs
-extends Cryptfs to provide advanced key management and policy features.
-eCryptfs stores cryptographic metadata in the header of each file written,
-so that encrypted files can be copied between hosts; the file will be
-decryptable with the proper key, and there is no need to keep track of any
-additional information aside from what is already in the encrypted file
-itself. Think of eCryptfs as a sort of \*(L"gnupgfs.\*(R"
-.SH "OPTIONS"
-.IX Header "OPTIONS"
-.Sh "\s-1STANDARD\s0 \s-1OPTIONS\s0"
-.IX Subsection "STANDARD OPTIONS"
-.IP "\fBkey=(keytype):[Key Options]\fR" 10
-.IX Item "key=(keytype):[Key Options]"
-Specify the type of key to be used when mounting eCryptfs.
-.IP "\fBecryptfs_cipher=(cipher)\fR" 10
-.IX Item "ecryptfs_cipher=(cipher)"
-Specify the symmetric cipher to be used on a per file basis
-.IP "\fBecryptfs_key_bytes=(key_bytes)\fR" 10
-.IX Item "ecryptfs_key_bytes=(key_bytes)"
-Specify the keysize to be used with the selected cipher. If the cipher
-only has one keysize the keysize does not need to be specified.
-.IP "\fBecryptfs_passthrough\fR" 10
-.IX Item "ecryptfs_passthrough"
-Allows for non-eCryptfs files to be read and written from within an
-eCryptfs mount. This option is turned off by default.
-.IP "\fBno_sig_cache\fR" 10
-.IX Item "no_sig_cache"
-Do not check the mount key signature against the values in the user's
-~/.ecryptfs/sig\-cache.txt file. This is useful for such things as
-non-interactive setup scripts, so that the mount helper does not stop
-and prompt the user in the event that the key sig is not in the cache.
-.IP "\fBecryptfs_encrypted_view\fR" 10
-.IX Item "ecryptfs_encrypted_view"
-This option, when set, will have eCryptfs return the encrypted
-versions of the lower files, rather than decrypt encrypted files and
-return the decrypted data from the lower files. This options is useful
-for such things as backup utilities.
-.IP "\fBecryptfs_xattr\fR" 10
-.IX Item "ecryptfs_xattr"
-Store the metadata in the extended attribute of the lower files rather
-than the header region of the lower files.
-.Sh "\s-1KEY\s0 \s-1OPTIONS\s0"
-.IX Subsection "KEY OPTIONS"
-.IP "\fBpassphrase_passwd=(passphrase)\fR" 10
-.IX Item "passphrase_passwd=(passphrase)"
-The actual password is password. Since the password is visible to utilities
-(like ’ps’ under Unix) this form should only be used where security is not
-important.
-.IP "\fBpassphrase_passwd_file=(filename)\fR" 10
-.IX Item "passphrase_passwd_file=(filename)"
-The password should be specified in a file with \fBpasswd=(passphrase)\fR. It is
-highly reccomended that the file be stored on a secure medium such as a
-personal usb key.
-.IP "\fBpassphrase_passwd_fd=(file descriptor)\fR" 10
-.IX Item "passphrase_passwd_fd=(file descriptor)"
-The password is specified through the specified file descriptor.
-.IP "\fBpassphrase_passstdin\fR" 10
-.IX Item "passphrase_passstdin"
-The user types their passphrase in through stdin.
-.IP "\fBsalt=(hex value)\fR" 10
-.IX Item "passphrase_salt=(hex value)"
-The salt should be specified as a 16 digit hex value. 
-.IP "\fBkeyfile=(filename)\fR" 10
-.IX Item "openssl_keyfile=(filename)"
-The filename should be the filename of a file containing an \s-1RSA\s0 \s-1SSL\s0 key.
-.SH "SEE ALSO"
-.IX Header "SEE ALSO"
-\&\fImount\fR\|(8)
-.SH "NOTES"
-.IX Header "NOTES"
-Do not run eCryptfs in higher verbosity levels
-unless you are doing so for the sole purpose of development, since
-secret values will be written out to the system log in that case.
-.SH "BUGS"
-.IX Header "BUGS"
-Please send bug reports to the lead developer, an eCryptfs mailing
-list hosted from SourceForge, or to the SourceForge bug tracker for
-the eCryptfs project. For kernel bugs, please follow the procedure
-detailed in Documentation/oops\-tracing.txt to help us figure out what
-is happening.
