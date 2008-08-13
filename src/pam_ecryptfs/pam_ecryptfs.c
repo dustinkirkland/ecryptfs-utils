@@ -157,7 +157,7 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags, int argc,
 			syslog(LOG_WARNING, "There is already a key in the "
 			       "user session keyring for the given "
 			       "passphrase.\n");
-			rc = 0;
+			goto out_child;
 		}
 		if (rc) {
 			syslog(LOG_ERR, "Error adding passphrase key token to "
