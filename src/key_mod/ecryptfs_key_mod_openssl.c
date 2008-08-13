@@ -782,7 +782,7 @@ static struct param_node ssl_param_nodes[] = {
 	 .val = NULL,
 	 .display_opts = NULL,
 	 .default_val = NULL,
-	 .suggested_val = "passwd",
+	 .suggested_val = "openssl_passwd",
 	 /* An implicit transition takes place if one of the key
 	  * module parameters that are the target of one of the
 	  * transition nodes already exists in the provided parameter
