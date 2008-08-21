@@ -402,8 +402,8 @@ out:
 static struct key_mod_param tspi_params[] = {
 	{.id = ECRYPTFS_KEY_MOD_PARAM_TSPI_UUID,
 	 .flags = ECRYPTFS_PARAM_FLAG_ECHO_INPUT,
-	 .option = "uuid",
-	 .description = "uuid",
+	 .option = "tspi_uuid",
+	 .description = "tspi_uuid",
 	 .suggested_val = NULL,
 	 .default_val = NULL,
 	 .val = NULL},
@@ -490,7 +490,7 @@ ecryptfs_tspi_init_from_param_vals(struct tspi_data *tspi_data,
 		tspi_params[i].val = &param_vals[i];
 	memset(tspi_data, 0, sizeof(struct tspi_data));
 	for (i = 0; i < num_param_vals; i++)
-		if (strcmp(tspi_params[i].option, "uuid") == 0) {
+		if (strcmp(tspi_params[i].option, "tspi_uuid") == 0) {
 			string_to_uuid(&tspi_data->uuid,
 				       tspi_params[i].val->val);
 			uuid_set = 1;
