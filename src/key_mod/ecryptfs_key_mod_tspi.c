@@ -27,6 +27,7 @@
 #include <string.h>
 #include <pthread.h>
 #include <time.h>
+#include <unistd.h>
 #include <errno.h>
 #include <trousers/tss.h>
 #include "config.h"
@@ -192,7 +193,7 @@ static struct ecryptfs_tspi_connect_ticket *ptr_to_free_ticket_list_head = NULL;
 static struct ecryptfs_tspi_connect_ticket *ptr_to_used_ticket_list_head = NULL;
 
 static int
-ecryptfs_tspi_get_ticket(struct ecryptfs_tspi_connect_ticket **ret_ticket)
+ecryptfs_tspi_grab_ticket(struct ecryptfs_tspi_connect_ticket **ret_ticket)
 {
 	struct ecryptfs_tspi_connect_ticket *ticket;
 	int rc;
@@ -285,6 +286,22 @@ out:
 }
 
 static int
+ecryptfs_tspi_release_ticket(struct ecryptfs_tspi_connect_ticket *ticket)
+{
+	int rc = 0;
+
+	pthread_mutex_lock(&ecryptfs_ticket_list_lock);
+	pthread_mutex_unlock(&ticket->wait);
+	ptr_to_used_ticket_list_head = ticket->next;
+	ticket->next = ptr_to_free_ticket_list_head;
+	ptr_to_free_ticket_list_head = ticket;
+	ecryptfs_tspi_num_tickets_free++;
+	ecryptfs_tspi_num_tickets_used--;
+	pthread_mutex_unlock(&ecryptfs_ticket_list_lock);
+	return rc;
+}
+
+static int
 ecryptfs_tspi_encrypt(char *to, size_t *to_size, char *from, size_t from_size,
 		      unsigned char *blob, int blob_type)
 {
@@ -303,7 +320,7 @@ ecryptfs_tspi_encrypt(char *to, size_t *to_size, char *from, size_t from_size,
 	(*to_size) = 0;
 	ecryptfs_tspi_deserialize(&tspi_data, blob);
 	DBG_print_hex((BYTE *)&tspi_data.uuid, sizeof(TSS_UUID));
-	rc = ecryptfs_tspi_get_ticket(&ticket);
+	rc = ecryptfs_tspi_grab_ticket(&ticket);
 	if (rc) {
 		syslog(LOG_ERR, "%s: Error attempting to get TSPI connection "
 		       "ticket; rc = [%d]\n", __FUNCTION__, rc);
@@ -374,6 +391,8 @@ ecryptfs_tspi_encrypt(char *to, size_t *to_size, char *from, size_t from_size,
 	Tspi_Context_FreeMemory(ticket->tspi_ctx, encdata);
 out:
 	pthread_mutex_unlock(&encrypt_lock);
+	if (ticket)
+		ecryptfs_tspi_release_ticket(ticket);
 	return rc;
 }
 
@@ -396,7 +415,7 @@ ecryptfs_tspi_decrypt(char *to, size_t *to_size, char *from, size_t from_size,
 
 	pthread_mutex_lock(&decrypt_lock);
 	ecryptfs_tspi_deserialize(&tspi_data, blob);
-	rc = ecryptfs_tspi_get_ticket(&ticket);
+	rc = ecryptfs_tspi_grab_ticket(&ticket);
 	if (rc) {
 		syslog(LOG_ERR, "%s: Error attempting to get TSPI connection "
 		       "ticket; rc = [%d]\n", __FUNCTION__, rc);
@@ -487,6 +506,8 @@ ecryptfs_tspi_decrypt(char *to, size_t *to_size, char *from, size_t from_size,
 	rc = 0;
 out:
 	pthread_mutex_unlock(&decrypt_lock);
+	if (ticket)
+		ecryptfs_tspi_release_ticket(ticket);
 	return rc;
 }
 
@@ -651,9 +672,41 @@ static int ecryptfs_tspi_destroy(unsigned char *blob)
 	return 0;
 }
 
+#define ECRYPTFS_TSPI_MAX_WAIT_FOR_END 5
+
 static int ecryptfs_tspi_finalize(void)
 {
-	return 0;
+	uint32_t retries = 0;
+	struct ecryptfs_tspi_connect_ticket *ticket;
+	int rc = 0;
+
+	while (ptr_to_used_ticket_list_head
+	       && (retries < ECRYPTFS_TSPI_MAX_WAIT_FOR_END)) {
+		sleep(1);
+		retries++;
+	}
+	if (retries == ECRYPTFS_TSPI_MAX_WAIT_FOR_END) {
+		syslog(LOG_ERR, "%s: Stale TSPI tickets in used list; cannot "
+		       "shut down cleanly\n", __FUNCTION__);
+		rc = -EBUSY;
+		goto out;
+	}
+	ticket = ptr_to_free_ticket_list_head;
+	while (ticket) {
+		struct ecryptfs_tspi_connect_ticket *next;
+
+		pthread_mutex_lock(&ticket->lock);
+		next = ticket->next;
+		if (ticket->flags
+		    & ECRYPTFS_TSPI_TICKET_CTX_INITIALIZED) {
+			Tspi_Context_Close(ticket->tspi_ctx);
+			ticket->flags &= ~ECRYPTFS_TSPI_TICKET_CTX_INITIALIZED;
+		}
+		pthread_mutex_unlock(&ticket->lock);
+		ticket = next;
+	}
+out:
+	return rc;
 }
 
 static struct ecryptfs_key_mod_ops ecryptfs_tspi_ops = {
