@@ -25,11 +25,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <pthread.h>
+#include <time.h>
 #include <errno.h>
 #include <trousers/tss.h>
 #include "config.h"
 #include "../include/ecryptfs.h"
 #include "../include/decision_graph.h"
+
+#define ECRYPTFS_TSPI_DEFAULT_MAX_NUM_CONNECTIONS 10
 
 #undef DEBUG
 
@@ -166,6 +170,120 @@ out:
 
 static pthread_mutex_t encrypt_lock = PTHREAD_MUTEX_INITIALIZER;
 
+struct ecryptfs_tspi_connect_ticket;
+
+struct ecryptfs_tspi_connect_ticket {
+	struct ecryptfs_tspi_connect_ticket *next;
+#define ECRYPTFS_TSPI_TICKET_CTX_INITIALIZED 0x00000001
+	uint32_t flags;
+	pthread_mutex_t lock;
+	pthread_mutex_t wait;
+	TSS_HCONTEXT tspi_ctx;
+	uint32_t num_pending;
+};
+
+static pthread_mutex_t ecryptfs_ticket_list_lock = PTHREAD_MUTEX_INITIALIZER;
+
+static uint32_t ecryptfs_tspi_num_tickets_free;
+static uint32_t ecryptfs_tspi_num_tickets_used;
+static uint32_t ecryptfs_tspi_num_tickets_connected;
+
+static struct ecryptfs_tspi_connect_ticket *ptr_to_free_ticket_list_head = NULL;
+static struct ecryptfs_tspi_connect_ticket *ptr_to_used_ticket_list_head = NULL;
+
+static int
+ecryptfs_tspi_get_ticket(struct ecryptfs_tspi_connect_ticket **ret_ticket)
+{
+	struct ecryptfs_tspi_connect_ticket *ticket;
+	int rc;
+
+	(*ret_ticket) = NULL;
+	pthread_mutex_lock(&ecryptfs_ticket_list_lock);
+	ticket = ptr_to_free_ticket_list_head;
+	if (!ticket) {
+		struct ecryptfs_tspi_connect_ticket *tmp;
+
+		ticket = ptr_to_used_ticket_list_head;
+		pthread_mutex_lock(&ticket->lock);
+		tmp = ticket->next;
+		while (tmp) {
+			struct ecryptfs_tspi_connect_ticket *next;
+
+			pthread_mutex_lock(&tmp->lock);
+			next = tmp->next;
+			if (tmp->num_pending < ticket->num_pending) {
+				pthread_mutex_unlock(&ticket->lock);
+				ticket = tmp;
+			} else
+				pthread_mutex_unlock(&tmp->lock);
+			tmp = next;
+		}
+		ticket->num_pending++;
+		pthread_mutex_unlock(&ticket->lock);
+	} else {
+		while (ticket) {
+			struct ecryptfs_tspi_connect_ticket *next;
+
+			pthread_mutex_lock(&ticket->lock);
+			next = ticket->next;
+			if (ticket->flags
+			    & ECRYPTFS_TSPI_TICKET_CTX_INITIALIZED) {
+				pthread_mutex_unlock(&ticket->lock);
+				break;
+			}
+			pthread_mutex_unlock(&ticket->lock);
+			ticket = next;
+		}
+		if (!ticket) {
+			TSS_RESULT result;
+
+			ticket = ptr_to_free_ticket_list_head;
+			pthread_mutex_lock(&ticket->lock);
+			if ((result = Tspi_Context_Create(&ticket->tspi_ctx))
+			    != TSS_SUCCESS) {
+				syslog(LOG_ERR, "Tspi_Context_Create failed: "
+				       "[%s]\n", Trspi_Error_String(result));
+				rc = -EIO;
+				pthread_mutex_unlock(&ticket->lock);
+				pthread_mutex_unlock(
+					&ecryptfs_ticket_list_lock);
+				goto out;
+			}
+			if ((result = Tspi_Context_Connect(&ticket->tspi_ctx,
+							   NULL))
+			    != TSS_SUCCESS) {
+				syslog(LOG_ERR, "Tspi_Context_Connect "
+				       "failed: [%s]\n",
+				       Trspi_Error_String(result));
+				rc = -EIO;
+				pthread_mutex_unlock(&ticket->lock);
+				pthread_mutex_unlock(
+					&ecryptfs_ticket_list_lock);
+				goto out;
+			}
+			ticket->flags |= ECRYPTFS_TSPI_TICKET_CTX_INITIALIZED;
+			ecryptfs_tspi_num_tickets_connected++;
+			pthread_mutex_unlock(&ticket->lock);
+		}
+		pthread_mutex_lock(&ticket->lock);
+		ptr_to_free_ticket_list_head = ticket->next;
+		ticket->next = ptr_to_used_ticket_list_head;
+		ptr_to_used_ticket_list_head = ticket;
+		ecryptfs_tspi_num_tickets_free--;
+		ecryptfs_tspi_num_tickets_used++;
+		ticket->num_pending++;
+		pthread_mutex_unlock(&ticket->lock);
+	}
+	pthread_mutex_unlock(&ecryptfs_ticket_list_lock);
+	pthread_mutex_lock(&ticket->wait);
+	pthread_mutex_lock(&ticket->lock);
+	ticket->num_pending--;
+	pthread_mutex_unlock(&ticket->lock);
+	(*ret_ticket) = ticket;
+out:
+	return rc;
+}
+
 static int
 ecryptfs_tspi_encrypt(char *to, size_t *to_size, char *from, size_t from_size,
 		      unsigned char *blob, int blob_type)
@@ -173,32 +291,25 @@ ecryptfs_tspi_encrypt(char *to, size_t *to_size, char *from, size_t from_size,
 	static TSS_HPOLICY h_srk_policy = 0;
 	static TSS_HKEY h_srk = 0;
 	TSS_RESULT result;
-	TSS_HCONTEXT h_encrypt_ctx;
 	TSS_HKEY hKey;
 	TSS_HENCDATA h_encdata;
 	uint32_t encdata_size;
 	BYTE *encdata;
 	struct tspi_data tspi_data;
+	struct ecryptfs_tspi_connect_ticket *ticket;
 	int rc = 0;
 
 	pthread_mutex_lock(&encrypt_lock);
 	(*to_size) = 0;
 	ecryptfs_tspi_deserialize(&tspi_data, blob);
 	DBG_print_hex((BYTE *)&tspi_data.uuid, sizeof(TSS_UUID));
-	if ((result = Tspi_Context_Create(&h_encrypt_ctx)) != TSS_SUCCESS) {
-		syslog(LOG_ERR, "Tspi_Context_Create failed: [%s]\n",
-		       Trspi_Error_String(result));
-		rc = -EIO;
+	rc = ecryptfs_tspi_get_ticket(&ticket);
+	if (rc) {
+		syslog(LOG_ERR, "%s: Error attempting to get TSPI connection "
+		       "ticket; rc = [%d]\n", __FUNCTION__, rc);
 		goto out;
 	}
-	if ((result = Tspi_Context_Connect(h_encrypt_ctx, NULL))
-	    != TSS_SUCCESS) {
-		syslog(LOG_ERR, "Tspi_Context_Connect failed: [%s]\n",
-		       Trspi_Error_String(result));
-		rc = -EIO;
-		goto out;
-	}
-	if ((result = Tspi_Context_LoadKeyByUUID(h_encrypt_ctx,
+	if ((result = Tspi_Context_LoadKeyByUUID(ticket->tspi_ctx,
 						 TSS_PS_TYPE_SYSTEM,
 						 ecryptfs_tspi_srk_uuid,
 						 &h_srk)) != TSS_SUCCESS) {
@@ -223,7 +334,7 @@ ecryptfs_tspi_encrypt(char *to, size_t *to_size, char *from, size_t from_size,
 		rc = -EIO;
 		goto out;
 	}
-	if ((result = Tspi_Context_CreateObject(h_encrypt_ctx,
+	if ((result = Tspi_Context_CreateObject(ticket->tspi_ctx,
 						TSS_OBJECT_TYPE_ENCDATA,
 						TSS_ENCDATA_SEAL, &h_encdata))
 	    != TSS_SUCCESS) {
@@ -232,7 +343,7 @@ ecryptfs_tspi_encrypt(char *to, size_t *to_size, char *from, size_t from_size,
 		rc = -EIO;
 		goto out;
 	}
-	if ((result = Tspi_Context_LoadKeyByUUID(h_encrypt_ctx,
+	if ((result = Tspi_Context_LoadKeyByUUID(ticket->tspi_ctx,
 						 TSS_PS_TYPE_USER,
 						 tspi_data.uuid, &hKey))
 	    != TSS_SUCCESS) {
@@ -260,7 +371,7 @@ ecryptfs_tspi_encrypt(char *to, size_t *to_size, char *from, size_t from_size,
 	(*to_size) = encdata_size;
 	if (to)
 		memcpy(to, encdata, (*to_size));
-	Tspi_Context_FreeMemory(h_encrypt_ctx, encdata);
+	Tspi_Context_FreeMemory(ticket->tspi_ctx, encdata);
 out:
 	pthread_mutex_unlock(&encrypt_lock);
 	return rc;
@@ -272,7 +383,6 @@ static int
 ecryptfs_tspi_decrypt(char *to, size_t *to_size, char *from, size_t from_size,
 		      unsigned char *blob, int blob_type)
 {
-	static TSS_HCONTEXT h_decrypt_context = 0;
 	static TSS_HPOLICY h_srk_policy = 0;
 	static TSS_HKEY h_srk = 0;
 	static TSS_HENCDATA h_encdata;
@@ -280,63 +390,51 @@ ecryptfs_tspi_decrypt(char *to, size_t *to_size, char *from, size_t from_size,
 	BYTE *encdata;
 	struct tspi_data tspi_data;
 	struct key_mapper *walker, *new_mapper;
+	struct ecryptfs_tspi_connect_ticket *ticket;
 	TSS_RESULT result;
 	int rc = 0;
 
 	pthread_mutex_lock(&decrypt_lock);
 	ecryptfs_tspi_deserialize(&tspi_data, blob);
-	if (h_decrypt_context == 0) {
-		if ((result = Tspi_Context_Create(&h_decrypt_context))
-		    != TSS_SUCCESS) {
-			syslog(LOG_ERR, "Tspi_Context_Create failed: [%s]\n",
-					Trspi_Error_String(result));
-			rc = -EINVAL;
-			goto out_uninit;
-		}
-		DBGSYSLOG("New TSP context: 0x%x", h_decrypt_context);
-		if ((result = Tspi_Context_Connect(h_decrypt_context, NULL))
-				!= TSS_SUCCESS) {
-			syslog(LOG_ERR, "Tspi_Context_Connect failed: [%s]\n",
-					Trspi_Error_String(result));
-			rc = -EINVAL;
-			goto out_uninit;
-		}
-		if ((result = Tspi_Context_LoadKeyByUUID(h_decrypt_context,
+	rc = ecryptfs_tspi_get_ticket(&ticket);
+	if (rc) {
+		syslog(LOG_ERR, "%s: Error attempting to get TSPI connection "
+		       "ticket; rc = [%d]\n", __FUNCTION__, rc);
+		goto out;
+	}
+	if ((result = Tspi_Context_LoadKeyByUUID(ticket->tspi_ctx,
 						TSS_PS_TYPE_SYSTEM,
 						ecryptfs_tspi_srk_uuid,
 						&h_srk)) != TSS_SUCCESS) {
-			syslog(LOG_ERR,
-			       "Tspi_Context_LoadKeyByUUID failed: [%s]\n",
-			       Trspi_Error_String(result));
-			rc = -EIO;
-			goto out_uninit;
-		}
-		if ((result = Tspi_GetPolicyObject(h_srk, TSS_POLICY_USAGE,
-						&h_srk_policy))
-				!= TSS_SUCCESS) {
-			syslog(LOG_ERR, "Tspi_GetPolicyObject failed: [%s]\n",
-					Trspi_Error_String(result));
-			rc = -EIO;
-			goto out_uninit;
-		}
-		if ((result = Tspi_Policy_SetSecret(h_srk_policy,
-						TSS_SECRET_MODE_PLAIN, 0, NULL))
-				!= TSS_SUCCESS) {
-			syslog(LOG_ERR, "Tspi_Policy_SetSecret failed: [%s]\n",
-					Trspi_Error_String(result));
-			rc = -EIO;
-			goto out_uninit;
-		}
-		if ((result = Tspi_Context_CreateObject(h_decrypt_context,
+		syslog(LOG_ERR, "Tspi_Context_LoadKeyByUUID failed: [%s]\n",
+		       Trspi_Error_String(result));
+		rc = -EIO;
+		goto out;
+	}
+	if ((result = Tspi_GetPolicyObject(h_srk, TSS_POLICY_USAGE,
+					   &h_srk_policy))
+	    != TSS_SUCCESS) {
+		syslog(LOG_ERR, "Tspi_GetPolicyObject failed: [%s]\n",
+		       Trspi_Error_String(result));
+		rc = -EIO;
+		goto out;
+	}
+	if ((result = Tspi_Policy_SetSecret(h_srk_policy,
+					    TSS_SECRET_MODE_PLAIN, 0, NULL))
+	    != TSS_SUCCESS) {
+		syslog(LOG_ERR, "Tspi_Policy_SetSecret failed: [%s]\n",
+		       Trspi_Error_String(result));
+		rc = -EIO;
+		goto out;
+	}
+	if ((result = Tspi_Context_CreateObject(ticket->tspi_ctx,
 						TSS_OBJECT_TYPE_ENCDATA,
 						TSS_ENCDATA_SEAL, &h_encdata))
-				!= TSS_SUCCESS) {
-			syslog(LOG_ERR,
-			       "Tspi_Context_CreateObject failed: [%s]\n",
-			       Trspi_Error_String(result));
-			rc = -EIO;
-			goto out_uninit;
-		}
+	    != TSS_SUCCESS) {
+		syslog(LOG_ERR, "Tspi_Context_CreateObject failed: [%s]\n",
+		       Trspi_Error_String(result));
+		rc = -EIO;
+		goto out;
 	}
 	for (walker = mapper; walker; walker = walker->next)
 		if (!memcmp(&walker->uuid, &tspi_data.uuid, sizeof(TSS_UUID)))
@@ -349,7 +447,7 @@ ecryptfs_tspi_decrypt(char *to, size_t *to_size, char *from, size_t from_size,
 			rc = -EIO;
 			goto out;
 		}
-		if ((result = Tspi_Context_LoadKeyByUUID(h_decrypt_context,
+		if ((result = Tspi_Context_LoadKeyByUUID(ticket->tspi_ctx,
 							 TSS_PS_TYPE_USER,
 							 tspi_data.uuid,
 							 &new_mapper->hKey))
@@ -385,14 +483,8 @@ ecryptfs_tspi_decrypt(char *to, size_t *to_size, char *from, size_t from_size,
 	(*to_size) = encdata_bytes;
 	if (to)
 		memcpy(to, encdata, encdata_bytes);
-	Tspi_Context_FreeMemory(h_decrypt_context, encdata);
+	Tspi_Context_FreeMemory(ticket->tspi_ctx, encdata);
 	rc = 0;
-	goto out;
-out_uninit:
-	Tspi_Context_Close(h_decrypt_context);
-	h_decrypt_context = 0;
-	h_srk_policy = 0;
-	h_srk = 0;
 out:
 	pthread_mutex_unlock(&decrypt_lock);
 	return rc;
@@ -439,12 +531,32 @@ static void string_to_uuid(TSS_UUID *uuid, char *str)
 
 static int ecryptfs_tspi_init(char **alias)
 {
+	int i;
+
 	int rc = 0;
 
 	if (asprintf(alias, "tspi") == -1) {
 		syslog(LOG_ERR, "Out of memory\n");
 		rc = -ENOMEM;
 		goto out;
+	}
+	for (i = 0; i < ECRYPTFS_TSPI_DEFAULT_MAX_NUM_CONNECTIONS; i++) {
+		struct ecryptfs_tspi_connect_ticket *ticket;
+
+		ticket = malloc(sizeof(struct ecryptfs_tspi_connect_ticket));
+		if (!ticket) {
+			rc = -ENOMEM;
+			goto out;
+		}
+		pthread_mutex_init(&ticket->lock, NULL);
+		ticket->flags = 0;
+		ticket->tspi_ctx = 0;
+		ticket->num_pending = 0;
+		pthread_mutex_lock(&ecryptfs_ticket_list_lock);		
+		ticket->next = ptr_to_free_ticket_list_head;
+		ptr_to_free_ticket_list_head = ticket;
+		ecryptfs_tspi_num_tickets_free++;
+		pthread_mutex_unlock(&ecryptfs_ticket_list_lock);
 	}
 out:
 	return rc;
