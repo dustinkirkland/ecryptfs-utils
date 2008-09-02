@@ -196,7 +196,7 @@ static int
 ecryptfs_tspi_grab_ticket(struct ecryptfs_tspi_connect_ticket **ret_ticket)
 {
 	struct ecryptfs_tspi_connect_ticket *ticket;
-	int rc;
+	int rc = 0;
 
 	(*ret_ticket) = NULL;
 	pthread_mutex_lock(&ecryptfs_ticket_list_lock);
@@ -250,7 +250,7 @@ ecryptfs_tspi_grab_ticket(struct ecryptfs_tspi_connect_ticket **ret_ticket)
 					&ecryptfs_ticket_list_lock);
 				goto out;
 			}
-			if ((result = Tspi_Context_Connect(&ticket->tspi_ctx,
+			if ((result = Tspi_Context_Connect(ticket->tspi_ctx,
 							   NULL))
 			    != TSS_SUCCESS) {
 				syslog(LOG_ERR, "Tspi_Context_Connect "
