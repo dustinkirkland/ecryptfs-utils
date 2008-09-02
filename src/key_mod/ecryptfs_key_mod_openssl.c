@@ -598,9 +598,9 @@ static int tf_ssl_passwd_file(struct ecryptfs_ctx *ctx, struct param_node *node,
 
 	syslog(LOG_INFO, "%s: Called\n", __FUNCTION__);
 	subgraph_ctx = (struct ecryptfs_subgraph_ctx *)(*foo);
-	if (strcmp(node->mnt_opt_names[0], "passwd_file") == 0)
+	if (strcmp(node->mnt_opt_names[0], "openssl_passwd_file") == 0)
 		fd = open(node->val, O_RDONLY);
-	else if (strcmp(node->mnt_opt_names[0], "passwd_fd") == 0)
+	else if (strcmp(node->mnt_opt_names[0], "openssl_passwd_fd") == 0)
 		fd = strtol(node->val, NULL, 0);
 	else {
 		rc = MOUNT_ERROR;
@@ -621,7 +621,7 @@ static int tf_ssl_passwd_file(struct ecryptfs_ctx *ctx, struct param_node *node,
 	close(fd);
 	walker = file_head.next;
 	while (walker) {
-		if (strcmp(walker->name, "passwd") == 0) {
+		if (strcmp(walker->name, "openssl_passwd") == 0) {
 			if ((rc = 
 			     asprintf(&subgraph_ctx->openssl_data.passphrase,
 				      "%s", walker->value)) == -1) {

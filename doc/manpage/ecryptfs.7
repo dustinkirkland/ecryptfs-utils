@@ -53,6 +53,17 @@ The salt should be specified as a 16 digit hex value.
 .TP
 .B openssl_keyfile=(filename)
 The filename should be the filename of a file containing an RSA SSL key.
+.TP                                                                            
+.B openssl_passwd_file=(filename)                                              
+The password should be specified in a file with passwd=(openssl-password). It is highly reccomended that the file be stored on a secure medium such as a personal usb key.
+.TP
+.B openssl_passwd_fd=(file descriptor)
+The password is specified through the specified file descriptor.
+.TP
+.B openssl_passwd=(password)
+The password can be specified on the command line. Since the password is
+visible in the process list, it is highly recommended to use this option
+only for testing purposes.
 
 .SH EXAMPLE
 
