@@ -561,6 +561,9 @@ static int ecryptfs_tspi_init(char **alias)
 		rc = -ENOMEM;
 		goto out;
 	}
+	ecryptfs_tspi_num_tickets_free = 0;
+	ecryptfs_tspi_num_tickets_used = 0;
+	ecryptfs_tspi_num_tickets_connected = 0;
 	for (i = 0; i < ECRYPTFS_TSPI_DEFAULT_MAX_NUM_CONNECTIONS; i++) {
 		struct ecryptfs_tspi_connect_ticket *ticket;
 
