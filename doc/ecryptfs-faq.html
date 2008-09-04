@@ -31,6 +31,9 @@ eCryptfs
 <li><a href="#versions">What versions of the kernel have eCryptfs
 support?</a></li>
 
+<li><a href="#deployment">Will eCryptfs by iteself protect all my
+data?</a></li>
+
 <li><a href="#access_lower">Can I access the lower files while
 eCryptfs is mounted?</a></li>
 
@@ -145,6 +148,61 @@ it upstream in the Linux kernel.
 Linux kernel versions 2.6.19 and later have eCryptfs support. We
 provide experimental backports, but only the official mainline kernel
 is supported and is in active development.
+</p>
+
+<a name="deployment">
+
+<p><h3>Q. Will eCryptfs by iteself protect all my data?</h3></p>
+
+<p>
+eCryptfs is just one component in a comprehensive set of mechanisms to
+protect the confidentiality of your data. Simply mounting eCryptfs
+over a directory in your home directory will probably not provide
+sufficient coverage for everything your applications will write to
+disk. For instance, applications that produce and store thumbnails of
+your images may write the thumbnails to an unprotected location.
+</p>
+
+<p>
+Sensitive application data will typically wind up in the following
+locations, although some applications will write data to other
+locations not listed here:
+</p>
+
+<ul>
+<li>Anywhere in your home directory</li>
+<li>The /tmp directory</li>
+<li>The /var directory</li>
+<li>The swap device</li>
+</ul>
+
+<p>
+The /tmp directory and the swap device can be easily protected with
+dm-crypt using a key randomly generated when the system is booted,
+since the information in those locations does not need to persist
+between reboots. eCryptfs must mount the /var directory prior to any
+daemons or other system applications reading from or writing to that
+location (including the syslog utility). eCryptfs must also mount over
+the user's home directory prior to the user logging into the system.
+</p>
+
+<p>
+You will need to consider other applications that diverge from
+traditional paths for storing data on a case-by-case basis. Analyzing
+application behavior with the kernel auditing system is one way to
+profile the behavior of an application, and explicit SE Linux rules
+that only allow applications to write to encrypted mountpoints helps
+prevent inadvertent information leakage. We recommend always using
+eCryptfs together with appropriate Mandatory Access Control (MAC)
+mechanisms to ensure that your sensitive data is always encrypted.
+</p>
+
+<p>
+Proper deployment of a comprehensive per-file encryption mechanism is
+a task best tackled by the entire Linux distribution. The eCryptfs
+team is working closely with various major Linux distributions to help
+ensure that eCryptfs is properly used as one component of a
+comprehensive data protection strategy.
 </p>
 
 <a name="access_lower">
