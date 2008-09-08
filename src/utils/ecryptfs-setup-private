@@ -155,6 +155,7 @@ if [ -z "$MOUNTPASS" ]; then
 			# Pull 128 bits of random data from /dev/urandom, and convert
 			# to a string of 32 hex digits
 			MOUNTPASS=`head -c 16 /dev/urandom | od -x | head -n 1 |sed "s/^0000000//" | sed "s/\s*//g"`
+			RANDOM_MOUNTPASS=1
 			break
 		else
 			stty -echo
@@ -171,21 +172,24 @@ if [ -z "$MOUNTPASS" ]; then
 	done
 fi
 
-echo
-echo
-echo "Using username [$USER]"
-echo "Using mount passphrase [$MOUNTPASS]"
-echo "Using login passphrase [$LOGINPASS]"
-echo "Using mount point [$MOUNTPOINT]"
-echo "Using encrypted dir [$CRYPTDIR]"
-echo
-echo "This script will attempt to set up your system to mount"
-echo "$MOUNTPOINT with eCryptfs automatically on login,"
-echo "using your login passphrase."
+#echo
+#echo "Using username [$USER]"
+#echo "Using mount passphrase [$MOUNTPASS]"
+#echo "Using login passphrase [$LOGINPASS]"
+#echo "Using mount point [$MOUNTPOINT]"
+#echo "Using encrypted dir [$CRYPTDIR]"
+#echo
+#echo "This script will attempt to set up your system to mount"
+#echo "$MOUNTPOINT with eCryptfs automatically on login,"
+#echo "using your login passphrase."
 echo
 echo "************************************************************************"
-echo "YOU SHOULD RECORD THIS MOUNT PASSPHRASE AND STORE IN A SAFE LOCATION:"
-echo "$MOUNTPASS"
+if [ "$RANDOM_MOUNTPASS" = "1" ]; then
+	echo "YOU SHOULD RECORD THIS MOUNT PASSPHRASE AND STORE IN A SAFE LOCATION:"
+	echo "$MOUNTPASS"
+else
+	echo "YOU SHOULD RECORD YOUR MOUNT PASSPHRASE AND STORE IN A SAFE LOCATION:"
+fi
 echo "THIS WILL BE REQUIRED IF YOU NEED TO RECOVER YOUR DATA AT A LATER TIME."
 echo "************************************************************************"
 echo
