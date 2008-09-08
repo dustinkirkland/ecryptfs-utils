@@ -118,6 +118,18 @@ CRYPTDIR="$HOME/.$PRIVATE_DIR"
 grep -qs "$MOUNTPOINT " /proc/mounts && error "[$MOUNTPOINT] is already mounted"
 grep -qs "$CRYPTDIR " /proc/mounts && error "[$CRYPTDIR] is already mounted"
 
+# Check that the mount point and encrypted directory are empty.
+# Perhaps one day we could provide a migration mode (using rsync or something),
+# but this would be VERY hard to do safely.
+count=`ls -Al "$MOUNTPOINT" 2>/dev/null | grep -v "^total" | grep -v "^l.*mount.ecryptfs_private$" | wc -l`
+if [ "$count" != "0" ]; then
+	error "$MOUNTPOINT must be empty before proceeding"
+fi
+count=`ls -Al "$CRYPTDIR" 2>/dev/null | grep -v "^total" | wc -l`
+if [ "$count" != "0" ]; then
+	error "$CRYPTDIR must be empty before proceeding"
+fi
+
 stty_orig=`stty -g`
 # Prompt for the LOGINPASS, if not on the command line and not in the environment
 if [ -z "$LOGINPASS" ]; then
