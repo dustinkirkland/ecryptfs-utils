@@ -35,7 +35,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-
+#include <syslog.h>
 
 /* Perhaps a future version of this program will allow these to be configurable
  * by the system administrator (or user?) at run time.  For now, these are set
@@ -96,6 +96,8 @@ char *fetch_sig(char *pw_dir) {
 	}
 	fh = fopen(sig_file, "r");
 	if (fh == NULL) {
+		syslog(LOG_ERR, "%s: Error opening [%s] for read\n",
+		       __FUNCTION__, sig_file);
 		perror("fopen");
 		return NULL;
 	}
