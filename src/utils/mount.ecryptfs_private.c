@@ -359,7 +359,7 @@ int main(int argc, char *argv[]) {
 	if (mounting == 1) {
 		/* Mounting, so exit if already mounted */
 		if (is_mounted(dev, mnt, sig, mounting) == 1) {
-			fputs("Already mounted\n", stderr);
+			/* fputs("Already mounted\n", stderr); */
 			return 1;
 		}
 		/* We must maintain our real uid as the user who called this
@@ -384,7 +384,7 @@ int main(int argc, char *argv[]) {
 	} else {
 		/* Unmounting, so exit if not mounted */
 		if (is_mounted(dev, mnt, sig, mounting) == 0) {
-			fputs("Not currently mounted\n", stderr);
+			/* fputs("Not currently mounted\n", stderr); */
 			return 1;
 		}
 		/* The key is not needed for unmounting, so we set res=0.
