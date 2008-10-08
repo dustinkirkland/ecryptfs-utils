@@ -9,8 +9,11 @@
 
 PRIVATE_DIR="Private"
 
+# Zero out user-defined GREP_OPTIONS, such as --line-number
+GREP_OPTIONS=
+
 usage() {
-	echo 
+	echo
 	echo "Usage:"
 	echo "# $0 [--username USER]"
 	echo "  [--loginpass LOGINPASS] [--mountpass MOUNTPASS]"
