@@ -5,4 +5,6 @@ Mike Halcrow designed and implemented eCryptfs, which is a fork from
 Cryptfs. Erez Zadok, along with the fileystem research lab at Stony
 Brook University, designed and implemented Cryptfs.
 
-Dustin 
+Dustin Kirkland implemented a scheme by which a user can have an
+encrypted private directory, ~/Private, automatically mounted at login
+and unmounted at logout by pam_ecryptfs.
