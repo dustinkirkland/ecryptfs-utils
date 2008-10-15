@@ -142,6 +142,11 @@ int ecryptfs_supports_hmac(uint32_t version)
 	return (version & ECRYPTFS_VERSIONING_HMAC);
 }
 
+int ecryptfs_supports_filename_encryption(uint32_t version)
+{
+	return (version & ECRYPTFS_VERSIONING_FILENAME_ENCRYPTION);
+}
+
 int ecryptfs_supports_policy(uint32_t version)
 {
 	return (version & ECRYPTFS_VERSIONING_POLICY);

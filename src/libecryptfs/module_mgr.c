@@ -149,22 +149,6 @@ static int get_encrypted_passthrough(struct ecryptfs_ctx *ctx,
 	return 0;
 }
 
-static struct param_node ecryptfs_version_support_node = {
-	.num_mnt_opt_names = 1,
-	.mnt_opt_names = {"end"},
-	.prompt = "end",
-	.val_type = VAL_STR,
-	.val = NULL,
-	.display_opts = NULL,
-	.default_val = NULL,
-	.flags = ECRYPTFS_PARAM_FLAG_NO_VALUE,
-	.num_transitions = 1,
-	.tl = {{.val = "default",
-		.pretty_val = "default",
-		.next_token = NULL,
-		.trans_func = NULL}}
-};
-
 static struct param_node end_param_node = {
 	.num_mnt_opt_names = 1,
 	.mnt_opt_names = {"end"},
@@ -181,10 +165,136 @@ static struct param_node end_param_node = {
 		.trans_func = NULL}}
 };
 
+static struct param_node enable_filename_crypto_param_node;
+
+static int filename_crypto_fnek_sig_callback(struct ecryptfs_ctx *ctx,
+					     struct param_node *node,
+					     struct val_node **head, void **foo)
+{
+	char *param;
+	int rc = 0;
+
+	if (!node->val) {
+		node->flags = ECRYPTFS_PARAM_FLAG_ECHO_INPUT;
+		enable_filename_crypto_param_node.tl[0].next_token =
+			node->tl[0].next_token;
+		node->tl[0].next_token = &enable_filename_crypto_param_node;
+		goto out;
+	}
+	if (strcmp(node->val, "NULL") == 0) {
+		node->flags = ECRYPTFS_PARAM_FLAG_ECHO_INPUT;
+		enable_filename_crypto_param_node.tl[0].next_token =
+			node->tl[0].next_token;
+		node->tl[0].next_token = &enable_filename_crypto_param_node;
+		goto out;
+	}
+	rc = asprintf(&param, "ecryptfs_fnek_sig=%s", node->val);
+	if (rc == -1) {
+		rc = -ENOMEM;
+		syslog(LOG_ERR, "Out of memory\n");
+		goto out;
+	}
+	stack_push(head, param);
+out:
+	return rc;
+}
+
+static struct param_node filename_crypto_fnek_sig_param_node = {
+	.num_mnt_opt_names = 1,
+	.mnt_opt_names = {"ecryptfs_fnek_sig"},
+	.prompt = "Filname Encryption Key (FNEK) Signature",
+	.val_type = VAL_STR,
+	.val = NULL,
+	.display_opts = NULL,
+	.default_val = NULL,
+	.suggested_val = NULL,
+	.flags = ECRYPTFS_PARAM_FLAG_NO_VALUE | ECRYPTFS_NO_AUTO_TRANSITION,
+	.num_transitions = 1,
+	.tl = {{.val = "default",
+		.pretty_val = "default",
+		.next_token = &end_param_node,
+		.trans_func = filename_crypto_fnek_sig_callback}}
+};
+
+static int get_enable_filename_crypto(struct ecryptfs_ctx *ctx,
+					struct param_node *node,
+					struct val_node **head, void **foo)
+{
+	int rc = 0;
+
+	if ((node->val && (*(node->val) == 'y'))
+	    || (node->flags & PARAMETER_SET)) {
+		int i;
+		struct val_node *val_node;
+
+		for (i = 0;
+		     i < filename_crypto_fnek_sig_param_node.num_transitions;
+		     i++)
+			filename_crypto_fnek_sig_param_node.tl[i].next_token =
+				node->tl[0].next_token;
+		node->tl[0].next_token = &filename_crypto_fnek_sig_param_node;
+		val_node = (*head);
+		while (val_node) {
+			if (strncmp(val_node->val, "ecryptfs_sig=", 13) == 0) {
+				rc  = asprintf(&filename_crypto_fnek_sig_param_node.suggested_val,
+					       "%s",
+					       &((char *)val_node->val)[13]);
+				if (rc == -1) {
+					rc = -ENOMEM;
+					syslog(LOG_ERR,
+					       "%s: No memory whilst "
+					       "attempting to write [%s]\n",
+					       __FUNCTION__,
+					       &((char *)val_node->val)[13]);
+					goto out_free;
+				}
+				break;
+			}
+			val_node = val_node->next;
+		}
+	}
+out_free:
+	if (node->val)
+		free(node->val);
+	return rc;
+}
+
+static struct param_node enable_filename_crypto_param_node = {
+	.num_mnt_opt_names = 1,
+	.mnt_opt_names = {"ecryptfs_enable_filename_crypto"},
+	.prompt = "Enable filename encryption (y/n)",
+	.val_type = VAL_STR,
+	.val = NULL,
+	.display_opts = NULL,
+	.default_val = NULL,
+	.flags = ECRYPTFS_PARAM_FLAG_ECHO_INPUT,
+	.num_transitions = 1,
+	.tl = {{.val = "default",
+		.pretty_val = "default",
+		.next_token = &filename_crypto_fnek_sig_param_node,
+		.trans_func = get_enable_filename_crypto}}
+};
+
+static struct param_node ecryptfs_version_support_node = {
+	.num_mnt_opt_names = 1,
+	.mnt_opt_names = {"end"},
+	.prompt = "end",
+	.val_type = VAL_STR,
+	.val = NULL,
+	.display_opts = NULL,
+	.default_val = NULL,
+	.flags = ECRYPTFS_PARAM_FLAG_NO_VALUE,
+	.num_transitions = 1,
+	.tl = {{.val = "default",
+		.pretty_val = "default",
+		.next_token = NULL,
+		.trans_func = NULL}}
+};
+
 static struct param_node encrypted_passthrough_param_node = {
 	.num_mnt_opt_names = 1,
 	.mnt_opt_names = {"ecryptfs_encrypted_view"},
-	.prompt = "Pass through encrypted versions of all files (y/n)",
+	.prompt = "Pass through encrypted versions of all files (y/N)",
 	.val_type = VAL_STR,
 	.val = NULL,
 	.display_opts = NULL,
@@ -200,7 +310,7 @@ static struct param_node encrypted_passthrough_param_node = {
 static struct param_node xattr_param_node = {
 	.num_mnt_opt_names = 1,
 	.mnt_opt_names = {"ecryptfs_xattr"},
-	.prompt = "Write metadata to extended attribute region (y/n)",
+	.prompt = "Write metadata to extended attribute region (y/N)",
 	.val_type = VAL_STR,
 	.val = NULL,
 	.display_opts = NULL,
@@ -232,7 +342,7 @@ static struct param_node passthrough_param_node = {
 static struct param_node hmac_param_node = {
 	.num_mnt_opt_names = 1,
 	.mnt_opt_names = {"ecryptfs_hmac"},
-	.prompt = "Enable HMAC integrity verification (y/n)",
+	.prompt = "Enable HMAC integrity verification (y/N)",
 	.val_type = VAL_STR,
 	.val = NULL,
 	.display_opts = NULL,
@@ -594,6 +704,21 @@ fill_in_decision_graph_based_on_version_support(struct param_node *root,
 			last_param_node->tl[i].next_token =
 				&encrypted_passthrough_param_node;
 		last_param_node = &encrypted_passthrough_param_node;
+	}
+	if (ecryptfs_supports_filename_encryption(version)) {
+		int i;
+
+		rc = asprintf(&enable_filename_crypto_param_node.suggested_val,
+			      "n");
+		if (rc == -1) {
+			rc = -ENOMEM;
+			goto out;
+		}
+		rc = 0;
+		for (i = 0; i < last_param_node->num_transitions; i++)
+			last_param_node->tl[i].next_token =
+				&filename_crypto_fnek_sig_param_node;
+		last_param_node = &filename_crypto_fnek_sig_param_node;
 	}
 out:
 	return rc;

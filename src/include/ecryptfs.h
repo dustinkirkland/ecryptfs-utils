@@ -484,6 +484,7 @@ int ecryptfs_supports_passphrase(uint32_t version);
 int ecryptfs_supports_pubkey(uint32_t version);
 int ecryptfs_supports_plaintext_passthrough(uint32_t version);
 int ecryptfs_supports_hmac(uint32_t version);
+int ecryptfs_supports_filename_encryption(uint32_t version);
 int ecryptfs_supports_policy(uint32_t version);
 #define ECRYPTFS_ASK_FOR_ALL_MOUNT_OPTIONS 0
 #define ECRYPTFS_KEY_MODULE_ONLY 1
