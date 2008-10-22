@@ -43,8 +43,8 @@ int ecryptfs_send_miscdev(struct ecryptfs_miscdev_ctx *miscdev_ctx,
 			  uint16_t msg_flags, uint32_t msg_seq)
 {
 	uint32_t miscdev_msg_data_size;
-	uint32_t packet_len_size;
-	uint32_t packet_len;
+	size_t packet_len_size;
+	size_t packet_len;
 	uint32_t msg_seq_be32;
 	uint32_t i;
 	ssize_t written;
@@ -259,7 +259,7 @@ receive:
 		}
 		reply->index = emsg->index;
 		rc = ecryptfs_send_miscdev(miscdev_ctx, reply,
-					ECRYPTFS_MSG_RESPONSE, 0, msg_seq);
+					   ECRYPTFS_MSG_RESPONSE, 0, msg_seq);
 		if (rc < 0) {
 			syslog(LOG_ERR, "Failed to send netlink "
 			       "message in response to kernel "
