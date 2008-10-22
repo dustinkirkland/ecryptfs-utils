@@ -8,3 +8,6 @@ Brook University, designed and implemented Cryptfs.
 Dustin Kirkland implemented a scheme by which a user can have an
 encrypted private directory, ~/Private, automatically mounted at login
 and unmounted at logout by pam_ecryptfs.
+
+Eric Sandeen has provided various bugfixes to both the kernel and the
+userspace components of eCryptfs.
