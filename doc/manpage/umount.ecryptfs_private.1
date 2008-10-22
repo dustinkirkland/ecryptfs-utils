@@ -3,7 +3,13 @@
 umount.ecryptfs_private \- eCryptfs private unmount helper.
 
 .SH SYNOPSIS
-\fBumount.ecryptfs_private\fP
+\fBumount.ecryptfs_private\fP [\-f]
+
+.SH OPTIONS
+Options available for the \fBumount.ecryptfs_private\fP command:
+.TP
+.B \-f
+Force the unmount, ignoring the value of the mount counter in \fI/tmp/ecryptfs-USERNAME-Private\fP
 
 .SH DESCRIPTION
 \fBumount.ecryptfs_private\fP is a mount helper utility for non-root users to unmount a cryptographically mounted private directory, ~/Private.
@@ -12,6 +18,7 @@ If, and only if:
   - the private mount passphrase is in their kernel keyring, and
   - the current user owns both ~/.Private and ~/Private, and
   - ~/.Private is currently mounted on ~/Private
+  - the mount counter is 0 (counter is ignored if \-f option is used)
 
 This program will:
   - unmount ~/Private
@@ -26,6 +33,8 @@ The system administrator can add the pam_ecryptfs.so module to the PAM stack and
 \fI~/Private\fP - mountpoint containing decrypted data (when mounted)
 
 \fI~/.ecryptfs/Private.sig\fP - file containing signature of mountpoint passphrase
+
+\fI/tmp/ecryptfs-USERNAME-Private\fP - file containing the mount counter, incremented on each mount, decremented on each unmount
 
 .SH SEE ALSO
 .PD 0

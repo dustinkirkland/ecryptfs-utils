@@ -25,6 +25,7 @@
  */
 
 
+#include <sys/file.h>
 #include <sys/mount.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -45,6 +46,7 @@
 #define KEY_CIPHER "aes"
 #define PRIVATE_DIR "Private"
 #define FSTYPE "ecryptfs"
+#define TMP "/tmp"
 
 
 int check_username(char *u) {
@@ -256,6 +258,91 @@ int update_mtab(char *dev, char *mnt, char *opt) {
 }
 
 
+int bump_counter(char *u, int delta) {
+/* Maintain a mount counter
+ *   increment on delta = 1
+ *   decrement on delta = -1
+ *   remove the counter file on delta = 0
+ *   return the updated count, negative on error
+ */
+	char *f;
+	int fd;
+	FILE *fh;
+	int count;
+	/* We expect TMP to exist, be writeable by the user,
+	 * and to be cleared on boot */
+	if (
+		asprintf(&f, "%s/%s-%s-%s", TMP, FSTYPE, u, PRIVATE_DIR) < 0
+	   ) {
+		perror("asprintf");
+		return -1;
+	}
+	if (delta == 0) {
+		/* Try to remove the counter file, and exit */
+		return unlink(f);
+	}
+	/* open file for reading and writing */
+	if ((fd = open(f, O_RDWR)) < 0) {
+		/* Could not open it, so try to safely create it */
+		if ((fd = open(f, O_RDWR | O_CREAT | O_EXCL, 0600)) < 0) {
+			perror("open");
+			return -1;
+		}
+	}
+	fh = fdopen(fd, "r+");
+	if (fh == NULL) {
+		perror("fopen");
+		close(fd);
+		return -1;
+	}
+	/* Lock the file for reading/writing */
+	if (flock(fileno(fh), LOCK_EX) != 0) {
+		perror("flock");
+		fclose(fh);
+		close(fd);
+		return -1;
+	}
+	rewind(fh);
+	/* Read the count from file, default to 0 */
+	if (fscanf(fh, "%d\n", &count) != 1) {
+		count = 0;
+	}
+	/* Increment/decrement the counter */
+	count += delta;
+	if (count < 0) {
+		/* Never set a count less than 0 */
+		count = 0;
+	}
+	/* Write the count to file */
+	rewind(fh);
+	fprintf(fh, "%d\n", count);
+	/* Unlock the file */
+	if (flock(fileno(fh), LOCK_UN) != 0) {
+		perror("flock");
+	}
+	fclose(fh);
+	close(fd);
+	return count;
+}
+
+
+int increment(char *u) {
+/* Bump counter up */
+	return bump_counter(u, 1);
+}
+
+
+int decrement(char *u) {
+/* Bump counter down */
+	return bump_counter(u, -1);
+}
+
+int zero(char *u) {
+/* Remove the counter file */
+	return bump_counter(u, 0);
+}
+
+
 /* This program is a setuid-executable allowing a non-privileged user to mount
  * and unmount an ecryptfs private directory.  This program is necessary to
  * keep from adding such entries to /etc/fstab.
@@ -291,7 +378,7 @@ int update_mtab(char *dev, char *mnt, char *opt) {
  *  c) updating /etc/mtab
  */
 int main(int argc, char *argv[]) {
-	int uid, rc, mounting;
+	int uid, rc, mounting, force;
 	struct passwd *pwd;
 	char *dev, *mnt, *opt;
 	char *sig;
@@ -323,6 +410,12 @@ int main(int argc, char *argv[]) {
 		mounting = 1;
 	} else {
 		mounting = 0;
+		/* Determine if unmounting is forced */
+		if (argv[1] != NULL && strncmp(argv[1], "-f", 2) == 0) {
+			force = 1;
+		} else {
+			force = 0;
+		}
 	}
 
 	/* Fetch signature from file */
@@ -357,6 +450,8 @@ int main(int argc, char *argv[]) {
 	}
 
 	if (mounting == 1) {
+		/* Increment mount counter, errors non-fatal */
+		increment(pwd->pw_name);
 		/* Mounting, so exit if already mounted */
 		if (is_mounted(dev, mnt, sig, mounting) == 1) {
 			return 1;
@@ -378,9 +473,26 @@ int main(int argc, char *argv[]) {
 			}
 		} else {
 			perror("mount");
+			/* Drop privileges and decrement the counter, since
+ 			 * since the mount did not succeed
+ 			 */
+			if (setreuid(uid, uid)) {
+				decrement(pwd->pw_name);
+			} else {
+				perror("setreuid");
+			}
 			return 1;
 		}
 	} else {
+		/* Decrement counter, exiting if >0, and non-forced unmount */
+		if (decrement(pwd->pw_name) > 0 && force != 1) {
+			fputs("Sessions still open, not unmounting\n", stderr);
+			return 1;
+		}
+		/* If we have made it here, zero the counter,
+ 		 * as we are going to unmount.
+ 		 */
+		zero(pwd->pw_name);
 		/* Unmounting, so exit if not mounted */
 		if (is_mounted(dev, mnt, sig, mounting) == 0) {
 			return 1;
