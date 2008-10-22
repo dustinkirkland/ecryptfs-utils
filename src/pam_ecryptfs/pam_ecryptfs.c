@@ -357,6 +357,18 @@ PAM_EXTERN int pam_sm_chauthtok(pam_handle_t * pamh, int flags,
 		seteuid(saved_uid);
 		goto out;
 	}
+	/* On the first pass, do nothing except check that we have a password */
+	if ((flags & PAM_PRELIM_CHECK)) {
+		if (!old_passphrase)
+		{
+			syslog(LOG_WARNING, "eCryptfs PAM passphrase change "
+			       "module retrieved a NULL passphrase; nothing to "
+			       "do\n");
+			rc = PAM_AUTHTOK_RECOVER_ERR;
+		}
+		seteuid(saved_uid);
+		goto out;
+	}
 	if ((rc = pam_get_item(pamh, PAM_AUTHTOK,
 			       (const void **)&new_passphrase))
 	    != PAM_SUCCESS) {
@@ -366,10 +378,11 @@ PAM_EXTERN int pam_sm_chauthtok(pam_handle_t * pamh, int flags,
 		goto out;
 	}
 	seteuid(saved_uid);
-	if (!old_passphrase || !new_passphrase) {
+	if (!old_passphrase || !new_passphrase || *new_passphrase == '\0') {
 		syslog(LOG_WARNING, "eCryptfs PAM passphrase change module "
 		       "retrieved at least one NULL passphrase; nothing to "
 		       "do\n");
+		rc = PAM_AUTHTOK_RECOVER_ERR;
 		goto out;
 	}
 	if ((rc = asprintf(&wrapped_pw_filename, "%s/.ecryptfs/%s", homedir,
