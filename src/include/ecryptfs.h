@@ -151,6 +151,8 @@
 
 #define ECRYPTFS_DEFAULT_WRAPPED_PASSPHRASE_FILENAME "wrapped-passphrase"
 
+#define ECRYPTFS_WARN_DEFAULT_SALT "Warning: Using default salt value"
+
 extern int ecryptfs_verbosity;
 
 /**

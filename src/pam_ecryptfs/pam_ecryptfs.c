@@ -115,8 +115,7 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags, int argc,
 	}
 	rc = ecryptfs_read_salt_hex_from_rc(salt_hex);
 	if (rc) {
-		syslog(LOG_WARNING, "Unable to read salt value from user's "
-		       ".ecryptfsrc file; using default\n");
+		syslog(LOG_WARNING, "%s\n", ECRYPTFS_WARN_DEFAULT_SALT);
 		from_hex(salt, ECRYPTFS_DEFAULT_SALT_HEX, ECRYPTFS_SALT_SIZE);
 	} else
 		from_hex(salt, salt_hex, ECRYPTFS_SALT_SIZE);
@@ -393,8 +392,7 @@ PAM_EXTERN int pam_sm_chauthtok(pam_handle_t * pamh, int flags,
 		goto out;
 	}
 	if ((rc = ecryptfs_read_salt_hex_from_rc(salt_hex))) {
-		syslog(LOG_WARNING, "Unable to read salt value from user's "
-		       ".ecryptfsrc file; using default\n");
+		syslog(LOG_WARNING, "%s\n", ECRYPTFS_WARN_DEFAULT_SALT);
 		from_hex(salt, ECRYPTFS_DEFAULT_SALT_HEX, ECRYPTFS_SALT_SIZE);
 	} else
 		from_hex(salt, salt_hex, ECRYPTFS_SALT_SIZE);
