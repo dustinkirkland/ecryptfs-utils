@@ -38,13 +38,23 @@ int main(int argc, char *argv[])
 	char salt[ECRYPTFS_SALT_SIZE];
 	char salt_hex[ECRYPTFS_SALT_SIZE_HEX];
 	int rc = 0;
+	char *p;
 
 	if (argc != 2) {
 		usage();
 		goto out;
 	}
-	memcpy(passphrase, argv[1], ECRYPTFS_MAX_PASSWORD_LENGTH);
-	passphrase[ECRYPTFS_MAX_PASSWORD_LENGTH] = '\0';
+	if (strlen(argv[1]) == 1 && strncmp(argv[1], "-", 1) == 0) {
+		if (fgets(passphrase, ECRYPTFS_MAX_PASSWORD_LENGTH, stdin) == NULL) {
+			usage();
+			goto out;
+		}
+		p = strrchr(passphrase, '\n');
+		if (p) *p = '\0';
+	} else {
+		memcpy(passphrase, argv[1], ECRYPTFS_MAX_PASSWORD_LENGTH);
+		passphrase[ECRYPTFS_MAX_PASSWORD_LENGTH] = '\0';
+	}
 	rc = ecryptfs_read_salt_hex_from_rc(salt_hex);
 	if (rc) {
 		printf("Unable to read salt value from user's "

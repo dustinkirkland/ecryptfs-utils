@@ -20,6 +20,7 @@
 
 #include <stdio.h>
 #include <ecryptfs.h>
+#include <string.h>
 #include "config.h"
 
 void usage(void)
@@ -39,14 +40,37 @@ int main(int argc, char *argv[])
 	char salt[ECRYPTFS_SALT_SIZE];
 	char salt_hex[ECRYPTFS_SALT_SIZE_HEX];
 	int rc = 0;
+	char *p;
 
-	if (argc != 4) {
+	if (argc == 3 && strlen(argv[2]) == 1 && strncmp(argv[2], "-", 1) == 0) {
+		if ((passphrase = (char *)malloc(ECRYPTFS_MAX_PASSWORD_LENGTH+1)) == NULL) {
+			perror("malloc");
+			goto out;
+		}
+		if ((wrapping_passphrase = (char *)malloc(ECRYPTFS_MAX_PASSWORD_LENGTH+1)) == NULL) {
+			perror("malloc");
+			goto out;
+		}
+		if (fgets(passphrase, ECRYPTFS_MAX_PASSWORD_LENGTH, stdin) == NULL) {
+			usage();
+			goto out;
+		}
+		p = strrchr(passphrase, '\n');
+		if (p) *p = '\0';
+		if (fgets(wrapping_passphrase, ECRYPTFS_MAX_PASSWORD_LENGTH, stdin) == NULL) {
+			usage();
+			goto out;
+		}
+		p = strrchr(wrapping_passphrase, '\n');
+		if (p) *p = '\0';
+	} else if (argc == 4) {
+		passphrase = argv[2];
+		wrapping_passphrase = argv[3];
+	} else {
 		usage();
 		goto out;
 	}
 	file = argv[1];
-	passphrase = argv[2];
-	wrapping_passphrase = argv[3];
 	rc = ecryptfs_read_salt_hex_from_rc(salt_hex);
 	if (rc) {
 		printf("Unable to read salt value from user's "
