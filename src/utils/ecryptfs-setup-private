@@ -144,16 +144,12 @@ if [ -z "$LOGINPASS" ]; then
 		if [ -z "$LOGINPASS" ]; then
 			echo "ERROR: You must provide a login passphrase"
 			continue
-		else 
-			stty -echo
-			read -p "Enter your login passphrase (again): " -r LOGINPASS2
-			stty $stty_orig
-			echo
-			if [ "$LOGINPASS" != "$LOGINPASS2" ]; then
-				echo "ERROR: Login passphrases do not match"
-				continue
-			else
+		else
+			if printf "$LOGINPASS\0" | /sbin/unix_chkpwd "$USER" nullok; then
 				break
+			else
+				echo "ERROR: Your login passphrase is incorrect"
+				continue
 			fi
 		fi
 	done
