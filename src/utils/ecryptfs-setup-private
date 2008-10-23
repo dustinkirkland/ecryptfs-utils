@@ -229,12 +229,12 @@ done
 # Setup wrapped-passphrase file
 u=`umask`
 umask 377
-echo -e "$MOUNTPASS\n$LOGINPASS" | ecryptfs-wrap-passphrase "$HOME/.ecryptfs/wrapped-passphrase" - || error "Could not wrap passphrase"
+printf "$MOUNTPASS\n$LOGINPASS" | ecryptfs-wrap-passphrase "$HOME/.ecryptfs/wrapped-passphrase" - || error "Could not wrap passphrase"
 umask $u
 
 # Add the passphrase to current keyring
 # On subsequent logins, this should be handled by "pam_ecryptfs.so unwrap"
-response=`echo -e "$MOUNTPASS" | ecryptfs-add-passphrase -`
+response=`printf "$MOUNTPASS" | ecryptfs-add-passphrase -`
 if [ $? -ne 0 ]; then
 	error "Could not add passphrase to the current keyring"
 fi
