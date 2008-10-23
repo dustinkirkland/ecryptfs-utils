@@ -1,6 +1,7 @@
 /**
  * Copyright (C) 2007 International Business Machines
  * Author(s): Michael Halcrow <mhalcrow@us.ibm.com>
+ *            Dustin Kirkland <kirkland@canonical.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -27,8 +28,11 @@ void usage(void)
 {
 	printf("Usage:\n"
 	       "\n"
-	       "ecryptfs_wrap_passphrase [file] [passphrase to wrap] "
+	       "ecryptfs-wrap-passphrase [file] [passphrase to wrap] "
 	       "[wrapping passphrase]\n"
+	       "or\n"
+	       "printf \"passphrase to wrap\\nwrapping passphrase\" "
+	       "| ecryptfs-wrap-passphrase [file] -\n"
 	       "\n");
 }
 
@@ -43,21 +47,25 @@ int main(int argc, char *argv[])
 	char *p;
 
 	if (argc == 3 && strlen(argv[2]) == 1 && strncmp(argv[2], "-", 1) == 0) {
-		if ((passphrase = (char *)malloc(ECRYPTFS_MAX_PASSWORD_LENGTH+1)) == NULL) {
+		if ((passphrase =
+		    (char *)malloc(ECRYPTFS_MAX_PASSWORD_LENGTH+1)) == NULL) {
 			perror("malloc");
 			goto out;
 		}
-		if ((wrapping_passphrase = (char *)malloc(ECRYPTFS_MAX_PASSWORD_LENGTH+1)) == NULL) {
+		if ((wrapping_passphrase =
+		    (char *)malloc(ECRYPTFS_MAX_PASSWORD_LENGTH+1)) == NULL) {
 			perror("malloc");
 			goto out;
 		}
-		if (fgets(passphrase, ECRYPTFS_MAX_PASSWORD_LENGTH, stdin) == NULL) {
+		if (fgets(passphrase,
+			  ECRYPTFS_MAX_PASSWORD_LENGTH, stdin) == NULL) {
 			usage();
 			goto out;
 		}
 		p = strrchr(passphrase, '\n');
 		if (p) *p = '\0';
-		if (fgets(wrapping_passphrase, ECRYPTFS_MAX_PASSWORD_LENGTH, stdin) == NULL) {
+		if (fgets(wrapping_passphrase,
+			  ECRYPTFS_MAX_PASSWORD_LENGTH, stdin) == NULL) {
 			usage();
 			goto out;
 		}

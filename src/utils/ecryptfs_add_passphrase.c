@@ -1,6 +1,7 @@
 /**
  * Copyright (C) 2007 International Business Machines
  * Author(s): Michael Halcrow <mhalcrow@us.ibm.com>
+ *            Dustin Kirkland <kirkland@canonical.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -28,6 +29,8 @@ void usage(void)
 	printf("Usage:\n"
 	       "\n"
 	       "ecryptfs-add-passphrase [passphrase]\n"
+	       "or\n"
+	       "printf \"passphrase\" | ecryptfs-add-passphrase -\n"
 	       "\n");
 }
 
@@ -45,7 +48,8 @@ int main(int argc, char *argv[])
 		goto out;
 	}
 	if (strlen(argv[1]) == 1 && strncmp(argv[1], "-", 1) == 0) {
-		if (fgets(passphrase, ECRYPTFS_MAX_PASSWORD_LENGTH, stdin) == NULL) {
+		if (fgets(passphrase,
+			  ECRYPTFS_MAX_PASSWORD_LENGTH, stdin) == NULL) {
 			usage();
 			goto out;
 		}

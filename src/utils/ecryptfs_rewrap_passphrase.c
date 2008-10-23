@@ -1,6 +1,7 @@
 /**
  * Copyright (C) 2007 International Business Machines
  * Author(s): Michael Halcrow <mhalcrow@us.ibm.com>
+ *            Dustin Kirkland <kirkland@canonical.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -20,13 +21,18 @@
 
 #include <stdio.h>
 #include <ecryptfs.h>
+#include <string.h>
 #include "config.h"
 
 void usage(void)
 {
 	printf("Usage:\n"
 	       "\n"
-	       "ecryptfs_rewrap_passphrase [file] [old wrapping passphrase] [new wrapping passphrase]\n"
+	       "ecryptfs-rewrap-passphrase "
+	       "[file] [old wrapping passphrase] [new wrapping passphrase]\n"
+	       "or\n"
+	       "printf \"old wrapping passphrase\\nnew wrapping passphrase\" "
+	       "| ecryptfs-rewrap-passphrase [file] -\n"
 	       "\n");
 }
 
@@ -39,14 +45,42 @@ int main(int argc, char *argv[])
 	char salt[ECRYPTFS_SALT_SIZE];
 	char salt_hex[ECRYPTFS_SALT_SIZE_HEX];
 	int rc = 0;
+	char *p;
 
-	if (argc != 4) {
+	if (argc==3 && strlen(argv[2])==1 && strncmp(argv[2], "-", 1)==0) {
+		if ((old_wrapping_passphrase =
+		    (char *)malloc(ECRYPTFS_MAX_PASSWORD_LENGTH+1)) == NULL) {
+			perror("malloc");
+			goto out;
+		}
+		if ((new_wrapping_passphrase =
+		    (char *)malloc(ECRYPTFS_MAX_PASSWORD_LENGTH+1)) == NULL) {
+			perror("malloc");
+			goto out;
+		}
+		if (fgets(old_wrapping_passphrase,
+			  ECRYPTFS_MAX_PASSWORD_LENGTH, stdin) == NULL) {
+			usage();
+			goto out;
+		}
+		p = strrchr(old_wrapping_passphrase, '\n');
+		if (p) *p = '\0';
+		if (fgets(new_wrapping_passphrase,
+			  ECRYPTFS_MAX_PASSWORD_LENGTH, stdin) == NULL) {
+			usage();
+			goto out;
+		}
+		p = strrchr(new_wrapping_passphrase, '\n');
+		if (p) *p = '\0';
+	} else if (argc == 4) {
+		old_wrapping_passphrase = argv[2];
+		new_wrapping_passphrase = argv[3];
+	} else {
 		usage();
 		goto out;
 	}
+
 	file = argv[1];
-	old_wrapping_passphrase = argv[2];
-	new_wrapping_passphrase = argv[3];
 	rc = ecryptfs_read_salt_hex_from_rc(salt_hex);
 	if (rc) {
 		printf("Unable to read salt value from user's "
