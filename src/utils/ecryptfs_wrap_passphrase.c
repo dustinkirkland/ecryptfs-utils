@@ -87,9 +87,8 @@ int main(int argc, char *argv[])
 		from_hex(salt, salt_hex, ECRYPTFS_SALT_SIZE);
 	if ((rc = ecryptfs_wrap_passphrase(file, wrapping_passphrase, salt,
 					   passphrase))) {
-		printf("Error attempting to wrap passphrase; rc = [%d]. "
-		       "Check the system log for more information from "
-		       "libecryptfs.\n", rc);
+		fprintf(stderr, "%s [%d]\n", ECRYPTFS_ERROR_WRAP, rc);
+		fprintf(stderr, "%s\n", ECRYPTFS_INFO_CHECK_LOG);
 		rc = 1;
 		goto out;
 	}

@@ -21,10 +21,8 @@ int main(int argc, char *argv[])
 	}
 	if ((rc = ecryptfs_add_key_module_key_to_keyring(auth_tok_sig_hex,
 							 selected_pki))) {
-		printf("Error attempting to insert key "
-		       "into the user session keyring; rc = [%d]. "
-		       "Check the system log for more information from "
-		       "libecryptfs.\n", rc);
+		fprintf(stderr, "%s [%d]\n", ECRYPTFS_ERROR_INSERT_KEY, rc);
+		fprintf(stderr, "%s\n", ECRYPTFS_INFO_CHECK_LOG);
 		rc = 1;
 		goto out;
 	}

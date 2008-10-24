@@ -77,10 +77,9 @@ int main(int argc, char *argv[])
 		from_hex(salt, salt_hex, ECRYPTFS_SALT_SIZE);
 	if ((rc = ecryptfs_insert_wrapped_passphrase_into_keyring(
 		     auth_tok_sig_hex, file, wrapping_passphrase, salt))) {
-		printf("Error attempting to unwrap passphrase and insert "
-		       "into the user session keyring; rc = [%d]. "
-		       "Check the system log for more information from "
-		       "libecryptfs.\n", rc);
+		fprintf(stderr, "%s [%d]\n",
+			ECRYPTFS_ERROR_UNWRAP_AND_INSERT, rc);
+                fprintf(stderr, "%s\n", ECRYPTFS_INFO_CHECK_LOG);
 		rc = 1;
 		goto out;
 	}

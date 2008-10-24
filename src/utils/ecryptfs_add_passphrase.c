@@ -67,10 +67,8 @@ int main(int argc, char *argv[])
 		from_hex(salt, salt_hex, ECRYPTFS_SALT_SIZE);
 	if ((rc = ecryptfs_add_passphrase_key_to_keyring(auth_tok_sig_hex,
 							 passphrase, salt))) {
-		printf("Error attempting to insert passphrase "
-		       "into the user session keyring; rc = [%d]. "
-		       "Check the system log for more information from "
-		       "libecryptfs.\n", rc);
+		fprintf(stderr, "%s [%d]\n", ECRYPTFS_ERROR_INSERT_KEY, rc);
+		fprintf(stderr, "%s\n", ECRYPTFS_INFO_CHECK_LOG);
 		rc = 1;
 		goto out;
 	}
