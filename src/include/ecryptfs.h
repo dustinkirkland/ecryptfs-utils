@@ -481,6 +481,11 @@ struct ecryptfs_crypt_stat_user {
 	struct ecryptfs_auth_tok_list *ptr_to_auth_tok_list_head;
 };
 
+typedef struct binary_data {
+	int size;
+	unsigned char *data;
+} binary_data;
+
 #define ECRYPTFS_DEFAULT_MESSAGING_TYPE ECRYPTFS_MESSAGING_TYPE_NETLINK
 
 int ecryptfs_get_kernel_ciphers(struct cipher_descriptor *cd_head);
@@ -531,9 +536,8 @@ int parse_packet(struct ecryptfs_ctx *ctx,
 		 struct ecryptfs_message **reply);
 int ecryptfs_find_key_mod(struct ecryptfs_key_mod **key_mod,
 			  struct ecryptfs_ctx *ctx, char *key_mod_alias);
-int
-generate_passphrase_sig(char *passphrase_sig, char *passphrase, char *salt,
-			char *session_key_encryption_key);
+int generate_passphrase_sig(char *passphrase_sig, char *fekek, char *salt,
+			    char *passphrase);
 int
 generate_payload(struct ecryptfs_auth_tok *auth_tok, char *passphrase_sig,
 		 char *salt, char *session_key_encryption_key);
@@ -600,5 +604,11 @@ int ecryptfs_run_miscdev_daemon(struct ecryptfs_miscdev_ctx *miscdev_ctx);
 struct ecryptfs_ctx_ops *cryptfs_get_ctx_opts(void);
 int ecryptfs_parse_stat(struct ecryptfs_crypt_stat_user *crypt_stat, char *buf,
 			size_t buf_size);
+binary_data ecryptfs_passphrase_blob(char *salt, char *passphrase);
+binary_data ecryptfs_passphrase_sig_from_blob(char *blob);
+int ecryptfs_add_passphrase_blob_to_keyring(char *blob, char *sig);
+int ecryptfs_add_auth_tok_to_keyring(struct ecryptfs_auth_tok *auth_tok,
+				     char *auth_tok_sig);
+int ecryptfs_add_blob_to_keyring(char *blob, char *sig);
 
 #endif

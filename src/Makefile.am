@@ -10,4 +10,4 @@
 
 MAINTAINERCLEANFILES = $(srcdir)/Makefile.in
 
-SUBDIRS = key_mod libecryptfs utils daemon include pam_ecryptfs
+SUBDIRS = key_mod libecryptfs utils daemon include pam_ecryptfs libecryptfs-swig

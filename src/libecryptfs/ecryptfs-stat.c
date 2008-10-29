@@ -277,7 +277,7 @@ static int ecryptfs_parse_packet_set(struct ecryptfs_crypt_stat_user *crypt_stat
 out_wipe_list:
 	auth_tok_list = crypt_stat->ptr_to_auth_tok_list_head;
 	while (auth_tok_list) {
-		struct ecryptfs_auth_tok *next_auth_tok_list;
+		struct ecryptfs_auth_tok_list *next_auth_tok_list;
 
 		next_auth_tok_list = auth_tok_list->next;
 		free(auth_tok_list->auth_tok);

@@ -1,6 +1,7 @@
 MAINTAINERCLEANFILES = $(srcdir)/Makefile.in
 
 lib_LTLIBRARIES = libecryptfs.la
+
 pkgconfig_DATA = libecryptfs.pc
 
 libecryptfs_la_SOURCES = \
@@ -18,6 +19,7 @@ libecryptfs_la_SOURCES = \
 	key_mod.c \
 	ecryptfs-stat.c \
 	$(top_srcdir)/src/key_mod/ecryptfs_key_mod_passphrase.c
+
 libecryptfs_la_LDFLAGS = \
 	-version-info @LIBECRYPTFS_LT_CURRENT@:@LIBECRYPTFS_LT_REVISION@:@LIBECRYPTFS_LT_AGE@ \
 	-no-undefined

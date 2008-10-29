@@ -30,11 +30,11 @@
 #include <fcntl.h>
 #include <getopt.h>
 #include <pthread.h>
+#include <libgen.h>
 #include <sys/wait.h>
 #include <sys/resource.h>
 #include "config.h"
 #include "../include/ecryptfs.h"
-
 
 static char *pidfile = NULL;
 static char *prompt_prog = NULL;
@@ -231,8 +231,8 @@ void sigterm_handler(int sig)
 	pthread_mutex_unlock(&mctx_mux);
 }
 
-void usage(const char * const me, const struct option * const options,
-	   const char * const short_options)
+void usage(const char *const me, const struct option *const options,
+	   const char *const short_options)
 {
 	const struct option *opt;
 

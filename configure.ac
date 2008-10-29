@@ -18,12 +18,24 @@ AC_CONFIG_SRCDIR([src/libecryptfs])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
 
+AC_DISABLE_STATIC
+AM_PATH_PYTHON(2.5)
+AC_PROG_SWIG(1.3.31)
+SWIG_PYTHON
+
 LIBECRYPTFS_LT_CURRENT="0"
 LIBECRYPTFS_LT_REVISION="0"
 LIBECRYPTFS_LT_AGE="0"
 AC_SUBST([LIBECRYPTFS_LT_CURRENT])
 AC_SUBST([LIBECRYPTFS_LT_REVISION])
 AC_SUBST([LIBECRYPTFS_LT_AGE])
+
+AC_ARG_ENABLE(
+	[pywrap],
+	[AS_HELP_STRING([--disable-pywrap],[Build libecryptfs Python wrappers])],
+	,
+	[enable_pywrap="detect"]
+)
 
 AC_ARG_ENABLE(
 	[openssl],
@@ -221,6 +233,30 @@ CFLAGS="${CFLAGS} ${OPENSSL_CFLAGS}"
 AC_CHECK_HEADER([openssl/rsa.h],, [have_openssl="no"])
 CFLAGS="${OLD_CFLAGS}"
 
+have_python="no"
+have_swig="no"
+
+if test "x${PYTHON_VERSION}" != "x" ; then
+   have_python="yes"
+fi
+
+if test "x${SWIG}" != "x" ; then
+   have_swig="yes"
+fi
+
+if test "${enable_pywrap}" = "detect" ; then
+        if test "${have_python}" = "yes" ; then
+                if test "${have_swig}" = "yes" ; then
+                        enable_pywrap="yes"
+                fi
+        fi
+fi
+
+if test "${enable_pywrap}" = "yes" ; then
+        test "${have_python}" != "yes" && AC_MSG_ERROR([Python not found])
+        test "${have_swig}" != "yes" && AC_MSG_ERROR([SWIG not found])
+fi
+
 test "${enable_openssl}" = "detect" && enable_openssl="${have_openssl}"
 
 if test "${enable_openssl}" = "yes" ; then
@@ -307,6 +343,7 @@ AM_CONDITIONAL([BUILD_PKCS11_HELPER], [test "${enable_pkcs11_helper}" = "yes"])
 AM_CONDITIONAL([BUILD_TSPI], [test "${enable_tspi}" = "yes"])
 AM_CONDITIONAL([BUILD_GPG], [test "${enable_gpg}" = "yes"])
 AM_CONDITIONAL([BUILD_PAM], [test "${enable_pam}" = "yes"])
+AM_CONDITIONAL([BUILD_PYWRAP], [test "${enable_pywrap}" = "yes"])
 AM_CONDITIONAL([BUILD_GUI], [test "${enable_gui}" = "yes"])
 AM_CONDITIONAL([BUILD_DOCS], [test "${enable_docs}" = "yes"])
 AM_CONDITIONAL([BUILD_DOCS_GEN], [test "${enable_docs_gen}" = "yes"])
@@ -341,6 +378,7 @@ AC_CONFIG_FILES([
 	doc/manpage/Makefile
 	src/pam_ecryptfs/Makefile
 	src/libecryptfs/libecryptfs.pc
+	src/libecryptfs-swig/Makefile
 ])
 AC_OUTPUT
 

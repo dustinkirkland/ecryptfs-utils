@@ -42,26 +42,99 @@
 #endif
 
 /**
- * This is the common functionality used to put a password generated key into
- * the keyring, shared by both non-interactive and interactive signature
- * generation code.
- *
- * Returns 0 on add, 1 on pre-existed, negative on failure.
+ * @auth_tok: (out) This function will allocate; callee must free
+ * @auth_tok_sig: (out) Allocated memory this function fills in:
+                        (ECRYPTFS_SIG_SIZE_HEX + 1)
+ * @fekek: (out) Allocated memory this function fills in: ECRYPTFS_MAX_KEY_BYTES
+ * @salt: (in) salt: ECRYPTFS_SALT_SIZE
+ * @passphrase: (in) passphrase: ECRYPTFS_MAX_PASSPHRASE_BYTES
  */
-int ecryptfs_add_passphrase_key_to_keyring(char *auth_tok_sig, char *passphrase,
-					   char *salt)
+int ecryptfs_generate_passphrase_auth_tok(struct ecryptfs_auth_tok **auth_tok,
+					  char *auth_tok_sig, char *fekek,
+					  char *salt, char *passphrase)
 {
 	int rc;
-	char session_key_encryption_key[ECRYPTFS_MAX_KEY_BYTES];
-	struct ecryptfs_auth_tok *auth_tok = NULL;
 
-	if ((rc = generate_passphrase_sig(auth_tok_sig, passphrase, salt,
-					  session_key_encryption_key))) {
+	*auth_tok = NULL;
+	rc = generate_passphrase_sig(auth_tok_sig, fekek, salt, passphrase);
+	if (rc) {
 		syslog(LOG_ERR, "Error generating passphrase signature; "
 		       "rc = [%d]\n", rc);
 		rc = (rc < 0) ? rc : rc * -1;
 		goto out;
 	}
+	*auth_tok = malloc(sizeof(struct ecryptfs_auth_tok));
+	if (!*auth_tok) {
+		syslog(LOG_ERR, "Unable to allocate memory for auth_tok\n");
+		rc = -ENOMEM;
+		goto out;
+	}
+	rc = generate_payload(*auth_tok, auth_tok_sig, salt, fekek);
+	if (rc) {
+		syslog(LOG_ERR, "Error generating payload for auth tok key; "
+		       "rc = [%d]\n", rc);
+		rc = (rc < 0) ? rc : rc * -1;
+		goto out;
+	}
+out:
+	return rc;
+}
+
+/**
+ * ecryptfs_passphrase_sig_from_blob
+ * @blob: Byte array of struct ecryptfs_auth_tok
+ *
+ * SWIG support function.
+ */
+binary_data ecryptfs_passphrase_sig_from_blob(char *blob)
+{
+	struct ecryptfs_auth_tok *auth_tok;
+	binary_data bd;
+
+	auth_tok = (struct ecryptfs_auth_tok *)blob;
+	bd.size = (ECRYPTFS_PASSWORD_SIG_SIZE + 1);
+	bd.data = auth_tok->token.password.signature;
+	return bd;
+}
+
+/**
+ * ecryptfs_passphrase_blob
+ * @salt: Hexadecimal representation of the salt value
+ * @passphrase: Passphrase
+ *
+ * SWIG support function.
+ */
+binary_data ecryptfs_passphrase_blob(char *salt, char *passphrase)
+{
+	char *blob;
+	struct ecryptfs_auth_tok *auth_tok;
+	char auth_tok_sig[ECRYPTFS_SIG_SIZE_HEX + 1];
+	char fekek[ECRYPTFS_MAX_KEY_BYTES];
+	binary_data bd;
+	int rc;
+
+	memset(&bd, 0, sizeof(bd));
+	rc = ecryptfs_generate_passphrase_auth_tok(&auth_tok, auth_tok_sig,
+						   fekek, salt, passphrase);
+	if (rc) {
+		syslog(LOG_ERR, "%s: Error attempting to generate passphrase "
+		       "authentication token blob; rc = [%d]\n", __FUNCTION__,
+		       rc);
+		blob = NULL;
+		goto out;
+	}
+	blob = (char *)auth_tok;
+	bd.size = sizeof(struct ecryptfs_auth_tok);
+	bd.data = blob;
+out:
+	return bd;
+}
+
+int ecryptfs_add_auth_tok_to_keyring(struct ecryptfs_auth_tok *auth_tok,
+				     char *auth_tok_sig)
+{
+	int rc;
+
 	rc = (int)keyctl_search(KEY_SPEC_USER_KEYRING, "user", auth_tok_sig, 0);
 	if (rc != -1) { /* we already have this key in keyring; we're done */
 		rc = 1;
@@ -75,19 +148,6 @@ int ecryptfs_add_passphrase_key_to_keyring(char *auth_tok_sig, char *passphrase,
 		rc = (errnum < 0) ? errnum : errnum * -1;
 		goto out;
 	}
-	auth_tok = malloc(sizeof(struct ecryptfs_auth_tok));
-	if (!auth_tok) {
-		syslog(LOG_ERR, "Unable to allocate memory for auth_tok\n");
-		rc = -ENOMEM;
-		goto out;
-	}
-	if ((rc = generate_payload(auth_tok, auth_tok_sig, salt,
-				   session_key_encryption_key))) {
-		syslog(LOG_ERR, "Error generating payload for auth tok key; "
-		       "rc = [%d]\n", rc);
-		rc = (rc < 0) ? rc : rc * -1;
-		goto out_wipe;
-	}
 	rc = add_key("user", auth_tok_sig, (void *)auth_tok,
 		     sizeof(struct ecryptfs_auth_tok), KEY_SPEC_USER_KEYRING);
 	if (rc == -1) {
@@ -96,13 +156,63 @@ int ecryptfs_add_passphrase_key_to_keyring(char *auth_tok_sig, char *passphrase,
 		syslog(LOG_ERR, "Error adding key with sig [%s]; rc = [%d] "
 		       "\%s\"\n", auth_tok_sig, rc, strerror(errnum));
 		rc = (errnum < 0) ? errnum : errnum * -1;
-		goto out_wipe;
+		goto out;
 	}
 	rc = 0;
-out_wipe:
-	memset(auth_tok, 0, sizeof(auth_tok));
 out:
-	free(auth_tok);
+	return rc;
+}
+
+/**
+ * ecryptfs_add_blob_to_keyring
+ * @blob: Byte array containing struct ecryptfs_auth_tok
+ * @sig: Hexadecimal representation of the auth tok signature
+ *
+ * SWIG support function.
+ */
+int ecryptfs_add_blob_to_keyring(char *blob, char *sig)
+{
+	int rc;
+
+	rc = ecryptfs_add_auth_tok_to_keyring((struct ecryptfs_auth_tok *)blob,
+					      sig);
+	return rc;
+}
+
+/**
+ * This is the common functionality used to put a password generated key into
+ * the keyring, shared by both non-interactive and interactive signature
+ * generation code.
+ *
+ * Returns 0 on add, 1 on pre-existed, negative on failure.
+ */
+int ecryptfs_add_passphrase_key_to_keyring(char *auth_tok_sig, char *passphrase,
+					   char *salt)
+{
+	int rc;
+	char fekek[ECRYPTFS_MAX_KEY_BYTES];
+	struct ecryptfs_auth_tok *auth_tok = NULL;
+
+	rc = ecryptfs_generate_passphrase_auth_tok(&auth_tok, auth_tok_sig,
+						   fekek, salt, passphrase);
+	if (rc) {
+		syslog(LOG_ERR, "%s: Error attempting to generate the "
+		       "passphrase auth tok payload; rc = [%d]\n",
+		       __FUNCTION__, rc);
+		goto out;
+	}
+	rc = ecryptfs_add_auth_tok_to_keyring(auth_tok, auth_tok_sig);
+	if (rc) {
+		syslog(LOG_ERR, "%s: Error adding auth tok with sig [%s] to "
+		       "the keyring; rc = [%d]\n", __FUNCTION__, auth_tok_sig,
+		       rc);
+		goto out;
+	}
+out:
+	if (auth_tok) {
+		memset(auth_tok, 0, sizeof(auth_tok));
+		free(auth_tok);
+	}
 	return rc;
 }
 
@@ -131,9 +241,9 @@ int ecryptfs_wrap_passphrase(char *filename, char *wrapping_passphrase,
 		rc = -EIO;
 		goto out;
 	}
-	if ((rc = generate_passphrase_sig(wrapping_auth_tok_sig,
-					  wrapping_passphrase, wrapping_salt,
-					  wrapping_key))) {
+	rc = generate_passphrase_sig(wrapping_auth_tok_sig, wrapping_key,
+				     wrapping_salt, wrapping_passphrase);
+	if (rc) {
 		syslog(LOG_ERR, "Error generating passphrase signature; "
 		       "rc = [%d]\n", rc);
 		rc = (rc < 0) ? rc : rc * -1;
@@ -233,9 +343,9 @@ int ecryptfs_unwrap_passphrase(char *decrypted_passphrase, char *filename,
 	ssize_t size;
 	int rc;
 
-	if ((rc = generate_passphrase_sig(wrapping_auth_tok_sig,
-					  wrapping_passphrase, wrapping_salt,
-					  wrapping_key))) {
+	rc = generate_passphrase_sig(wrapping_auth_tok_sig, wrapping_key,
+				     wrapping_salt, wrapping_passphrase);
+	if (rc) {
 		syslog(LOG_ERR, "Error generating passphrase signature; "
 		       "rc = [%d]\n", rc);
 		rc = (rc < 0) ? rc : rc * -1;

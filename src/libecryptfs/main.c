@@ -95,6 +95,7 @@ int do_hash(char *src, int src_size, char *dst, int algo)
 
 /**
  * TODO: We need to support more hash algs
+ * @fekek: ECRYPTFS_MAX_KEY_BYTES bytes of allocated memory
  *
  * @passphrase A NULL-terminated char array
  *
@@ -105,11 +106,11 @@ int do_hash(char *src, int src_size, char *dst, int algo)
  *
  */
 int
-generate_passphrase_sig(char *passphrase_sig, char *passphrase, char *salt,
-			char *session_key_encryption_key)
+generate_passphrase_sig(char *passphrase_sig, char *fekek,
+			char *salt, char *passphrase)
 {
 	char salt_and_passphrase[ECRYPTFS_MAX_PASSPHRASE_BYTES
-					  + ECRYPTFS_SALT_SIZE];
+				 + ECRYPTFS_SALT_SIZE];
 	int passphrase_size;
 	int alg = GCRY_MD_SHA512;
 	int dig_len = SHA512_DIGEST_LENGTH;
@@ -137,7 +138,7 @@ generate_passphrase_sig(char *passphrase_sig, char *passphrase, char *salt,
 			return rc;
 		}
 	}
-	memcpy(session_key_encryption_key, buf, ECRYPTFS_MAX_KEY_BYTES);
+	memcpy(fekek, buf, ECRYPTFS_MAX_KEY_BYTES);
 	if ((rc = do_hash(buf, dig_len, buf, alg))) {
 		return rc;
 	}
