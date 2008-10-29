@@ -5,6 +5,8 @@ ecryptfs-unwrap-passphrase \- unwrap an eCryptfs mount passphrase from file.
 .SH SYNOPSIS
 \fBecryptfs-unwrap-passphrase [file] [wrapping passphrase]\fP
 
+printf "%s" "wrapping passphrase" | \fBecryptfs-unwrap-passphrase [file] -\fP
+
 .SH DESCRIPTION
 \fBecryptfs-unwrap-passphrase\fP is a utility to unwrap an eCryptfs mount passphrase from file, using a specified wrapping passphrase, and display the decrypted result on standard out.
 

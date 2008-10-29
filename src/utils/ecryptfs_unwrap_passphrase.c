@@ -30,7 +30,7 @@ void usage(void)
 	       "\n"
 	       "ecryptfs-unwrap-passphrase [file] [wrapping passphrase]\n"
 	       "or\n"
-	       "printf \"wrapping passphrase\" | "
+	       "printf \"%%s\" \"wrapping passphrase\" | "
 	       "ecryptfs-unwrap-passphrase [file] -\n"
 	       "\n");
 }

@@ -5,6 +5,8 @@ ecryptfs-insert-wrapped-passphrase-into-keyring \- unwrap a wrapped passphrase f
 .SH SYNOPSIS
 \fBecryptfs-insert-wrapped-passphrase-into-keyring [file] [wrapping passphrase]\fP
 
+printf "%s" "wrapping passphrase" | \fBecryptfs-insert-wrapped-passphrase-into-keyring [file] -\fP
+
 .SH DESCRIPTION
 \fBecryptfs-insert-wrapped-passphrase-into-keyring\fP is a utility to manually unwrap a passphrase from a file, and insert the unwrapped passphrase into the kernel keyring.
 

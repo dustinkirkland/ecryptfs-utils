@@ -31,7 +31,8 @@ void usage(void)
 	       "ecryptfs-wrap-passphrase [file] [passphrase to wrap] "
 	       "[wrapping passphrase]\n"
 	       "or\n"
-	       "printf \"passphrase to wrap\\nwrapping passphrase\" "
+	       "printf \"%%s\\n%%s\" \"passphrase to wrap\" "
+	       "\"wrapping passphrase\" "
 	       "| ecryptfs-wrap-passphrase [file] -\n"
 	       "\n");
 }

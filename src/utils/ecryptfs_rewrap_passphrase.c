@@ -31,7 +31,8 @@ void usage(void)
 	       "ecryptfs-rewrap-passphrase "
 	       "[file] [old wrapping passphrase] [new wrapping passphrase]\n"
 	       "or\n"
-	       "printf \"old wrapping passphrase\\nnew wrapping passphrase\" "
+	       "printf \"%%s\\n%%s\" \"old wrapping passphrase\" "
+	       "\"new wrapping passphrase\" "
 	       "| ecryptfs-rewrap-passphrase [file] -\n"
 	       "\n");
 }

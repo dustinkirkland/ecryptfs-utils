@@ -5,6 +5,8 @@ ecryptfs-rewrap-passphrase \- unwrap an eCryptfs wrapped passphrase, rewrap it w
 .SH SYNOPSIS
 \fBecryptfs-rewrap-passphrase [file] [old wrapping passphrase] [new wrapping passphrase]\fP
 
+printf "%s\\n%s" "old wrapping passphrase" "new wrapping passphrase" | \fBecryptfs-rewrap-passphrase [file] -\fP
+
 .SH DESCRIPTION
 \fBecryptfs-rewrap-passphrase\fP is a utility to change the wrapping passphrase on a wrapped passphrase file.
 

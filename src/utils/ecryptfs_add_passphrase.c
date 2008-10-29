@@ -30,7 +30,7 @@ void usage(void)
 	       "\n"
 	       "ecryptfs-add-passphrase [passphrase]\n"
 	       "or\n"
-	       "printf \"passphrase\" | ecryptfs-add-passphrase -\n"
+	       "printf \"%%s\" \"passphrase\" | ecryptfs-add-passphrase -\n"
 	       "\n");
 }
 

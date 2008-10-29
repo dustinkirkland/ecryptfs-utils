@@ -31,7 +31,7 @@ void usage(void)
 	       "ecryptfs-insert-wrapped-passphrase-into-keyring "
 	       "[file] [wrapping passphrase]\n"
 	       "or\n"
-	       "printf \"wrapping passphrase\" | "
+	       "printf \"%%s\" \"wrapping passphrase\" | "
 	       "ecryptfs-insert-wrapped-passphrase-into-keyring [file] -\n"
 	       "\n");
 }
