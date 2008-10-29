@@ -145,7 +145,7 @@ if [ -z "$LOGINPASS" ]; then
 			echo "ERROR: You must provide a login passphrase"
 			continue
 		else
-			if printf "$LOGINPASS\0" | /sbin/unix_chkpwd "$USER" nullok; then
+			if printf "%s\0" "$LOGINPASS" | /sbin/unix_chkpwd "$USER" nullok; then
 				break
 			else
 				echo "ERROR: Your login passphrase is incorrect"
@@ -229,12 +229,12 @@ done
 # Setup wrapped-passphrase file
 u=`umask`
 umask 377
-printf "$MOUNTPASS\n$LOGINPASS" | ecryptfs-wrap-passphrase "$HOME/.ecryptfs/wrapped-passphrase" - || error "Could not wrap passphrase"
+printf "%s\n%s" "$MOUNTPASS" "$LOGINPASS" | ecryptfs-wrap-passphrase "$HOME/.ecryptfs/wrapped-passphrase" - || error "Could not wrap passphrase"
 umask $u
 
 # Add the passphrase to current keyring
 # On subsequent logins, this should be handled by "pam_ecryptfs.so unwrap"
-response=`printf "$MOUNTPASS" | ecryptfs-add-passphrase -`
+response=`printf "%s" "$MOUNTPASS" | ecryptfs-add-passphrase -`
 if [ $? -ne 0 ]; then
 	error "Could not add passphrase to the current keyring"
 fi
