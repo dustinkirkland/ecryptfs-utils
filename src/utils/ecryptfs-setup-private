@@ -8,6 +8,7 @@
 # Copyright (C) 2007-2008 International Business Machines
 
 PRIVATE_DIR="Private"
+PW_ATTEMPTS=3
 
 # Zero out user-defined GREP_OPTIONS, such as --line-number
 GREP_OPTIONS=
@@ -136,28 +137,34 @@ fi
 stty_orig=`stty -g`
 # Prompt for the LOGINPASS, if not on the command line and not in the environment
 if [ -z "$LOGINPASS" ]; then
-	while [ true ]; do
+	tries=0
+	while [ $tries -lt $PW_ATTEMPTS ]; do
 		stty -echo
 		read -p "Enter your login passphrase: " -r LOGINPASS
 		stty $stty_orig
 		echo
 		if [ -z "$LOGINPASS" ]; then
 			echo "ERROR: You must provide a login passphrase"
-			continue
+			tries=$(($tries + 1))
 		else
 			if printf "%s\0" "$LOGINPASS" | /sbin/unix_chkpwd "$USER" nullok; then
 				break
 			else
 				echo "ERROR: Your login passphrase is incorrect"
-				continue
+				tries=$(($tries + 1))
 			fi
 		fi
 	done
+	if [ $tries -ge $PW_ATTEMPTS ]; then
+		echo "ERROR: Too many incorrect password attempts, exiting"
+		exit 1
+	fi
 fi
 
 # Prompt for the MOUNTPASS, if not on the command line and not in the environment
 if [ -z "$MOUNTPASS" ]; then
-	while [ true ]; do
+	tries=0
+	while [ $tries -lt $PW_ATTEMPTS ]; do
 		stty -echo
 		read -p "Enter your mount passphrase [leave blank to generate one]: " -r MOUNTPASS
 		stty $stty_orig
@@ -175,12 +182,16 @@ if [ -z "$MOUNTPASS" ]; then
 			echo
 			if [ "$MOUNTPASS" != "$MOUNTPASS2" ]; then
 				echo "ERROR: Mount passphrases do not match"
-				continue
+				tries=$(($tries + 1))
 			else
 				break
 			fi
 		fi
 	done
+	if [ $tries -ge $PW_ATTEMPTS ]; then
+		echo "ERROR: Too many incorrect passphrase attempts, exiting"
+		exit 1
+	fi
 fi
 
 #echo
