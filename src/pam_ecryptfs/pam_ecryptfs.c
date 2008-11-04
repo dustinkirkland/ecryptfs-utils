@@ -245,8 +245,8 @@ static int private_dir(pam_handle_t *pamh, int mount)
 		return 1;
         }
 	if (stat(sigfile, &s) != 0) {
-		syslog(LOG_ERR, "Sigfile not found");
-		return 1;
+		/* No sigfile, no need to mount private dir */
+		goto out;
 	}
 	if (!S_ISREG(s.st_mode)) {
 		/* No sigfile, no need to mount private dir */
