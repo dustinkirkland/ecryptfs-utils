@@ -1,4 +1,4 @@
-.TH ecryptfs-umount-private 1 2008-07-21 ecryptfs-utils "eCryptfs"
+.TH ecryptfs-umount-private 1 2008-11-03 ecryptfs-utils "eCryptfs"
 .SH NAME
 ecryptfs-umount-private \- eCryptfs private unmount wrapper script.
 
@@ -6,16 +6,7 @@ ecryptfs-umount-private \- eCryptfs private unmount wrapper script.
 \fBecryptfs-umount-private\fP
 
 .SH DESCRIPTION
-\fBecryptfs-umount-private\fP is a wrapper script for the \fBumount.ecryptfs_private\fP utility.  It only unmounts if ~/.ecryptfs/auto-umount exists and if there are 1 or 0 instances of this user on the system, as reported by the \fBwho\fP(1) utility.  It also ensures that ~/.Private has 500 permissions after the unmount.
-
-.SH FILES
-\fI~/.ecryptfs/auto-umount\fP - \fBecryptfs-umount-private\fP only unmounts if this file exists
-
-\fI~/.Private\fP - underlying directory containing encrypted data
-
-\fI~/Private\fP - mountpoint containing decrypted data (when mounted)
-
-\fI~/.ecryptfs/Private.sig\fP - file containing signature of mountpoint passphrase
+\fBecryptfs-umount-private\fP is a wrapper script for the \fBumount.ecryptfs_private\fP utility.
 
 .SH SEE ALSO
 .PD 0

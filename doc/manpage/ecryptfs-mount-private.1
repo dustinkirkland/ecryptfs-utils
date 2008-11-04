@@ -1,21 +1,21 @@
-.TH ecryptfs-mount-private 1 2008-07-21 ecryptfs-utils "eCryptfs"
+.TH ecryptfs-mount-private 1 2008-11-03 ecryptfs-utils "eCryptfs"
 .SH NAME
-ecryptfs-mount-private \- eCryptfs private mount wrapper script.
+ecryptfs-mount-private \- interactive eCryptfs private mount wrapper script.
 
 .SH SYNOPSIS
 \fBecryptfs-mount-private\fP
 
 .SH DESCRIPTION
-\fBecryptfs-mount-private\fP is a wrapper script for the \fBmount.ecryptfs_private\fP utility.  It only mounts if ~/.ecryptfs/auto-mount exists, and it ensures that ~/.Private has 500 permissions, and that ~/Private has 700 permissions.
+\fBecryptfs-mount-private\fP is a wrapper script for the \fBmount.ecryptfs_private\fP utility that will interactively prompt for the user's login password, if necessary.
 
 .SH FILES
-\fI~/.ecryptfs/auto-mount\fP - \fBecryptfs-mount-private\fP will only execute if this file exists
-
 \fI~/.Private\fP - underlying directory containing encrypted data
 
 \fI~/Private\fP - mountpoint containing decrypted data (when mounted)
 
 \fI~/.ecryptfs/Private.sig\fP - file containing signature of mountpoint passphrase
+
+\fI~/.ecryptfs/wrapped-passphrase\fP - file containing the wrapped passphrase
 
 .SH SEE ALSO
 .PD 0

@@ -1,21 +1,7 @@
-#!/bin/sh
-# This script unmounts a user's private ecryptfs folder, and makes
-# both the mountpoint and underlying encrypted directories read-only, ONLY IF
-# there are 1 or fewer instances of this user left on the system.
+#!/bin/sh -e
+# This script unmounts a user's private ecryptfs folder
 #
 # Original by Michael Halcrow, IBM
 # Extracted to a stand-alone script by Dustin Kirkland <kirkland@canonical.com>
 
-PRIVATE_DIR="Private"
-if [ -f "$HOME/.ecryptfs/auto-umount" -a -f "$HOME/.ecryptfs/$PRIVATE_DIR.sig" ]; then
-	if egrep -qs "$HOME/[\.]{0,1}$PRIVATE_DIR " /proc/mounts; then
-		username=`whoami`
-		count=`who | grep "^$username " | wc -l`
-		if [ $count -le 1 ]; then
-			chmod 500 "$HOME/$PRIVATE_DIR" "$HOME/.$PRIVATE_DIR"
-			umount.ecryptfs_private
-		fi
-	fi
-fi
-
-ecryptfs-zombie-kill
+/sbin/umount.ecryptfs_private

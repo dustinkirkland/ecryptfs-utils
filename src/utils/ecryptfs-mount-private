@@ -1,18 +1,55 @@
-#!/bin/sh
-# This script mounts a user's confidential private folder, and ensures that
-# the permissions on the underlying encrypted directories are
-# private, and readable/writable/executable.
+#!/bin/sh -e
+# This script mounts a user's confidential private folder
 #
 # Original by Michael Halcrow, IBM
 # Extracted to a stand-alone script by Dustin Kirkland <kirkland@canonical.com>
+#
+# This script:
+#  * interactively prompts for a user's login passphrase
+#  * checks it for validity
+#  * unwraps a users mount passphrase with their supplied login passphrase
+#  * inserts the mount passphrase into the keyring
+#  * and mounts a user's encrypted private folder
 
 PRIVATE_DIR="Private"
-if [ -f "$HOME/.ecryptfs/auto-mount" -a -f "$HOME/.ecryptfs/$PRIVATE_DIR.sig" ]; then
-	if ! egrep -qs "$HOME/[\.]{0,1}$PRIVATE_DIR " /proc/mounts; then
-		chmod 500 "$HOME/$PRIVATE_DIR"
-		chmod 700 "$HOME/.$PRIVATE_DIR"
-		mount.ecryptfs_private
-	fi
+WRAPPED_PASSPHRASE_FILE="$HOME/.ecryptfs/wrapped-passphrase"
+MOUNT_PASSPHRASE_SIG_FILE="$HOME/.ecryptfs/$PRIVATE_DIR.sig"
+MESSAGE="Enter your login passphrase: "
+DESKTOP_FILE="/usr/share/app-install/desktop/ecryptfs-mount-private.desktop"
+SHORTCUT_NAME="Access-Your-Private-Data.desktop"
+README_FILE="/usr/share/doc/ecryptfs-utils/ecryptfs-mount-private.txt"
+PW_ATTEMPTS=3
+
+# First, silently try to perform the mount, which would succeed if the appropriate
+# key is available in the keyring
+if /sbin/mount.ecryptfs_private >/dev/null 2>&1; then
+	exit 0
 fi
 
-ecryptfs-zombie-kill
+# Otherwise, interactively prompt for the user's password
+if [ -f "$WRAPPED_PASSPHRASE_FILE" -a -f "$MOUNT_PASSPHRASE_SIG_FILE" ]; then
+	tries=0
+	stty_orig=`stty -g`
+	while [ $tries -lt $PW_ATTEMPTS ]; do
+		stty -echo
+		read -p "$MESSAGE" -r LOGINPASS
+		stty $stty_orig
+		echo
+		if printf "%s\0" "$LOGINPASS" | /sbin/unix_chkpwd "$USER" nullok; then
+			break
+		else
+			echo "ERROR: Your login passphrase is incorrect."
+			tries=$(($tries + 1))
+		fi
+	done
+	if [ $tries -ge $PW_ATTEMPTS ]; then
+		echo "ERROR: Too many incorrect password attempts, exiting"
+		exit 1
+	fi
+	echo "$LOGINPASS" | ecryptfs-insert-wrapped-passphrase-into-keyring "$WRAPPED_PASSPHRASE_FILE" -
+	/sbin/mount.ecryptfs_private
+else
+	echo "ERROR: Encrypted $PRIVATE_DIR is not setup properly"
+	exit 1
+fi
+exit 0

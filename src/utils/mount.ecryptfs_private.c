@@ -131,6 +131,8 @@ char *fetch_sig(char *pw_dir) {
 	 */
 	if ((int)keyctl_search(KEY_SPEC_USER_KEYRING, "user", sig, 0) == -1) {
 		perror("keyctl_search");
+		fputs("Perhaps try the interactive 'ecryptfs-mount-private'\n",
+			stderr);
 		return NULL;
 	}
 	return sig;

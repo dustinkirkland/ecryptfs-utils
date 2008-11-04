@@ -17,3 +17,6 @@ dist_doc_DATA += ecryptfs-pkcs11-helper-doc.txt
 else
 dist_noinst_DATA += ecryptfs-pkcs11-helper-doc.txt
 endif
+
+dist_doc_DATA += ecryptfs-mount-private.txt
+dist_noinst_DATA += ecryptfs-mount-private.txt
