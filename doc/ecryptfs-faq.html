@@ -701,9 +701,7 @@ individual page reads and writes require additional context switches
 between kernel and userspace. One advantage a userspace cryptographic
 filesystem is that it is possible to use symmetric ciphers implemented
 in userspace libraries, but the frequent context switching impacts
-performance. In addition, EncFS uses FUSE, which suffers from the fact
-that shared writable memory mappings must be entirely disabled in
-order to avoid deadlock on some page swap events.
+performance.
 </p>
 
 <a name="daemon-crash">
