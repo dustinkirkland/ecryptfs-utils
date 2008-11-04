@@ -46,7 +46,7 @@ base_test_descriptors = [
 	 None,                             # source_url
 	 None,                             # setup_command
 	 "mount -t ecryptfs -o key=passphrase:passwd=test,ecryptfs_cipher=aes," \
-	 "ecryptfs_key_bytes=16,ecryptfs_passthrough=n,no_sig_cache [MOUNTDIR] " \
+	 "ecryptfs_key_bytes=16,ecryptfs_passthrough=n,ecryptfs_enable_filename_crypto=n,no_sig_cache [MOUNTDIR] " \
 	 "[MOUNTDIR]",
 	 0,                                # expected_rc
 	 None,                             # post_command
@@ -144,12 +144,12 @@ mount_umount_test_descriptors = [
 	 None,                             # source_url
 	 None,                             # setup_command
 	 "mount -t ecryptfs -o key=passphrase:passwd=test,ecryptfs_cipher=aes," \
-	 "ecryptfs_key_bytes=16,ecryptfs_passthrough=n,no_sig_cache [MOUNTDIR] " \
+	 "ecryptfs_key_bytes=16,ecryptfs_passthrough=n,ecryptfs_enable_filename_crypto=n,no_sig_cache [MOUNTDIR] " \
 	 "[MOUNTDIR] && " \
 	 "echo \"test\" > [MOUNTDIR]/test1.txt " \
 	 "&& umount [MOUNTDIR] && " \
 	 "mount -t ecryptfs -o key=passphrase:passwd=test,ecryptfs_cipher=aes," \
-	 "ecryptfs_key_bytes=16,ecryptfs_passthrough=n,no_sig_cache [MOUNTDIR] " \
+	 "ecryptfs_key_bytes=16,ecryptfs_passthrough=n,ecryptfs_enable_filename_crypto=n,no_sig_cache [MOUNTDIR] " \
 	 "[MOUNTDIR] &&" \
 	 "grep \"^test$\" [MOUNTDIR]/test1.txt " \
 	 "&& echo \"Success\" && rm -f [MOUNTDIR]/test1.txt && " \
@@ -168,7 +168,7 @@ mount_umount_test_descriptors = [
 	 None,                             # source_url
 	 None,                             # setup_command
 	 "mount -t ecryptfs -o key=passphrase:passwd=test,ecryptfs_cipher=aes," \
-	 "ecryptfs_key_bytes=16,ecryptfs_passthrough=n,no_sig_cache [MOUNTDIR] " \
+	 "ecryptfs_key_bytes=16,ecryptfs_passthrough=n,ecryptfs_enable_filename_crypto=n,no_sig_cache [MOUNTDIR] " \
 	 "[MOUNTDIR] && " \
 	 "echo \"test\" > [MOUNTDIR]/test1.txt " \
 	 "&& mkdir [MOUNTDIR]/test2 " \
@@ -176,7 +176,7 @@ mount_umount_test_descriptors = [
 	 "&& echo \"test\" > [MOUNTDIR]/test4.txt " \
 	 "&& umount [MOUNTDIR] && " \
 	 "mount -t ecryptfs -o key=passphrase:passwd=test,ecryptfs_cipher=aes," \
-	 "ecryptfs_key_bytes=16,ecryptfs_passthrough=n,no_sig_cache [MOUNTDIR] " \
+	 "ecryptfs_key_bytes=16,ecryptfs_passthrough=n,ecryptfs_enable_filename_crypto=n,no_sig_cache [MOUNTDIR] " \
 	 "[MOUNTDIR] &&" \
 	 "grep \"^test$\" [MOUNTDIR]/test1.txt " \
 	 "&& grep \"^test$\" [MOUNTDIR]/test2/test3.txt " \
