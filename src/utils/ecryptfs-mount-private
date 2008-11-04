@@ -15,9 +15,6 @@ PRIVATE_DIR="Private"
 WRAPPED_PASSPHRASE_FILE="$HOME/.ecryptfs/wrapped-passphrase"
 MOUNT_PASSPHRASE_SIG_FILE="$HOME/.ecryptfs/$PRIVATE_DIR.sig"
 MESSAGE="Enter your login passphrase: "
-DESKTOP_FILE="/usr/share/app-install/desktop/ecryptfs-mount-private.desktop"
-SHORTCUT_NAME="Access-Your-Private-Data.desktop"
-README_FILE="/usr/share/doc/ecryptfs-utils/ecryptfs-mount-private.txt"
 PW_ATTEMPTS=3
 
 # First, silently try to perform the mount, which would succeed if the appropriate
