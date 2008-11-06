@@ -48,6 +48,8 @@
 #define FSTYPE "ecryptfs"
 #define TMP "/tmp"
 
+int ENTIRE_HOMEDIR_ENCRYPTED = 0;
+
 
 int check_username(char *u) {
 /* We follow the username guidelines used by the adduser program.  Quoting its
@@ -81,7 +83,7 @@ int check_username(char *u) {
 }
 
 
-char *fetch_sig(char *pw_dir) {
+char *fetch_sig(char *pw_dir, char *pw_name) {
 /* Read ecryptfs signature from file and validate 
  * Return signature as a string, or NULL on failure
  */
@@ -90,18 +92,31 @@ char *fetch_sig(char *pw_dir) {
 	char *sig;
 	int i;
 	/* Construct sig file name */
+	/* First try entire-homedir-encrypted */
 	if (
-	    asprintf(&sig_file, "%s/.ecryptfs/%s.sig", pw_dir, PRIVATE_DIR) < 0
+	    asprintf(&sig_file, "%s/../.%s/.ecryptfs/%s.sig", pw_dir, pw_name,
+		     PRIVATE_DIR) < 0
 	   ) {
 		perror("asprintf");
 		return NULL;
 	}
 	fh = fopen(sig_file, "r");
 	if (fh == NULL) {
-		syslog(LOG_ERR, "%s: Error opening [%s] for read\n",
-		       __FUNCTION__, sig_file);
-		perror("fopen");
-		return NULL;
+		/* File not found, so now try legacy encrypted private dir */
+		if (
+		    asprintf(&sig_file, "%s/.ecryptfs/%s.sig",
+			     pw_dir, PRIVATE_DIR) < 0
+		   ) {
+			perror("asprintf");
+			return NULL;
+		}
+		fh = fopen(sig_file, "r");
+		if (fh == NULL) {
+			perror("fopen");
+			return NULL;
+		}
+	} else {
+		ENTIRE_HOMEDIR_ENCRYPTED = 1;
 	}
 	if ((sig = (char *)malloc(KEY_BYTES*sizeof(char)+1)) == NULL) {
 		perror("malloc");
@@ -421,25 +436,40 @@ int main(int argc, char *argv[]) {
 	}
 
 	/* Fetch signature from file */
-	if ((sig = fetch_sig(pwd->pw_dir)) == NULL) {
+	if ((sig = fetch_sig(pwd->pw_dir, pwd->pw_name)) == NULL) {
 		return 1;
 	}
 
 	/* Construct device, mount point, and mount options */
-	if (
-	    (asprintf(&dev, "%s/.%s", pwd->pw_dir, PRIVATE_DIR) < 0) || 
-	    dev == NULL) {
-		perror("asprintf (dev)");
-		return 1;
-	}
-	if (
-	    (asprintf(&mnt, "%s/%s", pwd->pw_dir, PRIVATE_DIR) < 0) ||
-	    mnt == NULL) {
-		perror("asprintf (mnt)");
-		return 1;
+	if (ENTIRE_HOMEDIR_ENCRYPTED == 0) {
+		if (
+		    (asprintf(&dev, "%s/.%s", pwd->pw_dir, PRIVATE_DIR) < 0) ||
+		    dev == NULL) {
+			perror("asprintf (dev)");
+			return 1;
+		}
+		if (
+		    (asprintf(&mnt, "%s/%s", pwd->pw_dir, PRIVATE_DIR) < 0) ||
+		    mnt == NULL) {
+			perror("asprintf (mnt)");
+			return 1;
+		}
+	} else {
+		if (
+		    (asprintf(&dev, "%s/../.%s", pwd->pw_dir, pwd->pw_name) < 0)
+		     || dev == NULL) {
+			perror("asprintf (dev)");
+			return 1;
+		}
+		if (
+		    (asprintf(&mnt, "%s", pwd->pw_dir) < 0) ||
+		    mnt == NULL) {
+			perror("asprintf (mnt)");
+			return 1;
+		}
 	}
 	if ((asprintf(&opt, 
-	 "rw,ecryptfs_sig=%s,ecryptfs_cipher=%s,ecryptfs_key_bytes=%d,user=%s",
+		"rw,ecryptfs_sig=%s,ecryptfs_cipher=%s,ecryptfs_key_bytes=%d,ecryptfs_passthrough,user=%s",
 	 sig, KEY_CIPHER, KEY_BYTES, pwd->pw_name) < 0) ||
 	 opt == NULL) {
 		perror("asprintf (opt)");
