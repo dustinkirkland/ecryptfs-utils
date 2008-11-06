@@ -505,7 +505,7 @@ int main(int argc, char *argv[]) {
 		 * Do not use the umount.ecryptfs helper (-i).
  		 */
 		setresuid(0,0,0);
-		execl("/bin/umount", "umount", "-i", mnt, NULL);
+		execl("/bin/umount", "umount", "-i", "-l", mnt, NULL);
 		perror("execl unmount failed");
 		return 1;
 	}
