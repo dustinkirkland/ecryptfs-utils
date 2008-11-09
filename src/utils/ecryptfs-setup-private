@@ -89,8 +89,8 @@ if [ -z "$USER" ]; then
 			echo "ERROR: You must provide a username"
 			continue
 		else
-			# Verify the USER name is in /etc/passwd
-			if ! grep "^$USER:" /etc/passwd >/dev/null; then
+			# Verify that the user exists
+			if ! id "$USER" >/dev/null; then
 				echo "ERROR: User [$USER] does not exist"
 				continue
 			fi
@@ -98,12 +98,12 @@ if [ -z "$USER" ]; then
 		fi
 	done
 else
-	# Verify the USER name is in /etc/passwd
-	grep "^$USER:" /etc/passwd >/dev/null || error "User [$USER] does not exist"
+	# Verify that the user exists
+	id "$USER" >/dev/null || error "User [$USER] does not exist"
 fi
 
-# Obtain the user's home directory from /etc/passwd
-HOME=`grep "^$USER:" /etc/passwd | awk -F: '{print $6}'`
+# Obtain the user's home directory
+HOME=`getent passwd "$USER" | awk -F: '{print $6}'`
 if [ ! -d "$HOME" ]; then
 	error "User home directory [$HOME] does not exist"
 fi
