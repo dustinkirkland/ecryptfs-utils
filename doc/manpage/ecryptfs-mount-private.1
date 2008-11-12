@@ -1,4 +1,4 @@
-.TH ecryptfs-mount-private 1 2008-11-03 ecryptfs-utils "eCryptfs"
+.TH ecryptfs-mount-private 1 2008-11-13 ecryptfs-utils "eCryptfs"
 .SH NAME
 ecryptfs-mount-private \- interactive eCryptfs private mount wrapper script.
 
@@ -16,6 +16,8 @@ ecryptfs-mount-private \- interactive eCryptfs private mount wrapper script.
 \fI~/.ecryptfs/Private.sig\fP - file containing signature of mountpoint passphrase
 
 \fI~/.ecryptfs/wrapped-passphrase\fP - file containing the wrapped passphrase
+
+\fI~/.ecryptfs/wrapped-independent\fP - this file exists if the wrapping passphrase is independent from login passphrase
 
 .SH SEE ALSO
 .PD 0

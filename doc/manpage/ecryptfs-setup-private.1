@@ -1,20 +1,26 @@
-.TH ecryptfs-setup-private 1 2008-07-21 ecryptfs-utils "eCryptfs"
+.TH ecryptfs-setup-private 1 2008-11-13 ecryptfs-utils "eCryptfs"
 .SH NAME
 ecryptfs-setup-private \- setup an eCryptfs private directory.
 
 .SH SYNOPSIS
-.BI "ecryptfs-setup-private [\-\-username USER] [\-\-loginpass LOGINPASS] [\-\-mountpass MOUNTPASS]"
+.BI "ecryptfs-setup-private [\-f|\-\-force] [\-w|\-\-wrapping] [\-u|\-\-username USER] [\-l|\-\-loginpass LOGINPASS] [-m|\-\-mountpass MOUNTPASS]"
 
 .SH OPTIONS
 Options available for the \fBecryptfs-setup-private\fP command:
 .TP
-.B \-\-username USER
+.B \-f, \-\-force
+Force overwriting of an existing setup
+.TP
+.B \-w, \-\-wrapping
+Use an independent wrapping passphrase, different from the login passphrase
+.TP
+.B \-u, \-\-username USER
 User to setup, default is current user if omitted
 .TP
-.B \-\-loginpass LOGINPASS
+.B \-l, \-\-loginpass LOGINPASS
 System passphrase for USER, used to wrap MOUNTPASS, will interactively prompt if omitted
 .TP
-.B \-\-mountpass MOUNTPASS
+.B \-m, \-\-mountpass MOUNTPASS
 Passphrase for mounting the ecryptfs directory, default is 16 bytes from /dev/urandom if omitted
 
 .SH DESCRIPTION
@@ -50,6 +56,8 @@ The system administrator can add the pam_ecryptfs.so module to the PAM stack whi
 \fI~/.ecryptfs/Private.sig\fP - file containing signature of mountpoint passphrase
 
 \fI~/.ecryptfs/wrapped-passphrase\fP - file containing the mount passphrase, wrapped with the login passphrase
+
+\fI~/.ecryptfs/wrapped-independent\fP - this file exists if the wrapping passphrase is independent from login passphrase
 
 .SH SEE ALSO
 .PD 0
