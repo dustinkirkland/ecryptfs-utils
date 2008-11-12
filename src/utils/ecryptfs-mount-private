@@ -5,17 +5,26 @@
 # Extracted to a stand-alone script by Dustin Kirkland <kirkland@canonical.com>
 #
 # This script:
-#  * interactively prompts for a user's login passphrase
+#  * interactively prompts for a user's wrapping passphrase (defaults to their
+#    login passphrase)
 #  * checks it for validity
-#  * unwraps a users mount passphrase with their supplied login passphrase
+#  * unwraps a users mount passphrase with their supplied wrapping passphrase
 #  * inserts the mount passphrase into the keyring
 #  * and mounts a user's encrypted private folder
 
 PRIVATE_DIR="Private"
+WRAPPING_PASS="LOGIN"
+PW_ATTEMPTS=3
+MESSAGE="Enter your login passphrase: "
+
+if [ -f $HOME/.ecryptfs/wrapping-independent ]; then
+	# use a wrapping passphrase different from the login passphrase
+	WRAPPING_PASS="INDEPENDENT"
+	MESSAGE="Enter your wrapping passphrase: "
+fi
+
 WRAPPED_PASSPHRASE_FILE="$HOME/.ecryptfs/wrapped-passphrase"
 MOUNT_PASSPHRASE_SIG_FILE="$HOME/.ecryptfs/$PRIVATE_DIR.sig"
-MESSAGE="Enter your login passphrase: "
-PW_ATTEMPTS=3
 
 # First, silently try to perform the mount, which would succeed if the appropriate
 # key is available in the keyring
@@ -32,18 +41,18 @@ if [ -f "$WRAPPED_PASSPHRASE_FILE" -a -f "$MOUNT_PASSPHRASE_SIG_FILE" ]; then
 		read -p "$MESSAGE" -r LOGINPASS
 		stty $stty_orig
 		echo
-		if printf "%s\0" "$LOGINPASS" | /sbin/unix_chkpwd "$USER" nullok; then
+		if echo "$LOGINPASS" | ecryptfs-insert-wrapped-passphrase-into-keyring "$WRAPPED_PASSPHRASE_FILE" - ; then
 			break
 		else
-			echo "ERROR: Your login passphrase is incorrect."
+			echo "ERROR: Your passphrase is incorrect"
 			tries=$(($tries + 1))
+			continue
 		fi
 	done
 	if [ $tries -ge $PW_ATTEMPTS ]; then
 		echo "ERROR: Too many incorrect password attempts, exiting"
 		exit 1
 	fi
-	echo "$LOGINPASS" | ecryptfs-insert-wrapped-passphrase-into-keyring "$WRAPPED_PASSPHRASE_FILE" -
 	/sbin/mount.ecryptfs_private
 else
 	echo "ERROR: Encrypted $PRIVATE_DIR is not setup properly"

@@ -6,9 +6,10 @@
 # Ported for use on Ubuntu by Dustin Kirkland <kirkland@canonical.com>
 # Copyright (C) 2008 Canonical Ltd.
 # Copyright (C) 2007-2008 International Business Machines
-
 PRIVATE_DIR="Private"
+WRAPPING_PASS="LOGIN"
 PW_ATTEMPTS=3
+MESSAGE="Enter your login passphrase"
 
 # Zero out user-defined GREP_OPTIONS, such as --line-number
 GREP_OPTIONS=
@@ -16,15 +17,18 @@ GREP_OPTIONS=
 usage() {
 	echo
 	echo "Usage:"
-	echo "# $0 [--username USER]"
+	echo "# $0 [--force] [--wrapping] [--username USER]"
 	echo "  [--loginpass LOGINPASS] [--mountpass MOUNTPASS]"
 	echo
 	echo " --username   Username for encrypted private mountpoint,"
-	echo "              defaults to yourself"
-	echo " --loginpass  System passphrase for USER, used to wrap MOUNTPASS"
+	echo "                defaults to yourself"
+	echo " --wrapping   Use an independent wrapping passphrase,"
+	echo "                different from the login passphrase"
+	echo " --loginpass  Login/Wrapping passphrase for USER,"
+	echo "                used to wrap MOUNTPASS"
 	echo " --mountpass  Passphrase for mounting the ecryptfs directory,"
-	echo "              defaults to a randomly generated 16 bytes"
-	echo " --force	    Force overwriting of an existing setup"
+	echo "                defaults to a randomly generated 16 bytes"
+	echo " --force      Force overwriting of an existing setup"
 	echo
 	echo "   Be sure to properly escape your parameters according to your"
 	echo "   shell's special character nuances, and also surround the"
@@ -70,6 +74,11 @@ while [ ! -z "$1" ]; do
 		--mountpass)
 			MOUNTPASS="$2"
 			shift 2
+		;;
+		--wrapping)
+			WRAPPING_PASS="INDEPENDENT"
+			MESSAGE="Enter your wrapping passphrase"
+			shift 1
 		;;
 		--force)
 			FORCE=1
@@ -140,9 +149,22 @@ if [ -z "$LOGINPASS" ]; then
 	tries=0
 	while [ $tries -lt $PW_ATTEMPTS ]; do
 		stty -echo
-		read -p "Enter your login passphrase: " -r LOGINPASS
+		read -p "$MESSAGE: " -r LOGINPASS
 		stty $stty_orig
 		echo
+		if [ $WRAPPING_PASS != "LOGIN" ]; then
+			stty -echo
+			read -p "$MESSAGE (again): " -r LOGINPASS2
+			stty $stty_orig
+			echo
+			if [ "$LOGINPASS" != "$LOGINPASS2" ]; then
+				echo "ERROR: Wrapping passphrases must match"
+			else
+				break
+			fi
+			tries=$(($tries + 1))
+			continue
+		fi
 		if [ -z "$LOGINPASS" ]; then
 			echo "ERROR: You must provide a login passphrase"
 			tries=$(($tries + 1))
@@ -229,6 +251,12 @@ chmod 500 "$MOUNTPOINT"
 mkdir -m 700 $HOME/.ecryptfs 2>/dev/null
 touch $HOME/.ecryptfs/auto-mount || error "Could not setup ecryptfs auto-mount"
 touch $HOME/.ecryptfs/auto-umount || error "Could not setup ecryptfs auto-umount"
+if [ $WRAPPING_PASS = "LOGIN" ]; then
+	rm -f $HOME/.ecryptfs/wrapping-independent || error "Could not remove ecryptfs wrapping-independent"
+else
+	touch $HOME/.ecryptfs/wrapping-independent || error "Could not setup ecryptfs wrapping-independent"
+fi
+
 
 # Backup any existing wrapped-passphrase or sig files; we DO NOT destroy this
 timestamp=`date +%Y%m%d%H%M%S`
