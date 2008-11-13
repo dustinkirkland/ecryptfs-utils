@@ -7,11 +7,11 @@ eCryptfs Mounting Overview
 
 eCryptfs is set up in the Open Client to automatically mount on user
 login. The default mount is an overlay mount on top of
-~/Confidential/, and it uses a passphrase-based key.
+~/Private/, and it uses a passphrase-based key.
 
 eCryptfs requires that the user's mount passphrase be inserted into
 the user session keyring in order to access the files under the
-~/Confidential/ mount point. The mount passphrase is wrapped
+~/Private/ mount point. The mount passphrase is wrapped
 (encrypted) with the user's login passphrase and is stored in the
 ~/.ecryptfs/wrapped-passphrase file. When the user logs in, the
 eCryptfs PAM module intercepts the user's login passphrase, uses it to
@@ -21,7 +21,7 @@ passphrase into the user session keyring.
 Once the user has logged in, his ~/.bash_profile script is executed by
 the Bash shell. A segment of code in ~/.bash_profile checks for the
 existence of a ~/.ecryptfs/auto-mount file. If this file exists, then
-code is executed to mount ~/Confidential/ via eCryptfs.
+code is executed to mount ~/Private/ via eCryptfs.
 
 When the user changes his login credentials, the eCryptfs PAM module
 unwraps the mount passphrase in ~/.ecryptfs/wrapped-passphrase with
@@ -38,7 +38,7 @@ Setup Overview
 In order for these operations to complete successfully, the eCryptfs
 PAM module needs to be inserted into the PAM stack in
 /etc/pam.d/system-auth, an entry needs to be in /etc/fstab for the
-user's ~/Confidential/ directory, the ~/.ecryptfs/auto-mount and
+user's ~/Private/ directory, the ~/.ecryptfs/auto-mount and
 ~/.ecryptfs/wrapped-passphrase files need to exist, and the mount code
 needs to be in the user's ~/.bash_profile script.
 
@@ -75,7 +75,7 @@ password   required     pam_ecryptfs.so
 
 The following line needs to be added to /etc/fstab:
 
-/home/user/Confidential /home/user/Confidential ecryptfs rw,ecryptfs_sig=deadbeefbaadf00d,ecryptfs_cipher=aes,ecryptfs_key_bytes=16,user,noauto, 0 0
+/home/user/Private /home/user/Private ecryptfs rw,ecryptfs_sig=deadbeefbaadf00d,ecryptfs_cipher=aes,ecryptfs_key_bytes=16,user,noauto, 0 0
 
 Where 'user' is the username and 'deadbeefbaadf00d' is the mount
 passphrase signature/identifier value. This signature is in /etc/mtab
@@ -85,9 +85,9 @@ The following shell code needs to be appended to the user's
 ~/.bash_profile:
 
 if test -e $HOME/.ecryptfs/auto-mount; then
-  mount | grep "$HOME/Confidential type ecryptfs"
+  mount | grep "$HOME/Private type ecryptfs"
   if test $? != 0; then
-    mount -i $HOME/Confidential
+    mount -i $HOME/Private
   fi
 fi
 ecryptfs-zombie-kill
@@ -112,18 +112,18 @@ have his eCryptfs mount point be created automatically.
 
 Troubleshooting
 
-      Problem: The ~/Confidential/ directory is not being mounted on login.
-      Problem: The ~/Confidential/ directory is mounted on login, but
-      the files under the ~/Confidential/ directory cannot be read.
+      Problem: The ~/Private/ directory is not being mounted on login.
+      Problem: The ~/Private/ directory is mounted on login, but
+      the files under the ~/Private/ directory cannot be read.
 
             Solution: Your ~/.ecryptfs/wrapped-passphrase file may be
             incorrect. Run ecryptfs-wrap-passphrase to recreate it if
             that is the case. Otherwise, the PAM stack is not set up
             correctly. Otherwise, the code to mount your
-            ~/Confidential directory is not in your ~/.bash_profile
+            ~/Private directory is not in your ~/.bash_profile
             file.
 
-      Problem: The ~/Confidential/ directory mounts on console login
+      Problem: The ~/Private/ directory mounts on console login
       but not on GDM login.
 
             Solution: Make sure you have the most recent
@@ -139,7 +139,7 @@ Troubleshooting
 
       Problem: How to I backup my encrypted files?
 
-            Solution: Unmount your ~/Confidential directory so that
+            Solution: Unmount your ~/Private directory so that
             the lower filesystem files (in encrypted state) show up at
             that path location, and then copy the files in that
             directory to another storage device.
