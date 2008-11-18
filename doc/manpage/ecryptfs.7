@@ -89,14 +89,16 @@ Where passwd_file.txt contains the contents
 \fI/usr/share/doc/ecryptfs-utils/ecryptfs-faq.html\fP
 
 .TP
-\fIhttp://ecryptfs.sourceforge.net/\fP
+\fIhttp://launchpad.net/ecryptfs/\fP
 .PD
 
 .SH NOTES
 Do not run eCryptfs in higher verbosity levels unless you are doing so for the sole purpose of development, since secret values will be written out to the system log in that case. Make certain that your eCryptfs mount covers all locations where your applications may write sensitive data. In addition, use dm-crypt to encrypt your swap space with a random key on boot.
 
 .SH BUGS
-Please send bug reports to the lead developer, an eCryptfs mailing list hosted from SourceForge, or to the SourceForge bug tracker for the eCryptfs project. For kernel bugs, please follow the procedure detailed in Documentation/oops-tracing.txt to help us figure out what is happening.
+Please post bug reports to the eCryptfs bug tracker on Launchpad.net: https://bugs.launchpad.net/ecryptfs/+filebug.
+
+For kernel bugs, please follow the procedure detailed in Documentation/oops-tracing.txt to help us figure out what is happening.
 
 .SH AUTHOR
 This manpage was (re-)written by Dustin Kirkland <kirkland@canonical.com> for Ubuntu systems (but may be used by others).  Permission is granted to copy, distribute and/or modify this document under the terms of the GNU General Public License, Version 2 or any later version published by the Free Software Foundation.

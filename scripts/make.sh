@@ -30,7 +30,7 @@ echo
 echo "If this script aborts, you will need to try to build the kernel"
 echo "module and/or the userspace tools by hand. You can always get help from"
 echo "the eCryptfs mailing list:"
-echo "<https://lists.sourceforge.net/lists/listinfo/ecryptfs-users>"
+echo "<https://launchpad.net/~ecryptfs-devel>"
 whoami | grep "^root$" &> /dev/null
 if test $? == 1; then
   echo

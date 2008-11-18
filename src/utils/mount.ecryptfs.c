@@ -581,7 +581,7 @@ int main(int argc, char **argv)
 			       "ecryptfs-utils package, contact your operating "
 			       "system vendor, and/or submit a bug "
 			       "report on the ecryptfs-devel mailing list on "
-			       "SourceForge.\n", rc);
+			       "Launchpad.\n", rc);
 			goto out;
 		}
 		rc = ecryptfs_do_mount(argc, argv, mnt_params, sig_cache);

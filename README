@@ -21,9 +21,9 @@ passphrase protection mechanisms; without your salt/passphrase or
 private key, nobody will be able to retrieve your data.
 
 eCryptfs requires the userspace tools downloadable from the
-SourceForge site:
+Launchpad site:
 
-<http://sourceforge.net/projects/ecryptfs>
+<http://launchpad.net/ecryptfs>
 
 Requirements include:
  - Kernel version 2.6.19 or above
@@ -358,9 +358,10 @@ See <doc/ecryptfs-faq.html>. For the most up-to-date FAQ, see
 
 BUGS
 
-Please send bug reports to the lead developer, an eCryptfs mailing
-list hosted from SourceForge, or to the SourceForge bug tracker for
-the eCryptfs project. For kernel bugs, please follow the procedure
+Please send bug reports to the Launchpad bug tracker:
+ * https://bugs.launchpad.net/ecryptfs/+filebug
+
+For kernel bugs, please follow the procedure
 detailed in the kernel documentation (Documentation/oops-tracing.txt)
 to help us figure out what is happening.
 
