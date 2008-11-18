@@ -1,9 +1,9 @@
-.TH ecryptfs-setup-private 1 2008-11-13 ecryptfs-utils "eCryptfs"
+.TH ecryptfs-setup-private 1 2008-11-17 ecryptfs-utils "eCryptfs"
 .SH NAME
 ecryptfs-setup-private \- setup an eCryptfs private directory.
 
 .SH SYNOPSIS
-.BI "ecryptfs-setup-private [\-f|\-\-force] [\-w|\-\-wrapping] [\-u|\-\-username USER] [\-l|\-\-loginpass LOGINPASS] [-m|\-\-mountpass MOUNTPASS]"
+.BI "ecryptfs-setup-private [\-f|\-\-force] [\-w|\-\-wrapping] [\-a|\-\-all\-home] [\-u|\-\-username USER] [\-l|\-\-loginpass LOGINPASS] [-m|\-\-mountpass MOUNTPASS]"
 
 .SH OPTIONS
 Options available for the \fBecryptfs-setup-private\fP command:
@@ -22,6 +22,9 @@ System passphrase for USER, used to wrap MOUNTPASS, will interactively prompt if
 .TP
 .B \-m, \-\-mountpass MOUNTPASS
 Passphrase for mounting the ecryptfs directory, default is 16 bytes from /dev/urandom if omitted
+.TP
+.B \-a, \-\-all\-home
+Generate a setup for encrypting the user's entire home directory
 
 .SH DESCRIPTION
 \fBecryptfs-setup-private\fP is a program that sets up a private cryptographic mountpoint for a non-root user.
@@ -54,6 +57,8 @@ The system administrator can add the pam_ecryptfs.so module to the PAM stack whi
 \fI~/Private\fP - mountpoint containing decrypted data (when mounted)
 
 \fI~/.ecryptfs/Private.sig\fP - file containing signature of mountpoint passphrase
+
+\fI~/.ecryptfs/Private.mnt\fP - file containing path of the private directory mountpoint
 
 \fI~/.ecryptfs/wrapped-passphrase\fP - file containing the mount passphrase, wrapped with the login passphrase
 
