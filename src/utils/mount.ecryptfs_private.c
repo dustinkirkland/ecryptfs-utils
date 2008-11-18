@@ -27,6 +27,7 @@
 
 #include <sys/file.h>
 #include <sys/mount.h>
+#include <sys/param.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <keyutils.h>
@@ -47,8 +48,6 @@
 #define PRIVATE_DIR "Private"
 #define FSTYPE "ecryptfs"
 #define TMP "/tmp"
-
-int ENTIRE_HOMEDIR_ENCRYPTED = 0;
 
 
 int check_username(char *u) {
@@ -83,7 +82,7 @@ int check_username(char *u) {
 }
 
 
-char *fetch_sig(char *pw_dir, char *pw_name) {
+char *fetch_sig(char *pw_dir) {
 /* Read ecryptfs signature from file and validate 
  * Return signature as a string, or NULL on failure
  */
@@ -92,31 +91,16 @@ char *fetch_sig(char *pw_dir, char *pw_name) {
 	char *sig;
 	int i;
 	/* Construct sig file name */
-	/* First try entire-homedir-encrypted */
 	if (
-	    asprintf(&sig_file, "%s/../.%s/.ecryptfs/%s.sig", pw_dir, pw_name,
-		     PRIVATE_DIR) < 0
+	    asprintf(&sig_file, "%s/.ecryptfs/%s.sig", pw_dir, PRIVATE_DIR) < 0
 	   ) {
 		perror("asprintf");
 		return NULL;
 	}
 	fh = fopen(sig_file, "r");
 	if (fh == NULL) {
-		/* File not found, so now try legacy encrypted private dir */
-		if (
-		    asprintf(&sig_file, "%s/.ecryptfs/%s.sig",
-			     pw_dir, PRIVATE_DIR) < 0
-		   ) {
-			perror("asprintf");
-			return NULL;
-		}
-		fh = fopen(sig_file, "r");
-		if (fh == NULL) {
-			perror("fopen");
-			return NULL;
-		}
-	} else {
-		ENTIRE_HOMEDIR_ENCRYPTED = 1;
+		perror("fopen");
+		return NULL;
 	}
 	if ((sig = (char *)malloc(KEY_BYTES*sizeof(char)+1)) == NULL) {
 		perror("malloc");
@@ -153,13 +137,51 @@ char *fetch_sig(char *pw_dir, char *pw_name) {
 	return sig;
 }
 
+char *fetch_mnt(char *pw_dir) {
+/* Read ecryptfs mount from file
+ * Return a string, or pw_dir/PRIVATE_DIR
+ */
+	char *mnt_file = NULL;
+	char *mnt = NULL;
+	char *mnt_default = NULL;
+	FILE *fh;
+	/* Construct mnt file name */
+	if (asprintf(&mnt_default, "%s/%s", pw_dir, PRIVATE_DIR) < 0
+	    || mnt_default == NULL) {
+		perror("asprintf");
+		return NULL;
+	}
+	if (
+	    asprintf(&mnt_file, "%s/.ecryptfs/%s.mnt", pw_dir, PRIVATE_DIR) < 0
+	    || mnt_file == NULL) {
+		perror("asprintf");
+		return NULL;
+	}
+	fh = fopen(mnt_file, "r");
+	if (fh == NULL) {
+		mnt = mnt_default;
+	} else {
+		if ((mnt = (char *)malloc(MAXPATHLEN+1)) == NULL) {
+			perror("malloc");
+			return NULL;
+		}
+		if (fgets(mnt, MAXPATHLEN, fh) == NULL) {
+			mnt = mnt_default;
+		} else {
+			/* Ensure that mnt doesn't contain newlines */
+			mnt = strtok(mnt, "\n");
+		}
+		fclose(fh);
+	}
+	return mnt;
+}
 
-int check_ownerships(int uid, char *dev, char *mnt) {
+int check_ownerships(int uid, char *path) {
 /* Check ownership of device and mount point.
  * Return 0 if everything is in order, 1 on error.
  */
 	struct stat s;
-	if (stat(dev, &s) != 0) {
+	if (stat(path, &s) != 0) {
 		fputs("Cannot examine encrypted directory\n", stderr);
 		return 1;
 	}
@@ -169,14 +191,6 @@ int check_ownerships(int uid, char *dev, char *mnt) {
 	}
 	if (s.st_uid != uid) {
 		fputs("You do not own that encrypted directory\n", stderr);
-		return 1;
-	}
-	if (stat(mnt, &s) != 0) {
-		fputs("Cannot examine mount directory\n", stderr);
-		return 1;
-	}
-	if (s.st_uid != uid) {
-		fputs("You do not own that mount directory\n", stderr);
 		return 1;
 	}
 	return 0;
@@ -436,52 +450,42 @@ int main(int argc, char *argv[]) {
 	}
 
 	/* Fetch signature from file */
-	if ((sig = fetch_sig(pwd->pw_dir, pwd->pw_name)) == NULL) {
+	if ((sig = fetch_sig(pwd->pw_dir)) == NULL) {
 		return 1;
 	}
 
 	/* Construct device, mount point, and mount options */
-	if (ENTIRE_HOMEDIR_ENCRYPTED == 0) {
-		if (
-		    (asprintf(&dev, "%s/.%s", pwd->pw_dir, PRIVATE_DIR) < 0) ||
-		    dev == NULL) {
-			perror("asprintf (dev)");
-			return 1;
-		}
-		if (
-		    (asprintf(&mnt, "%s/%s", pwd->pw_dir, PRIVATE_DIR) < 0) ||
-		    mnt == NULL) {
-			perror("asprintf (mnt)");
-			return 1;
-		}
-	} else {
-		if (
-		    (asprintf(&dev, "%s/../.%s", pwd->pw_dir, pwd->pw_name) < 0)
-		     || dev == NULL) {
-			perror("asprintf (dev)");
-			return 1;
-		}
-		if (
-		    (asprintf(&mnt, "%s", pwd->pw_dir) < 0) ||
-		    mnt == NULL) {
-			perror("asprintf (mnt)");
-			return 1;
-		}
+	if (
+	    (asprintf(&dev, "%s/.%s", pwd->pw_dir, PRIVATE_DIR) < 0) || 
+	    dev == NULL) {
+		perror("asprintf (dev)");
+		return 1;
+	}
+	mnt = fetch_mnt(pwd->pw_dir);
+	if (mnt == NULL) {
+		perror("asprintf (mnt)");
+		return 1;
 	}
 	if ((asprintf(&opt, 
-		"rw,ecryptfs_sig=%s,ecryptfs_cipher=%s,ecryptfs_key_bytes=%d,ecryptfs_passthrough,user=%s",
+	 "rw,ecryptfs_sig=%s,ecryptfs_cipher=%s,ecryptfs_key_bytes=%d,user=%s",
 	 sig, KEY_CIPHER, KEY_BYTES, pwd->pw_name) < 0) ||
 	 opt == NULL) {
 		perror("asprintf (opt)");
 		return 1;
 	}
 
-	/* Check ownership of dev and mnt */
-	if (check_ownerships(uid, dev, mnt) != 0) {
+	/* Check ownership of mnt */
+	if (check_ownerships(uid, mnt) != 0) {
 		return 1;
 	}
 
 	if (mounting == 1) {
+		/* Check ownership of dev, if mounting;
+		 * note, umount only operates on mnt
+		 */
+		if (check_ownerships(uid, dev) != 0) {
+			return 1;
+		}
 		/* Increment mount counter, errors non-fatal */
 		increment(pwd->pw_name);
 		/* Mounting, so exit if already mounted */
