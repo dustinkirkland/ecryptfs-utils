@@ -29,16 +29,11 @@ usage() {
 	echo "                used to wrap MOUNTPASS"
 	echo " -m, --mountpass  Passphrase for mounting the ecryptfs directory,"
 	echo "                defaults to a randomly generated 16 bytes"
+	echo " -a,--all-home   Encrypt the entire home directory"
 	echo
 	echo "   Be sure to properly escape your parameters according to your"
 	echo "   shell's special character nuances, and also surround the"
 	echo "   parameters by double quotes, if necessary."
-	echo
-	echo "   Any of these parameters may be:"
-	echo "     1) exported as environment variables (USER, MOUNTPASS,"
-	echo "        LOGINPASS)"
-	echo "     2) specified on the command line"
-	echo "     3) left empty and interactively prompted"
 	echo
 	exit 1
 }
@@ -80,6 +75,10 @@ while [ ! -z "$1" ]; do
 		;;
 		-f|--force)
 			FORCE=1
+			shift 1
+		;;
+		-a|--all-home)
+			ALLHOME=1
 			shift 1
 		;;
 		*)
@@ -124,7 +123,11 @@ if [ -s "$HOME/.ecryptfs/$PRIVATE_DIR.sig" -a "$FORCE" != "1" ]; then
 fi
 
 # Check for active mounts
-MOUNTPOINT="$HOME/$PRIVATE_DIR"
+if [ "$ALLHOME" = "1" ]; then
+	MOUNTPOINT="$HOME"
+else
+	MOUNTPOINT="$HOME/$PRIVATE_DIR"
+fi
 CRYPTDIR="$HOME/.$PRIVATE_DIR"
 grep -qs "$MOUNTPOINT " /proc/mounts && error "[$MOUNTPOINT] is already mounted"
 grep -qs "$CRYPTDIR " /proc/mounts && error "[$CRYPTDIR] is already mounted"
@@ -243,10 +246,13 @@ mkdir -m 700 -p "$CRYPTDIR" || error "Could not create crypt directory [$CRYPTDI
 mkdir -m 700 -p "$MOUNTPOINT" || error "Could not create mount directory [$MOUNTPOINT]"
 ln -sf /usr/share/ecryptfs-utils/ecryptfs-mount-private.txt "$MOUNTPOINT"/README.txt
 ln -sf /usr/share/ecryptfs-utils/ecryptfs-mount-private.desktop "$MOUNTPOINT"/Access-Your-Private-Data.desktop
-chmod 500 "$MOUNTPOINT"
 
 # Setup ~/.ecryptfs directory
-mkdir -m 700 $HOME/.ecryptfs 2>/dev/null
+# Packaging must establish /var/lib/ecryptfs, and make writable by users
+# wanting to use this feature.
+mkdir -m 700 "/var/lib/ecryptfs/$USER"
+ln -sf "/var/lib/ecryptfs/$USER" "$HOME/.ecryptfs" || error "$HOME/.ecryptfs seems to already exist"
+chmod 500 "$MOUNTPOINT"
 touch $HOME/.ecryptfs/auto-mount || error "Could not setup ecryptfs auto-mount"
 touch $HOME/.ecryptfs/auto-umount || error "Could not setup ecryptfs auto-umount"
 if [ $WRAPPING_PASS = "LOGIN" ]; then
@@ -281,6 +287,7 @@ if ! echo "$sig" | egrep -qs "^[0-9a-fA-F]{16,16}$"; then
 	error "Could not obtain the key signature"
 fi
 echo "$sig" > "$HOME/.ecryptfs/$PRIVATE_DIR.sig" || error "Could not create signature file [$HOME/.ecryptfs/$PRIVATE_DIR.sig]"
+echo "$MOUNTPOINT" > "$HOME/.ecryptfs/$PRIVATE_DIR.mnt" || error "Could not create mountpoint file [$HOME/.ecryptfs/$PRIVATE_DIR.mnt]"
 
 echo
 echo "Done configuring."
@@ -289,7 +296,8 @@ echo
 # Now let's perform some basic mount/write/umount/read sanity testing...
 echo "Testing mount/write/umount/read..."
 /sbin/mount.ecryptfs_private || error "Could not mount private ecryptfs directory"
-temp=`mktemp "$HOME/$PRIVATE_DIR/ecryptfs.test.XXXXXX"` || error_testing "$temp" "Could not create empty file"
+ln -sf "/var/lib/ecryptfs/$USER" "$MOUNTPOINT/.ecryptfs"
+temp=`mktemp "$MOUNTPOINT/ecryptfs.test.XXXXXX"` || error_testing "$temp" "Could not create empty file"
 random_data=`head -c 16000 /dev/urandom | od -x` || error_testing "$temp" "Could not generate random data"
 echo "$random_data" > "$temp" || error_testing "$temp" "Could not write encrypted file"
 md5sum1=`md5sum "$temp"` || error_testing "$temp" "Could not read encrypted file"
@@ -304,5 +312,7 @@ else
 	echo "Testing succeeded."
 fi
 
+echo
+echo "Logout, and log back in to begin using your encrypted directory."
 echo
 exit 0
