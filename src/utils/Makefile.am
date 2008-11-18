@@ -1,6 +1,6 @@
 MAINTAINERCLEANFILES = $(srcdir)/Makefile.in
 
-EXTRA_DIST=ecryptfsrc ecryptfs-setup-private ecryptfs-mount-private ecryptfs-umount-private
+EXTRA_DIST=ecryptfsrc ecryptfs-setup-private ecryptfs-mount-private ecryptfs-umount-private ecryptfs-remove-private
 
 rootsbin_PROGRAMS=mount.ecryptfs \
 		  mount.ecryptfs_private
@@ -13,7 +13,8 @@ bin_PROGRAMS=ecryptfs-manager ecryptfs-wrap-passphrase \
 	     ecryptfs-stat
 bin_SCRIPTS = ecryptfs-setup-private \
 	      ecryptfs-mount-private \
-	      ecryptfs-umount-private
+	      ecryptfs-umount-private \
+	      ecryptfs-remove-private
 noinst_PROGRAMS=test
 
 if ENABLE_TESTS

@@ -19,6 +19,7 @@ dist_man_MANS = \
 	ecryptfs-manager.8 \
 	ecryptfs-mount-private.1 \
 	ecryptfs-rewrap-passphrase.1 \
+	ecryptfs-remove-private.1 \
 	ecryptfs-setup-private.1 \
 	ecryptfs-umount-private.1 \
 	ecryptfs-unwrap-passphrase.1 \
