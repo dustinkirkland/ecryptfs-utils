@@ -31,15 +31,22 @@ AC_SUBST([LIBECRYPTFS_LT_REVISION])
 AC_SUBST([LIBECRYPTFS_LT_AGE])
 
 AC_ARG_ENABLE(
+	[nss],
+	[AS_HELP_STRING([--disable-nss],[Build against gcrypt rather than NSS])],
+	,
+	[enable_nss="detect"]
+)
+
+AC_ARG_ENABLE(
 	[pywrap],
-	[AS_HELP_STRING([--disable-pywrap],[Build libecryptfs Python wrappers])],
+	[AS_HELP_STRING([--disable-pywrap],[Disable build of libecryptfs Python wrappers])],
 	,
 	[enable_pywrap="detect"]
 )
 
 AC_ARG_ENABLE(
 	[openssl],
-	[AS_HELP_STRING([--disable-openssl],[Build OpenSSL key module])],
+	[AS_HELP_STRING([--disable-openssl],[Disable build of OpenSSL key module])],
 	,
 	[enable_openssl="detect"]
 )
@@ -67,7 +74,7 @@ AC_ARG_ENABLE(
 
 AC_ARG_ENABLE(
 	[pam],
-	[AS_HELP_STRING([--disable-pam],[Build PAM module])],
+	[AS_HELP_STRING([--disable-pam],[Disable build of PAM module])],
 	,
 	[enable_pam="yes"]
 )
@@ -228,6 +235,26 @@ else
 	have_openssl="yes"
 fi
 
+#Verify nss
+NSS_LIBS=`nss-config --libs`
+if test "x${NSS_LIBS}" != "x" ; then
+        NSS_CFLAGS=`nss-config --cflags`
+        NSPR_CFLAGS=`nspr-config --cflags`
+        NSS_CFLAGS="${NSS_CFLAGS} -DENABLE_NSS ${NSPR_CFLAGS}"
+        have_nss="yes"
+else
+        NSS_CFLAGS=""
+        have_nss="no"
+fi
+
+if test "${enable_nss}" = "detect" ; then
+        if test "$have_nss" == "yes" ; then
+                enable_nss="yes"
+        else
+                enable_nss="no"
+        fi
+fi
+
 OLD_CFLAGS="${CFLAGS}"
 CFLAGS="${CFLAGS} ${OPENSSL_CFLAGS}"
 AC_CHECK_HEADER([openssl/rsa.h],, [have_openssl="no"])
@@ -326,6 +353,14 @@ else
 	rootsbindir="\$(sbindir)"
 fi
 
+if test "${enable_nss}" == "yes" ; then
+        CRYPTO_CFLAGS=${NSS_CFLAGS}
+	CRYPTO_LIBS=${NSS_LIBS}
+else
+        CRYPTO_CFLAGS=${LIBGCRYPT_CFLAGS}
+	CRYPTO_LIBS=${LIBGCRYPT_LIBS}
+fi
+
 AC_SUBST([pamdir])
 AC_SUBST([pamlibdir])
 AC_SUBST([pkgconfigdir])
@@ -333,12 +368,15 @@ AC_SUBST([rootsbindir])
 AC_SUBST([ecryptfskeymoddir])
 AC_SUBST([GPGME_CFLAGS])
 AC_SUBST([GPGME_LIBS])
+AC_SUBST([CRYPTO_CFLAGS])
+AC_SUBST([CRYPTO_LIBS])
 AM_CONDITIONAL([BUILD_OPENSSL], [test "${enable_openssl}" = "yes"])
 AM_CONDITIONAL([BUILD_PKCS11_HELPER], [test "${enable_pkcs11_helper}" = "yes"])
 AM_CONDITIONAL([BUILD_TSPI], [test "${enable_tspi}" = "yes"])
 AM_CONDITIONAL([BUILD_GPG], [test "${enable_gpg}" = "yes"])
 AM_CONDITIONAL([BUILD_PAM], [test "${enable_pam}" = "yes"])
 AM_CONDITIONAL([BUILD_PYWRAP], [test "${enable_pywrap}" = "yes"])
+AM_CONDITIONAL([BUILD_NSS], [test "${enable_nss}" = "yes"])
 AM_CONDITIONAL([BUILD_GUI], [test "${enable_gui}" = "yes"])
 AM_CONDITIONAL([BUILD_DOCS], [test "${enable_docs}" = "yes"])
 AM_CONDITIONAL([BUILD_DOCS_GEN], [test "${enable_docs_gen}" = "yes"])

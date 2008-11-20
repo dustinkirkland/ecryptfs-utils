@@ -26,7 +26,7 @@
 #include <stdio.h>
 #endif
 #include <string.h>
-#include <gcrypt.h>
+#include <unistd.h>
 #include <keyutils.h>
 #include <stdlib.h>
 #include "config.h"

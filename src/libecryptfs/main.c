@@ -20,7 +20,13 @@
  */
 
 #include <errno.h>
+#ifdef ENABLE_NSS
+#include <nss/pk11func.h>
+#include <nss/secmod.h>
+#include <nss/secmodt.h>
+#else
 #include <gcrypt.h>
+#endif /* #ifdef ENABLE_NSS */
 #include <mntent.h>
 #ifndef S_SPLINT_S
 #include <stdio.h>
@@ -30,7 +36,6 @@
 #include <unistd.h>
 #include <signal.h>
 #include <sys/mount.h>
-#include <gcrypt.h>
 #include <getopt.h>
 #include <keyutils.h>
 #include <sys/types.h>
@@ -73,11 +78,26 @@ void from_hex(char *dst, char *src, int dst_size)
 
 int do_hash(char *src, int src_size, char *dst, int algo)
 {
+#ifdef ENABLE_NSS
+	SECStatus err;
+#else
 	gcry_md_hd_t hd;
 	gcry_error_t err = 0;
 	unsigned char * hash;
 	unsigned int mdlen;
+#endif /* #ifdef ENABLE_NSS */
 
+#ifdef ENABLE_NSS
+	NSS_NoDB_Init();
+	err = PK11_HashBuf(algo, dst, src, src_size);
+	if (err == SECFailure) {
+		syslog(LOG_ERR, "%s: PK11_HashBuf() error; SECFailure = [%d]; "
+		       "PORT_GetError() = [%d]\n", __FUNCTION__, SECFailure,
+		       PORT_GetError());
+		err = -EINVAL;
+		goto out;
+	}
+#else
 	err = gcry_md_open(&hd, algo, 0);
 	mdlen = gcry_md_get_algo_dlen(algo);
 	if (err) {
@@ -89,8 +109,9 @@ int do_hash(char *src, int src_size, char *dst, int algo)
 	hash = gcry_md_read(hd, algo);
 	memcpy(dst, hash, mdlen);
 	gcry_md_close(hd);
- out:
-	return (int) err;
+#endif /* #ifdef ENABLE_NSS */
+out:
+	return (int)err;
 }
 
 /**
@@ -112,7 +133,11 @@ generate_passphrase_sig(char *passphrase_sig, char *fekek,
 	char salt_and_passphrase[ECRYPTFS_MAX_PASSPHRASE_BYTES
 				 + ECRYPTFS_SALT_SIZE];
 	int passphrase_size;
+#ifdef ENABLE_NSS
+	int alg = SEC_OID_SHA512;
+#else
 	int alg = GCRY_MD_SHA512;
+#endif /* #ifdef ENABLE_NSS */
 	int dig_len = SHA512_DIGEST_LENGTH;
 	char buf[SHA512_DIGEST_LENGTH];
 	int hash_iterations = ECRYPTFS_DEFAULT_NUM_HASH_ITERATIONS;

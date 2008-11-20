@@ -19,7 +19,13 @@
  */
 
 #include <errno.h>
+#ifdef ENABLE_NSS
+#include <nss/pk11func.h>
+#include <nss/secmod.h>
+#include <nss/secmodt.h>
+#else
 #include <gcrypt.h>
+#endif /* #ifdef ENABLE_NSS */
 #include <keyutils.h>
 #ifndef S_SPLINT_S
 #include <stdio.h>
@@ -225,8 +231,22 @@ int ecryptfs_wrap_passphrase(char *filename, char *wrapping_passphrase,
 	char encrypted_passphrase[ECRYPTFS_MAX_PASSPHRASE_BYTES + 1];
 	int encrypted_passphrase_pos = 0;
 	int decrypted_passphrase_pos = 0;
+#ifdef ENABLE_NSS
+	int tmp1_outlen;
+	int tmp2_outlen;
+	SECStatus err;
+	CK_MECHANISM_TYPE cipher_mech;
+	SECItem key_item;
+	PK11Context *pk11_ctx;
+	PK11SymKey *sym_key;
+	PK11SlotInfo *slot;
+	PK11Context *enc_ctx;
+	SECItem *sec_param;
+#else
+#warning Building against gcrypt instead of nss
 	gcry_cipher_hd_t gcry_handle;
 	gcry_error_t gcry_err;
+#endif /* #ifdef ENABLE_NSS */
 	int encrypted_passphrase_bytes;
 	int decrypted_passphrase_bytes;
 	int fd;
@@ -258,6 +278,55 @@ int ecryptfs_wrap_passphrase(char *filename, char *wrapping_passphrase,
 					       - (decrypted_passphrase_bytes
 						  % ECRYPTFS_AES_BLOCK_SIZE));
 	encrypted_passphrase_bytes = decrypted_passphrase_bytes;
+#ifdef ENABLE_NSS
+	NSS_NoDB_Init();
+	slot = PK11_GetBestSlot(CKM_AES_ECB, NULL);
+	key_item.data = wrapping_key;
+	key_item.len = ECRYPTFS_AES_KEY_BYTES;
+	sym_key = PK11_ImportSymKey(slot, CKM_AES_ECB, PK11_OriginUnwrap,
+				    CKA_ENCRYPT, &key_item, NULL);
+	if (!sym_key) {
+		syslog(LOG_ERR, "%s: PK11_ImportSymKey() returned NULL\n",
+		       __FUNCTION__);
+		rc = -EIO;
+		goto out;
+	}
+	sec_param = PK11_ParamFromIV(CKM_AES_ECB, NULL);
+	enc_ctx = PK11_CreateContextBySymKey(CKM_AES_ECB, CKA_ENCRYPT,
+					     sym_key, sec_param);
+	while (decrypted_passphrase_bytes > 0) {
+		err = PK11_CipherOp(
+			enc_ctx,
+			&encrypted_passphrase[encrypted_passphrase_pos],
+			&tmp1_outlen, ECRYPTFS_MAX_PASSPHRASE_BYTES,
+			&decrypted_passphrase[decrypted_passphrase_pos],
+			ECRYPTFS_MAX_PASSPHRASE_BYTES);
+		if (err == SECFailure) {
+			syslog(LOG_ERR, "%s: PK11_CipherOp() error; "
+			       "SECFailure = [%d]; PORT_GetError() = [%d]\n",
+			       __FUNCTION__, SECFailure, PORT_GetError());
+			rc = -EIO;
+			goto out;
+		}
+		err = PK11_DigestFinal(
+			enc_ctx,
+			(&encrypted_passphrase[encrypted_passphrase_pos]
+			 + tmp1_outlen), &tmp2_outlen,
+			(ECRYPTFS_MAX_PASSPHRASE_BYTES -
+			 (encrypted_passphrase_pos + tmp1_outlen)));
+		if (err == SECFailure) {
+			syslog(LOG_ERR, "%s: PK11 error on digest final; "
+			       "SECFailure = [%d]; PORT_GetError() = [%d]\n",
+			       __FUNCTION__, SECFailure, PORT_GetError());
+			rc = -EIO;
+			goto out;
+		}
+		encrypted_passphrase_pos += ECRYPTFS_AES_BLOCK_SIZE;
+		decrypted_passphrase_pos += ECRYPTFS_AES_BLOCK_SIZE;
+		decrypted_passphrase_bytes -= ECRYPTFS_AES_BLOCK_SIZE;
+	}
+	PK11_DestroyContext(enc_ctx, PR_TRUE);
+#else
 	if ((gcry_err = gcry_cipher_open(&gcry_handle, GCRY_CIPHER_AES,
 					 GCRY_CIPHER_MODE_ECB, 0))) {
 		syslog(LOG_ERR, "Error attempting to initialize AES cipher; "
@@ -291,6 +360,7 @@ int ecryptfs_wrap_passphrase(char *filename, char *wrapping_passphrase,
 		decrypted_passphrase_bytes -= ECRYPTFS_AES_BLOCK_SIZE;
 	}
 	gcry_cipher_close(gcry_handle);
+#endif /* #ifdef ENABLE_NSS */
 	unlink(filename);
 	if ((fd = open(filename, (O_WRONLY | O_CREAT | O_EXCL),
 		       (S_IRUSR | S_IWUSR))) == -1) {
@@ -336,8 +406,21 @@ int ecryptfs_unwrap_passphrase(char *decrypted_passphrase, char *filename,
 	char encrypted_passphrase[ECRYPTFS_MAX_PASSPHRASE_BYTES + 1];
 	int encrypted_passphrase_pos = 0;
 	int decrypted_passphrase_pos = 0;
+#ifdef ENABLE_NSS
+	int tmp1_outlen;
+	int tmp2_outlen;
+	SECStatus err;
+	CK_MECHANISM_TYPE cipher_mech;
+	SECItem key_item;
+	PK11Context *pk11_ctx;
+	PK11SymKey *sym_key;
+	PK11SlotInfo *slot;
+	PK11Context *enc_ctx;
+	SECItem *sec_param;
+#else
 	gcry_cipher_hd_t gcry_handle;
 	gcry_error_t gcry_err;
+#endif /* #ifdef ENABLE_NSS */
 	int encrypted_passphrase_bytes;
 	int fd;
 	ssize_t size;
@@ -384,6 +467,55 @@ int ecryptfs_unwrap_passphrase(char *decrypted_passphrase, char *filename,
 		goto out;
 	}
 	encrypted_passphrase_bytes = size;
+#ifdef ENABLE_NSS
+	NSS_NoDB_Init();
+	slot = PK11_GetBestSlot(CKM_AES_ECB, NULL);
+	key_item.data = wrapping_key;
+	key_item.len = ECRYPTFS_AES_KEY_BYTES;
+	sym_key = PK11_ImportSymKey(slot, CKM_AES_ECB, PK11_OriginUnwrap,
+				    CKA_ENCRYPT, &key_item, NULL);
+	if (!sym_key) {
+		syslog(LOG_ERR, "%s: PK11_ImportSymKey() returned NULL\n",
+		       __FUNCTION__);
+		rc = -EIO;
+		goto out;
+	}
+	sec_param = PK11_ParamFromIV(CKM_AES_ECB, NULL);
+	enc_ctx = PK11_CreateContextBySymKey(CKM_AES_ECB, CKA_DECRYPT,
+					     sym_key, sec_param);
+	while (encrypted_passphrase_bytes > 0) {
+		err = PK11_CipherOp(
+			enc_ctx,
+			&decrypted_passphrase[decrypted_passphrase_pos],
+			&tmp1_outlen, ECRYPTFS_MAX_PASSPHRASE_BYTES,
+			&encrypted_passphrase[encrypted_passphrase_pos],
+			ECRYPTFS_MAX_PASSPHRASE_BYTES);
+		if (err == SECFailure) {
+			syslog(LOG_ERR, "%s: PK11_CipherOp() error; "
+			       "SECFailure = [%d]; PORT_GetError() = [%d]\n",
+			       __FUNCTION__, SECFailure, PORT_GetError());
+			rc = -EIO;
+			goto out;
+		}
+		err = PK11_DigestFinal(
+			enc_ctx,
+			(&decrypted_passphrase[decrypted_passphrase_pos]
+			 + tmp1_outlen), &tmp2_outlen,
+			(ECRYPTFS_MAX_PASSPHRASE_BYTES -
+			 (decrypted_passphrase_pos + tmp1_outlen)));
+		if (err == SECFailure) {
+			syslog(LOG_ERR, "%s: PK11 error on digest final; "
+			       "SECFailure = [%d]; PORT_GetError() = [%d]\n",
+			       __FUNCTION__, SECFailure, PORT_GetError());
+			rc = -EIO;
+			goto out;
+		}
+		encrypted_passphrase_pos += ECRYPTFS_AES_BLOCK_SIZE;
+		decrypted_passphrase_pos += ECRYPTFS_AES_BLOCK_SIZE;
+		encrypted_passphrase_bytes -= ECRYPTFS_AES_BLOCK_SIZE;
+	}
+	PK11_DestroyContext(enc_ctx, PR_TRUE);
+#else
 	if ((gcry_err = gcry_cipher_open(&gcry_handle, GCRY_CIPHER_AES,
 					 GCRY_CIPHER_MODE_ECB, 0))) {
 		syslog(LOG_ERR, "Error attempting to initialize AES cipher; "
@@ -417,6 +549,7 @@ int ecryptfs_unwrap_passphrase(char *decrypted_passphrase, char *filename,
 		decrypted_passphrase_pos += ECRYPTFS_AES_BLOCK_SIZE;
 		encrypted_passphrase_bytes -= ECRYPTFS_AES_BLOCK_SIZE;
 	}
+#endif /* #ifdef ENABLE_NSS */
 out:
 	return rc;
 }
