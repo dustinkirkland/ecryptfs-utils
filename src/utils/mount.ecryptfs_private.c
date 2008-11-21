@@ -480,14 +480,14 @@ int main(int argc, char *argv[]) {
 	}
 
 	if (mounting == 1) {
+		/* Increment mount counter, errors non-fatal */
+		increment(pwd->pw_name);
 		/* Check ownership of dev, if mounting;
 		 * note, umount only operates on mnt
 		 */
 		if (check_ownerships(uid, dev) != 0) {
 			return 1;
 		}
-		/* Increment mount counter, errors non-fatal */
-		increment(pwd->pw_name);
 		/* Mounting, so exit if already mounted */
 		if (is_mounted(dev, mnt, sig, mounting) == 1) {
 			return 1;
