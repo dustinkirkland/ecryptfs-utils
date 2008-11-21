@@ -21,7 +21,7 @@
  *
  * On Debian-based systems, the complete text of the GNU General Public
  * License can be found in /usr/share/common-licenses/GPL-2
- * 
+ *
  */
 
 
@@ -55,7 +55,7 @@ int check_username(char *u) {
  * error message:
  *   adduser: To avoid problems, the username should consist only of
  *   letters, digits, underscores, periods, at signs and dashes, and not start
- *   with a dash (as defined by IEEE Std 1003.1-2001). For compatibility with 
+ *   with a dash (as defined by IEEE Std 1003.1-2001). For compatibility with
  *   Samba machine accounts $ is also supported at the end of the username
  */
 	int i;
@@ -69,9 +69,9 @@ int check_username(char *u) {
 	for (i=0; i<len; i++) {
 		c = u[i];
 		if ( 	!(c>='a' && c<='z') && !(c>='A' && c<='Z') &&
-			!(c>='0' && c<='9') && 
-			!(c=='_') && !(c=='.') && !(c=='@') && 
-			!(c=='-' && i!=0) && 
+			!(c>='0' && c<='9') &&
+			!(c=='_') && !(c=='.') && !(c=='@') &&
+			!(c=='-' && i!=0) &&
 			!(c=='$' && i==(len-1))
 		) {
 			fputs("Username has unsupported characters\n", stderr);
@@ -83,7 +83,7 @@ int check_username(char *u) {
 
 
 char *fetch_sig(char *pw_dir) {
-/* Read ecryptfs signature from file and validate 
+/* Read ecryptfs signature from file and validate
  * Return signature as a string, or NULL on failure
  */
 	char *sig_file, c;
@@ -228,7 +228,7 @@ int is_mounted(char *dev, char *mnt, char *sig, int mounting) {
 	mounted = 0;
 	while ((m = getmntent(fh)) != NULL) {
 		if (mounting == 1) {
-			/* If mounting, return "already mounted" if EITHER the 
+			/* If mounting, return "already mounted" if EITHER the
  			 * dev or the mnt dir shows up in mtab/mounts;
  			 * regardless of the signature of such mounts;
  			 */
@@ -379,7 +379,7 @@ int zero(char *u) {
  * keep from adding such entries to /etc/fstab.
  *
  * A single executable is created and hardlinked to two different names.
- * The mode of operation (mounting|unmounting) is determined by examining 
+ * The mode of operation (mounting|unmounting) is determined by examining
  * the name of the executable.  "Mounting" mode is assumed, unless the
  * executable contains the string "umount".
  * Example:
@@ -456,7 +456,7 @@ int main(int argc, char *argv[]) {
 
 	/* Construct device, mount point, and mount options */
 	if (
-	    (asprintf(&dev, "%s/.%s", pwd->pw_dir, PRIVATE_DIR) < 0) || 
+	    (asprintf(&dev, "%s/.%s", pwd->pw_dir, PRIVATE_DIR) < 0) ||
 	    dev == NULL) {
 		perror("asprintf (dev)");
 		return 1;
@@ -466,7 +466,7 @@ int main(int argc, char *argv[]) {
 		perror("asprintf (mnt)");
 		return 1;
 	}
-	if ((asprintf(&opt, 
+	if ((asprintf(&opt,
 	 "rw,ecryptfs_sig=%s,ecryptfs_cipher=%s,ecryptfs_key_bytes=%d,user=%s",
 	 sig, KEY_CIPHER, KEY_BYTES, pwd->pw_name) < 0) ||
 	 opt == NULL) {
