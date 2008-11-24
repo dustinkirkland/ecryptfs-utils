@@ -1,0 +1,56 @@
+#!/bin/sh -e
+
+auth=0c1295085dca124e6ba5a3cea7993c22
+account=9f04221fe44762047894adeb96ffd069
+session=2e9a42f2a3b6573891ff9e6bf0c31c9e
+password=4cf59ec48caad2a06ea2e183d8bc007a
+
+force=
+if dpkg --compare-versions "$2" lt-nl 53-1ubuntu6; then
+        # If we're upgrading from an older ecryptfs-utils,
+        # and the pam configuration precisely matches that
+        # which was written by auth-client-config, we can
+        # safely force the pam-auth-update.
+        force=--force
+        for type in auth account session password
+        do
+            sum="$(md5sum /etc/pam.d/common-$type 2>/dev/null | awk '{ print $1 }')"
+            [ "$sum" = "$(eval echo \$$type)" ] || force=
+        done
+fi
+pam-auth-update --package $force
+
+#DEBHELPER#
+
+exit 0
+#!/bin/sh
+
+set -e
+
+case "${1}" in
+	configure)
+		# Basically, if a user chooses to encrypt their entire home
+		# directory, we're going to need someplace to put their
+		# ~/.ecryptfs directory that's available prior to mounting their
+		# home directory. Classic chicken/egg bootstrapping.
+
+		if [ ! -d /var/lib/ecryptfs ]
+		then
+			mkdir -p /var/lib/ecryptfs
+			chmod 1777 /var/lib/ecryptfs
+		fi
+		;;
+
+	abort-upgrade|abort-remove|abort-deconfigure)
+
+		;;
+
+	*)
+		echo "postinst called with unknown argument \`{$1}'" >&2
+		exit 1
+		;;
+esac
+
+#DEBHELPER#
+
+exit 0
