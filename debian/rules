@@ -18,6 +18,11 @@ ifneq ($(DEB_BUILD_ARCH),s390)
 	TPMFLAGS = --enable-opencryptoki
 endif
 
+VER=$(shell grep "AC_INIT.*ecryptfs-utils" ../configure.ac | sed 's/[^0-9]//g')
+
+get-orig-source:
+	tar czf ../../ecryptfs-utils_$(VER).orig.tar.gz .. --exclude .git --exclude debian
+
 clean: unpatch
 	dh_testdir
 	dh_testroot
