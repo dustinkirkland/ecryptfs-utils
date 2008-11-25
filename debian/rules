@@ -21,13 +21,15 @@ endif
 VER=$(shell grep "AC_INIT.*ecryptfs-utils" ../configure.ac | sed 's/[^0-9]//g')
 
 get-orig-source:
-	tar czf ../../ecryptfs-utils_$(VER).orig.tar.gz .. --exclude .git --exclude debian
+	mv -f ../../ecryptfs-utils ../../ecryptfs-utils-$(VER)
+	tar czf ../../ecryptfs-utils_$(VER).orig.tar.gz ../../ecryptfs-utils-$(VER) --exclude .git --exclude debian
 
 clean: unpatch
 	dh_testdir
 	dh_testroot
 	rm -f build-stamp
 	rm -f config.guess config.sub
+	autoreconf -i -v -f
 
 	[ ! -f Makefile ] || $(MAKE) distclean
 
