@@ -209,23 +209,13 @@ int is_mounted(char *dev, char *mnt, char *sig, int mounting) {
 		perror("asprintf");
 		return 1;
 	}
-	if (mounting == 1) {
-		/* If we're mounting, we want to broadly search mounts that
-		 * might exist in /proc/mounts but not /etc/mtab; and we
-		 * are going to disregard the ecryptfs_sig option
-		 */
-		fh = setmntent("/proc/mounts", "r");
-	} else {
-		/* If we're unmounting, we need to check the ecryptfs_sig
-		 * option which only shows up in /etc/mtab
-		 */
-		fh = setmntent("/etc/mtab", "r");
-	}
+	fh = setmntent("/proc/mounts", "r");
 	if (fh == NULL) {
 		perror("setmntent");
 		return 1;
 	}
 	mounted = 0;
+	flockfile(fh);
 	while ((m = getmntent(fh)) != NULL) {
 		if (mounting == 1) {
 			/* If mounting, return "already mounted" if EITHER the
@@ -277,6 +267,7 @@ int update_mtab(char *dev, char *mnt, char *opt) {
 	m.mnt_opts = opt;
 	m.mnt_freq = 0;
 	m.mnt_passno = 0;
+	flockfile(fh);
 	if (addmntent(fh, &m) != 0) {
 		perror("addmntent");
 		endmntent(fh);
@@ -326,13 +317,7 @@ int bump_counter(char *u, int delta) {
 		close(fd);
 		return -1;
 	}
-	/* Lock the file for reading/writing */
-	if (flock(fileno(fh), LOCK_EX) != 0) {
-		perror("flock");
-		fclose(fh);
-		close(fd);
-		return -1;
-	}
+	flockfile(fh);
 	rewind(fh);
 	/* Read the count from file, default to 0 */
 	if (fscanf(fh, "%d\n", &count) != 1) {
@@ -347,10 +332,7 @@ int bump_counter(char *u, int delta) {
 	/* Write the count to file */
 	rewind(fh);
 	fprintf(fh, "%d\n", count);
-	/* Unlock the file */
-	if (flock(fileno(fh), LOCK_UN) != 0) {
-		perror("flock");
-	}
+	fsync(fd);
 	fclose(fh);
 	close(fd);
 	return count;
