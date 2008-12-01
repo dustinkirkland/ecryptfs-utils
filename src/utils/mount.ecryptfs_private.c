@@ -481,7 +481,9 @@ int main(int argc, char *argv[]) {
 
 	if (mounting == 1) {
 		/* Increment mount counter, errors non-fatal */
-		increment(pwd->pw_name);
+		if (increment(pwd->pw_name) < 0) {
+			fputs("Error incrementing mount counter\n", stderr);
+		}
 		/* Check ownership of dev, if mounting;
 		 * note, umount only operates on mnt
 		 */
@@ -513,7 +515,11 @@ int main(int argc, char *argv[]) {
  			 * since the mount did not succeed
  			 */
 			if (setreuid(uid, uid)) {
-				decrement(pwd->pw_name);
+				if (decrement(pwd->pw_name) < 0) {
+					fputs(
+					  "Error decrementing mount counter\n",
+					  stderr);
+				}
 			} else {
 				perror("setreuid");
 			}
@@ -528,7 +534,9 @@ int main(int argc, char *argv[]) {
 		/* If we have made it here, zero the counter,
  		 * as we are going to unmount.
  		 */
-		zero(pwd->pw_name);
+		if (zero(pwd->pw_name) != 0) {
+			fputs("Error zeroing mount counter\n", stderr);
+		}
 		/* Unmounting, so exit if not mounted */
 		if (is_mounted(dev, mnt, sig, mounting) == 0) {
 			return 1;
