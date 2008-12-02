@@ -108,8 +108,8 @@ int ecryptfs_recv_miscdev(struct ecryptfs_miscdev_ctx *miscdev_ctx,
 {
 	ssize_t read_bytes;
 	uint32_t miscdev_msg_data_size;
-	uint32_t packet_len_size;
-	uint32_t packet_len;
+	size_t packet_len_size;
+	size_t packet_len;
 	uint32_t msg_seq_be32;
 	uint32_t i;
 	char *miscdev_msg_data;
