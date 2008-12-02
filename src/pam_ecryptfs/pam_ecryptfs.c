@@ -327,9 +327,12 @@ PAM_EXTERN int pam_sm_chauthtok(pam_handle_t * pamh, int flags,
 	char *old_passphrase = NULL;
 	char *new_passphrase = NULL;
 	char *wrapped_pw_filename;
+	char *unwrapped_pw_filename;
+	char *name = NULL;
 	char salt[ECRYPTFS_SALT_SIZE];
 	char salt_hex[ECRYPTFS_SALT_SIZE_HEX];
 	pid_t child_pid, tmp_pid;
+	struct stat s;
 	int rc = PAM_SUCCESS;
 
 	rc = pam_get_user(pamh, &username, NULL);
@@ -340,6 +343,7 @@ PAM_EXTERN int pam_sm_chauthtok(pam_handle_t * pamh, int flags,
 		if (pwd) {
 			uid = pwd->pw_uid;
 			homedir = pwd->pw_dir;
+			name = pwd->pw_name;
 		}
 	} else {
 		syslog(LOG_ERR, "Error getting passwd info for user [%s]; "
@@ -376,6 +380,43 @@ PAM_EXTERN int pam_sm_chauthtok(pam_handle_t * pamh, int flags,
 		seteuid(saved_uid);
 		goto out;
 	}
+	if ((rc = asprintf(&wrapped_pw_filename, "%s/.ecryptfs/%s", homedir,
+			   ECRYPTFS_DEFAULT_WRAPPED_PASSPHRASE_FILENAME))
+	    == -1) {
+		syslog(LOG_ERR, "Unable to allocate memory\n");
+		rc = -ENOMEM;
+		goto out;
+	}
+	rc = asprintf(&unwrapped_pw_filename, "/dev/shm/.ecryptfs-%s", name);
+	if (rc == -1) {
+		syslog(LOG_ERR, "Unable to allocate memory\n");
+		rc = -ENOMEM;
+		goto out;
+	}
+	if ((rc = ecryptfs_read_salt_hex_from_rc(salt_hex))) {
+		syslog(LOG_WARNING, "%s\n", ECRYPTFS_WARN_DEFAULT_SALT);
+		from_hex(salt, ECRYPTFS_DEFAULT_SALT_HEX, ECRYPTFS_SALT_SIZE);
+	} else {
+		from_hex(salt, salt_hex, ECRYPTFS_SALT_SIZE);
+	}
+	/* If /dev/shm/.ecryptfs-$USER exists and owned by the user
+	   and ~/.ecryptfs/wrapped-passphrase does not exist
+	   and a new_passphrase is set:
+	   wrap the unwrapped passphrase file */
+	if (stat(unwrapped_pw_filename, &s) == 0 && (s.st_uid == uid) &&
+	    stat(wrapped_pw_filename, &s) != 0  &&
+	    new_passphrase != NULL && *new_passphrase != '\0' &&
+	    name != NULL && *name != '\0') {
+		setuid(uid);
+		rc = ecryptfs_wrap_passphrase_file(wrapped_pw_filename,
+			new_passphrase, salt, unwrapped_pw_filename);
+		if (rc != 0) {
+			syslog(LOG_ERR,
+			  "Error wrapping cleartext password; "
+	       		  "rc = [%d]\n", rc);
+		}
+		goto out;
+	}
 	seteuid(saved_uid);
 	if (!old_passphrase || !new_passphrase || *new_passphrase == '\0') {
 		syslog(LOG_WARNING, "eCryptfs PAM passphrase change module "
@@ -384,18 +425,6 @@ PAM_EXTERN int pam_sm_chauthtok(pam_handle_t * pamh, int flags,
 		rc = PAM_AUTHTOK_RECOVER_ERR;
 		goto out;
 	}
-	if ((rc = asprintf(&wrapped_pw_filename, "%s/.ecryptfs/%s", homedir,
-			   ECRYPTFS_DEFAULT_WRAPPED_PASSPHRASE_FILENAME))
-	    == -1) {
-		syslog(LOG_ERR, "Unable to allocate memory\n");
-		rc = -ENOMEM;
-		goto out;
-	}
-	if ((rc = ecryptfs_read_salt_hex_from_rc(salt_hex))) {
-		syslog(LOG_WARNING, "%s\n", ECRYPTFS_WARN_DEFAULT_SALT);
-		from_hex(salt, ECRYPTFS_DEFAULT_SALT_HEX, ECRYPTFS_SALT_SIZE);
-	} else
-		from_hex(salt, salt_hex, ECRYPTFS_SALT_SIZE);
 	rc = PAM_SUCCESS;
 	if ((child_pid = fork()) == 0) {
 		char passphrase[ECRYPTFS_MAX_PASSWORD_LENGTH + 1];

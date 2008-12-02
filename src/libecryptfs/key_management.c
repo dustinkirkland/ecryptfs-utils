@@ -222,6 +222,50 @@ out:
 	return rc;
 }
 
+int ecryptfs_wrap_passphrase_file(char *dest, char *wrapping_passphrase,
+				  char *salt, char *src)
+{
+	int rc = 0;
+	ssize_t size;
+	int fd;
+	int i;
+	char *p = NULL;
+	char decrypted_passphrase[ECRYPTFS_MAX_PASSPHRASE_BYTES + 1];
+
+	for (i=0; i<ECRYPTFS_MAX_PASSPHRASE_BYTES+1; i++)
+		decrypted_passphrase[i] = '\0';
+	if ((fd = open(src, O_RDONLY)) == -1) {
+		syslog(LOG_ERR, "Error attempting to open [%s] for reading\n",
+		       src);
+		rc = -EIO;
+		close(fd);
+		goto out;
+	}
+	if ((size = read(fd, decrypted_passphrase,
+			 ECRYPTFS_MAX_PASSPHRASE_BYTES)) <= 0) {
+		syslog(LOG_ERR, "Error attempting to read encrypted "
+		       "passphrase from file [%s]; size = [%d]\n",
+		       src, size);
+                p = strrchr(decrypted_passphrase, '\n');
+                if (p) *p = '\0';
+		rc = -EIO;
+		close(fd);
+		goto out;
+	}
+	close(fd);
+	if (ecryptfs_wrap_passphrase(dest, wrapping_passphrase, salt,
+	    decrypted_passphrase) == 0) {
+		unlink(src);
+	} else {
+		syslog(LOG_ERR, "Error attempting to wrap passphrase file "
+			"[%s]-> [%s]\n", src, dest);
+		rc = -EIO;
+		goto out;
+	}
+out:
+	return rc;
+}
+
 int ecryptfs_wrap_passphrase(char *filename, char *wrapping_passphrase,
 			     char *wrapping_salt, char *decrypted_passphrase)
 {

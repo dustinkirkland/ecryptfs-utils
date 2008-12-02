@@ -564,6 +564,8 @@ int ecryptfs_read_salt_hex_from_rc(char *salt_hex);
 int ecryptfs_check_sig(char *auth_tok_sig, char *sig_cache_filename,
 		       int *flags);
 int ecryptfs_append_sig(char *auth_tok_sig, char *sig_cache_filename);
+int ecryptfs_wrap_passphrase_file(char *dest, char *wrapping_passphrase,
+ 			     char *wrapping_salt, char *src);
 int ecryptfs_wrap_passphrase(char *filename, char *wrapping_passphrase,
 			     char *wrapping_salt, char *decrypted_passphrase);
 int ecryptfs_unwrap_passphrase(char *decrypted_passphrase, char *filename,
