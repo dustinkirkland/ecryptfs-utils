@@ -24,6 +24,7 @@
  *
  */
 
+#define _GNU_SOURCE
 
 #include <sys/file.h>
 #include <sys/mount.h>
@@ -38,6 +39,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <syslog.h>
+#include <values.h>
 
 /* Perhaps a future version of this program will allow these to be configurable
  * by the system administrator (or user?) at run time.  For now, these are set
@@ -279,47 +281,52 @@ int update_mtab(char *dev, char *mnt, char *opt) {
 	return 0;
 }
 
-
-int bump_counter(char *u, int delta) {
-/* Maintain a mount counter
- *   increment on delta = 1
- *   decrement on delta = -1
- *   remove the counter file on delta = 0
- *   return the updated count, negative on error
- */
+FILE *lock_counter(char *u) {
 	char *f;
 	int fd;
 	FILE *fh;
-	int count;
 	/* We expect TMP to exist, be writeable by the user,
 	 * and to be cleared on boot */
 	if (
 		asprintf(&f, "%s/%s-%s-%s", TMP, FSTYPE, u, PRIVATE_DIR) < 0
 	   ) {
 		perror("asprintf");
-		return -1;
-	}
-	if (delta == 0) {
-		/* Try to remove the counter file, and exit */
-		return unlink(f);
+		return NULL;
 	}
 	/* open file for reading and writing */
 	if ((fd = open(f, O_RDWR)) < 0) {
 		/* Could not open it, so try to safely create it */
 		if ((fd = open(f, O_RDWR | O_CREAT | O_EXCL, 0600)) < 0) {
 			perror("open");
-			return -1;
+			return NULL;
 		}
 	}
 	fh = fdopen(fd, "r+");
 	if (fh == NULL) {
 		perror("fopen");
 		close(fd);
-		return -1;
+		return NULL;
 	}
 	flockfile(fh);
-	rewind(fh);
+	return fh;
+}
+
+void unlock_counter(FILE *fh) {
+	if (fh != NULL) {
+		fclose(fh);
+	}
+}
+
+int bump_counter(FILE *fh, int delta) {
+/* Maintain a mount counter
+ *   increment on delta = 1
+ *   decrement on delta = -1
+ *   remove the counter file on delta = 0
+ *   return the updated count, negative on error
+ */
+	int count;
 	/* Read the count from file, default to 0 */
+	rewind(fh);
 	if (fscanf(fh, "%d\n", &count) != 1) {
 		count = 0;
 	}
@@ -332,27 +339,24 @@ int bump_counter(char *u, int delta) {
 	/* Write the count to file */
 	rewind(fh);
 	fprintf(fh, "%d\n", count);
-	fsync(fd);
-	fclose(fh);
-	close(fd);
 	return count;
 }
 
 
-int increment(char *u) {
+int increment(FILE *fh) {
 /* Bump counter up */
-	return bump_counter(u, 1);
+	return bump_counter(fh, 1);
 }
 
 
-int decrement(char *u) {
+int decrement(FILE *fh) {
 /* Bump counter down */
-	return bump_counter(u, -1);
+	return bump_counter(fh, -1);
 }
 
-int zero(char *u) {
+int zero(FILE *fh) {
 /* Remove the counter file */
-	return bump_counter(u, 0);
+	return bump_counter(fh, -MAXINT+1);
 }
 
 
@@ -391,31 +395,39 @@ int zero(char *u) {
  *  c) updating /etc/mtab
  */
 int main(int argc, char *argv[]) {
-	int uid, rc, mounting, force;
+	int uid, mounting;
+	int force = 0;
 	struct passwd *pwd;
 	char *dev, *mnt, *opt;
 	char *sig;
+	FILE *fh_counter = NULL;
 
 	uid = getuid();
-	if ((pwd = getpwuid(uid)) == NULL) {
-		perror("getpwuid");
-		return 1;
-	}
-
 	/* Non-privileged effective uid is sufficient for all but the code
  	 * that mounts, unmounts, and updates /etc/mtab.
 	 * Run at a lower privilege until we need it.
 	 */
 	if (seteuid(uid)<0 || geteuid()!=uid) {
 		perror("setuid");
-		return 1;
+		goto fail;
+	}
+	if ((pwd = getpwuid(uid)) == NULL) {
+		perror("getpwuid");
+		goto fail;
+	}
+
+	/* Lock the counter through the rest of the program */
+	fh_counter = lock_counter(pwd->pw_name);
+	if (fh_counter == NULL) {
+		fputs("Error locking counter", stderr);
+		goto fail;
 	}
 
 	if (check_username(pwd->pw_name) != 0) {
 		/* Must protect against a crafted user=john,suid from entering
 		 * filesystem options
 		 */
-		return 1;
+		goto fail;
 	}
 
 	/* Determine if mounting or unmounting by looking at the invocation */
@@ -433,7 +445,7 @@ int main(int argc, char *argv[]) {
 
 	/* Fetch signature from file */
 	if ((sig = fetch_sig(pwd->pw_dir)) == NULL) {
-		return 1;
+		goto fail;
 	}
 
 	/* Construct device, mount point, and mount options */
@@ -441,40 +453,40 @@ int main(int argc, char *argv[]) {
 	    (asprintf(&dev, "%s/.%s", pwd->pw_dir, PRIVATE_DIR) < 0) ||
 	    dev == NULL) {
 		perror("asprintf (dev)");
-		return 1;
+		goto fail;
 	}
 	mnt = fetch_mnt(pwd->pw_dir);
 	if (mnt == NULL) {
 		perror("asprintf (mnt)");
-		return 1;
+		goto fail;
 	}
 	if ((asprintf(&opt,
 	 "rw,ecryptfs_sig=%s,ecryptfs_cipher=%s,ecryptfs_key_bytes=%d,user=%s",
 	 sig, KEY_CIPHER, KEY_BYTES, pwd->pw_name) < 0) ||
 	 opt == NULL) {
 		perror("asprintf (opt)");
-		return 1;
+		goto fail;
 	}
 
 	/* Check ownership of mnt */
 	if (check_ownerships(uid, mnt) != 0) {
-		return 1;
+		goto fail;
 	}
 
 	if (mounting == 1) {
 		/* Increment mount counter, errors non-fatal */
-		if (increment(pwd->pw_name) < 0) {
+		if (increment(fh_counter) < 0) {
 			fputs("Error incrementing mount counter\n", stderr);
+		}
+		/* Mounting, so exit if already mounted */
+		if (is_mounted(dev, mnt, sig, mounting) == 1) {
+			goto success;
 		}
 		/* Check ownership of dev, if mounting;
 		 * note, umount only operates on mnt
 		 */
 		if (check_ownerships(uid, dev) != 0) {
-			return 1;
-		}
-		/* Mounting, so exit if already mounted */
-		if (is_mounted(dev, mnt, sig, mounting) == 1) {
-			return 1;
+			goto fail;
 		}
 		/* We must maintain our real uid as the user who called this
  		 * program in order to have access to their kernel keyring.
@@ -489,39 +501,29 @@ int main(int argc, char *argv[]) {
 		/* Perform mount */
 		if (mount(dev, mnt, FSTYPE, 0, opt) == 0) {
 			if (update_mtab(dev, mnt, opt) != 0) {
-				return 1;
+				goto fail;
 			}
 		} else {
 			perror("mount");
 			/* Drop privileges and decrement the counter, since
  			 * since the mount did not succeed
  			 */
-			if (setreuid(uid, uid)) {
-				if (decrement(pwd->pw_name) < 0) {
-					fputs(
-					  "Error decrementing mount counter\n",
-					  stderr);
-				}
-			} else {
+			if (setreuid(uid, uid) < 0) {
 				perror("setreuid");
 			}
-			return 1;
+			goto fail;
 		}
 	} else {
 		/* Decrement counter, exiting if >0, and non-forced unmount */
-		if (decrement(pwd->pw_name) > 0 && force != 1) {
+		if (force == 1) {
+			zero(fh_counter);
+		} else if (decrement(fh_counter) > 0) {
 			fputs("Sessions still open, not unmounting\n", stderr);
-			return 1;
-		}
-		/* If we have made it here, zero the counter,
- 		 * as we are going to unmount.
- 		 */
-		if (zero(pwd->pw_name) != 0) {
-			fputs("Error zeroing mount counter\n", stderr);
+			goto success;
 		}
 		/* Unmounting, so exit if not mounted */
 		if (is_mounted(dev, mnt, sig, mounting) == 0) {
-			return 1;
+			goto fail;
 		}
 		/* The key is not needed for unmounting, so we set res=0.
 		 * Perform umount by calling umount utility.  This execl will
@@ -531,7 +533,12 @@ int main(int argc, char *argv[]) {
 		setresuid(0,0,0);
 		execl("/bin/umount", "umount", "-i", "-l", mnt, NULL);
 		perror("execl unmount failed");
-		return 1;
+		goto fail;
 	}
+success:
+	unlock_counter(fh_counter);
 	return 0;
+fail:
+	unlock_counter(fh_counter);
+	return 1;
 }
