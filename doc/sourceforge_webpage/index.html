@@ -1,0 +1,281 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>
+eCryptfs
+</title>
+</head>
+<body>
+
+<h1>eCryptfs</h1>
+<h3>An Enterprise-class Cryptographic Filesystem for Linux</h3>
+
+<hr>
+
+<a href="#download">Download</a>
+ | <a href="#overview">Overview</a>
+ | <a href="#announcements">Announcements</a>
+ | <a href="#documentation">Documentation</a>/<a href="ecryptfs-faq.html">FAQ</a>
+ | <a href="#mailing_lists">Mailing Lists</a>
+ | <a href="#credits">Credits</a>
+ | <a href="http://www.sourceforge.net/projects/ecryptfs">SourceForge Page</a>
+
+<hr>
+
+<table width="996">
+<tr>
+<td width="640">
+<a name="download">
+<h3>Download</h3>
+
+<p>You can get eCryptfs in a number of ways. eCryptfs consists of two
+components: the kernel module and the userspace code. You need
+both.</p>
+
+<ul>
+<li>eCryptfs <a
+href="http://sourceforge.net/project/showfiles.php?group_id=133988&package_id=149785">userspace
+utilities</a>; you have two options:</li>
+<ul>
+<li>Download, build, and install the <a
+href="http://sourceforge.net/project/showfiles.php?group_id=133988&package_id=149785&release_id=320216">ecryptfs-utils</a>
+tarball (follow the installation and usage instructions in the README
+file), or</li>
+<li>Install the ecryptfs-utils package for your distribution.</li>
+</ul>
+<li>eCryptfs kernel module; you have three options:</li>
+<ul>
+<li>Use the latest release of the Linux kernel.</li>
+
+<li>Download and build the <a
+href="http://sourceforge.net/project/showfiles.php?group_id=133988&package_id=198555">
+full eCryptfs package containing both the kernel and the userspace
+components</a>. We supply these packages primarily for convenience;
+the stand-alone module code is not as actively maintained as the code
+in the official Linux kernel. In general, we recommend that you use
+eCryptfs that ships in the most recent official Linux kernel
+releases.</li>
+
+<li>Download an eCryptfs binary kernel module package for your
+distribution.</lI>
+</ul>
+</ul>
+
+<p>Note that the eCryptfs SourceForge CVS repository rarely contains
+up-to-date code. Work from the latest tarball releases instead. Active
+development on both the eCryptfs <a
+href="http://git.kernel.org/?p=linux/kernel/git/mhalcrow/ecryptfs.git;a=summary">kernel
+module</a> and the eCryptfs <a
+href="http://git.kernel.org/?p=linux/kernel/git/mhalcrow/ecryptfs-utils.git;a=summary">userspace
+utilities</a> takes place via the kernel.org GIT repository.</p>
+
+<a name="overview">
+<h3>Overview</h3>
+
+<p>eCryptfs (<a
+href="http://www.sourceforge.net/projects/ecryptfs">SourceForge
+page</a>) is a POSIX-compliant enterprise-class stacked cryptographic
+filesystem for Linux. It is derived from Erez Zadok's Cryptfs,
+implemented through the FiST framework for generating stacked
+filesystems. eCryptfs extends Cryptfs to provide advanced key
+management and policy features. eCryptfs stores cryptographic metadata
+in the header of each file written, so that encrypted files can be
+copied between hosts; the file will be decryptable with the proper
+key, and there is no need to keep track of any additional information
+aside from what is already in the encrypted file itself. Think of
+eCryptfs as a sort of ``gnupgfs.''</p>
+
+<p>eCryptfs is a native Linux filesystem (other popular cryptographic
+filesystems for Linux require FUSE or operate via RPC calls). The
+kernel module component of eCryptfs is upstream in the Linux
+kernel.</p>
+
+<p>eCryptfs is undergoing a staged feature release process:</p>
+
+<ul>
+<li>Mount-wide passphrase, specified at mount time (<font color=#0000ff>complete</font>)</li>
+<li>Encryption/decryption support (<font color=#0000ff>complete</font>)</li>
+<li>Add cipher selection support (<font color=#0000ff>complete</font>)</li>
+<li>Add mount-wide public key support, specified at mount time (<font color=#0000ff>complete</font>)</li>
+<li>Storage of metadata in file extended attribute region (<font color=#0000ff>complete</font>)</li>
+<li>PAM module (<font color=#0000ff>complete</font>)</li>
+<li>Multiple keys per inode (<font color=#0000ff>complete</font>)</li>
+<li>TPM key module (<font color=#0000ff>complete</font>)</li>
+<li>PKCS#11 key module (<font color=#0000ff>complete</font>)</li>
+<li>Integrity verification (<font color=#00ff00>in progress; preliminary patch <a href="http://downloads.sourceforge.net/ecryptfs/ecryptfs-hmac-2.6.24-rc5-2.txt">here</a></font>)</li>
+<li>Filename encryption support (<font color=#00ff00>in progress; preliminary patch <a href="http://downloads.sourceforge.net/ecryptfs/ecryptfs-filename-crypto-2.6.27-rc7-20081103.txt">here</a></font>)</li>
+<li>GnuPG key module (in plan)</li>
+<li>Dynamic policy support (in plan)</li>
+</ul>
+
+<p>To use eCryptfs, I recommend that you perform an overlay mount. You
+can do this on any existing installed system by creating a directory
+for your encrypted files and then by mounting that directory as an
+eCryptfs filesystem:</p>
+
+<p>
+<code>
+mkdir /secret<br>
+mount -t ecryptfs /secret /secret
+</code>
+</p>
+
+<p>The eCryptfs mount helper will ask you a few questions about what
+key you want to use, what cipher you want to use, and so forth. Once
+mounted, you can read and write to <code>/secret</code>, and your
+files will be encrypted on disk. Also, make sure that you use dm-crypt
+with a random key at boot on any swap space you may be using.  See the
+<a href="http://www.linuxjournal.com/article/9400">Linux Journal
+article</a> for some more details on this process.</p>
+
+<a name="announcements">
+
+<h3>Announcements</h3>
+
+<ul>
+<li>November 3, 2008</li>
+<ul>
+<li>eCryptfs mount-on-login has been integrated as a major new <a
+href="https://wiki.ubuntu.com/EncryptedPrivateDirectory">feature</a>
+in Ubuntu Intrepid.</li>
+<li>The primary administrative site for eCryptfs is now hosted from <a
+href="https://launchpad.net/ecryptfs">Launchpad</a>.</li>
+<li><a
+href="http://downloads.sourceforge.net/ecryptfs/ecryptfs-filename-crypto-2.6.27-rc7-20081103.txt">Patches
+providing filename encryption support</a> are being prepared for
+upstream submission.</li>
+</ul>
+</ul>
+
+<ul>
+<li>April 6, 2008</li>
+<ul>
+<li>The netlink interface with the userspace daemon broke somewhere
+between 2.6.23 and 2.6.24. <a
+href="http://downloads.sourceforge.net/ecryptfs/ecryptfs-procfs-kernel-20080406.txt">This
+patch</a> migrates to a procfs handle instead, bringing back public
+key functionality for 2.6.24 and later kernel releases. Until the next
+ecryptfs-utils release, grab the version in the kernel.org <a
+href="http://git.kernel.org/?p=linux/kernel/git/mhalcrow/ecryptfs-utils.git;a=summary">GIT
+repository</a>.</li>
+</ul>
+</ul>
+
+<ul>
+<li>September 15, 2007</li>
+<ul>
+<li>Direct access to the address space maintained by another
+filesystem can cause problems due to unintended interactions between
+the owning filesystem and the process making changes. eCryptfs now
+keeps a persistent lower file for each eCryptfs inode. This means that
+eCryptfs no longer needs to directly access the lower inode's address
+space in order to do I/O on the lower files. This helps bring eCryptfs
+closer to functioning well on networked filesystems like NFS, CIFS,
+and GPFS. The <a
+href="http://sourceforge.net/project/showfiles.php?group_id=133988&package_id=200455&release_id=438884">experimental</a>
+section contains a release with this feature implemented. Patches for
+the -mm tree are complete and under test and review.</li>
+</ul>
+</ul>
+
+<ul>
+<li>August 21, 2007</li>
+<ul>
+<li>ecryptfs-utils version 23 now contains TPM support. You can
+generate a key bound to certain PCR's and mount eCryptfs against that
+key. Any files you create from that point on will only be accessible
+if your PCR values match. You can use this feature to make certain
+files only decryptable if your machine is booted into a trusted
+configuration; you do not need to remember or provide any additional
+secret values for this to work. Think of this as a method for making
+your existing authentication mechanism on your machine useful for
+regulating access to files on secondary storage devices, even when the
+storage device is accessed directly. This provides strong protection
+against someone booting your computer from a bootable CD and accessing
+your files, for instance.</li>
+</ul>
+</ul>
+
+<ul>
+<li>July 19, 2007</li>
+<ul>
+<li>Multi-key support patches sent to the LKML.</li>
+</ul>
+</ul>
+
+<ul>
+<li>March 15, 2007</li>
+<ul>
+<li>The April 2007 edition of Linux Journal has an <a
+href="http://www.linuxjournal.com/article/9400">article</a> on
+eCryptfs. It is on page 54 of the print edition.</li>
+</ul>
+</ul>
+
+<a name="documentation">
+<h3>Documentation</h3>
+
+<p>See the <a href="README">README</a> that is distributed with the
+eCryptfs source.</p>
+
+<p>Read the <a href="ecryptfs-faq.html">FAQ</a>.</p>
+
+<p>Read the <a href="ecryptfs-article.pdf">article</a> on
+eCryptfs. The content of this article was originally published in the
+April 2007 edition of Linux Journal magazine. This article is now part
+of the eCryptfs documentation.</p>
+
+<p>Read the <a href="ecryptfs-pam-doc.txt">guide</a> on setting up a
+wrapped passphrase PAM mount.</p>
+
+<p>Read the <a href="ecryptfs.pdf">2005 Ottawa Linux Symposium
+paper</a> on eCryptfs.</p>
+
+<p>Read the original <a href="ecryptfs_design_doc_v0_1.pdf">design
+document</a> detailing cryptographic properties of eCryptfs. Note
+that, due to the nature of the Linux kernel development process, the
+actual implementation may change at any time. Consult the source code
+directly to get an accurate understanding of exactly what eCryptfs
+does.</p>
+
+<a name="mailing_lists">
+<h3>Mailing Lists</h3>
+
+<p>Subscribe to the <a
+href="http://lists.sourceforge.net/lists/listinfo/ecryptfs-users">ecryptfs-users</a>
+or the <a
+href="http://lists.sourceforge.net/lists/listinfo/ecryptfs-devel">ecryptfs-devel</a>
+mailing list.</p>
+
+<a name="credits">
+<h3>Credits</h3>
+
+<p><a href="http://halcrow.us/mike.html">Michael Halcrow</a> is the
+lead developer.</p>
+
+<p>Michael Thompson is a developer.</p>
+
+<p><a href="http://hellewell.homeip.net/phillip/">Phillip
+Hellewell</a> is the project maintainer.</p>
+
+<p>Erez Zadok and his research team authored and maintain Cryptfs,
+which is the basis from which eCryptfs was developed.</p>
+
+<p>Many folks have contributed time and resources toward helping
+eCryptfs become what it is today. These include Steve French (CIFS),
+David Kleikamp (JFS), and many folks on various mailing lists.</p>
+
+</td>
+<td width="356" valign="top">
+<img src="ecryptfs-key-diagram-356.png" />
+</td>
+</tr>
+</table>
+
+<br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+<br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+<br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+<br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+
+</body>
+</html>
