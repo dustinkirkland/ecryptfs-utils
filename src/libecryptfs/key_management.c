@@ -805,3 +805,50 @@ int ecryptfs_validate_keyring(void)
 out:
 	return rc;
 }
+
+int ecryptfs_disable_echo(struct termios *saved_settings)
+{
+	struct termios current_settings;
+	int rc = 0;
+
+	rc = tcgetattr(0, &current_settings);
+	if (rc)
+		return rc;
+	*saved_settings = current_settings;
+	current_settings.c_lflag &= ~ECHO;
+	rc = tcsetattr(0, TCSANOW, &current_settings);
+	return rc;
+}
+
+int ecryptfs_enable_echo(struct termios *saved_settings)
+{
+	return tcsetattr(0, TCSANOW, saved_settings);
+}
+
+char *ecryptfs_get_passphrase(char *prompt) {
+	char *passphrase = NULL;
+	char *p;
+	struct termios current_settings;
+
+	if ((passphrase =
+	    (char *)malloc(ECRYPTFS_MAX_PASSWORD_LENGTH+1)) == NULL) {
+		perror("malloc");
+		printf("\n");
+		return NULL;
+	}
+	if (prompt != NULL) {
+		printf("%s: ", prompt);
+	}
+	ecryptfs_disable_echo(&current_settings);
+	if (fgets(passphrase,
+		  ECRYPTFS_MAX_PASSWORD_LENGTH, stdin) == NULL) {
+		ecryptfs_enable_echo(&current_settings);
+		printf("\n");
+		return NULL;
+	}
+	ecryptfs_enable_echo(&current_settings);
+	p = strrchr(passphrase, '\n');
+	if (p) *p = '\0';
+	printf("\n");
+	return passphrase;
+}

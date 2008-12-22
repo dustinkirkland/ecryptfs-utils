@@ -30,6 +30,7 @@
 #include <stdint.h>
 #include <netdb.h>
 #include <limits.h>
+#include <termios.h>
 #ifndef S_SPLINT_S
 #include <stdio.h>
 #include <syslog.h>
@@ -612,5 +613,10 @@ int ecryptfs_add_passphrase_blob_to_keyring(char *blob, char *sig);
 int ecryptfs_add_auth_tok_to_keyring(struct ecryptfs_auth_tok *auth_tok,
 				     char *auth_tok_sig);
 int ecryptfs_add_blob_to_keyring(char *blob, char *sig);
+
+int ecryptfs_disable_echo(struct termios *saved_settings);
+int ecryptfs_enable_echo(struct termios *saved_settings);
+char *ecryptfs_get_passphrase(char *prompt);
+
 
 #endif

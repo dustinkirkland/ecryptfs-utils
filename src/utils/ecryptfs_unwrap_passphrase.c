@@ -28,7 +28,7 @@ void usage(void)
 {
 	printf("Usage:\n"
 	       "\n"
-	       "ecryptfs-unwrap-passphrase [file] [wrapping passphrase]\n"
+	       "ecryptfs-unwrap-passphrase [file]\n"
 	       "or\n"
 	       "printf \"%%s\" \"wrapping passphrase\" | "
 	       "ecryptfs-unwrap-passphrase [file] -\n"
@@ -43,27 +43,25 @@ int main(int argc, char *argv[])
 	char salt[ECRYPTFS_SALT_SIZE];
 	char salt_hex[ECRYPTFS_SALT_SIZE_HEX];
 	int rc = 0;
-	char *p;
 
-	if (argc != 3) {
+	if (argc == 2) {
+		/* interactive mode */
+		wrapping_passphrase = ecryptfs_get_passphrase("Passphrase");
+	} else if (argc == 3 &&
+		   strlen(argv[2]) == 1 && strncmp(argv[2], "-", 1) == 0) {
+		/* stdin mode */
+		wrapping_passphrase = ecryptfs_get_passphrase(NULL);
+	} else if (argc == 3 &&
+		   (strlen(argv[2]) != 1 || strncmp(argv[2], "-", 1) == 0)) {
+		/* argument mode */
+		wrapping_passphrase = argv[2];
+	} else {
 		usage();
 		goto out;
 	}
-	if (strlen(argv[2]) == 1 && strncmp(argv[2], "-", 1) == 0) {
-		if ((wrapping_passphrase =
-		    (char *)malloc(ECRYPTFS_MAX_PASSWORD_LENGTH+1)) == NULL) {
-			perror("malloc");
-			goto out;
-		}
-		if (fgets(wrapping_passphrase,
-			  ECRYPTFS_MAX_PASSWORD_LENGTH, stdin) == NULL) {
-			usage();
-			goto out;
-		}
-		p = strrchr(wrapping_passphrase, '\n');
-		if (p) *p = '\0';
-	} else {
-		wrapping_passphrase = argv[2];
+	if (wrapping_passphrase == NULL) {
+		usage();
+		goto out;
 	}
 
 	file = argv[1];

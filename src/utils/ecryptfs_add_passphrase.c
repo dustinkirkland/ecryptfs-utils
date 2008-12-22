@@ -28,7 +28,7 @@ void usage(void)
 {
 	printf("Usage:\n"
 	       "\n"
-	       "ecryptfs-add-passphrase [passphrase]\n"
+	       "ecryptfs-add-passphrase"
 	       "or\n"
 	       "printf \"%%s\" \"passphrase\" | ecryptfs-add-passphrase -\n"
 	       "\n");
@@ -36,29 +36,32 @@ void usage(void)
 
 int main(int argc, char *argv[])
 {
-	char passphrase[ECRYPTFS_MAX_PASSWORD_LENGTH + 1];
+	char *passphrase;
 	char auth_tok_sig_hex[ECRYPTFS_SIG_SIZE_HEX + 1];
 	char salt[ECRYPTFS_SALT_SIZE];
 	char salt_hex[ECRYPTFS_SALT_SIZE_HEX];
 	int rc = 0;
-	char *p;
 
-	if (argc != 2) {
+	if (argc == 1) {
+		/* interactive mode */
+		passphrase = ecryptfs_get_passphrase("Passphrase");
+	} else if (argc == 2 &&
+		   strlen(argv[1]) == 1 && strncmp(argv[1], "-", 1) == 0) {
+		/* stdin mode */
+		passphrase = ecryptfs_get_passphrase(NULL);
+	} else if (argc == 2 &&
+		   (strlen(argv[1]) != 1 || strncmp(argv[1], "-", 1) != 0)) {
+		/* argument mode */
+		passphrase = argv[1];
+	} else {
 		usage();
 		goto out;
 	}
-	if (strlen(argv[1]) == 1 && strncmp(argv[1], "-", 1) == 0) {
-		if (fgets(passphrase,
-			  ECRYPTFS_MAX_PASSWORD_LENGTH, stdin) == NULL) {
-			usage();
-			goto out;
-		}
-		p = strrchr(passphrase, '\n');
-		if (p) *p = '\0';
-	} else {
-		memcpy(passphrase, argv[1], ECRYPTFS_MAX_PASSWORD_LENGTH);
-		passphrase[ECRYPTFS_MAX_PASSWORD_LENGTH] = '\0';
+	if (passphrase == NULL) {
+		usage();
+		goto out;
 	}
+
 	rc = ecryptfs_read_salt_hex_from_rc(salt_hex);
 	if (rc) {
 		fprintf(stderr, "%s\n", ECRYPTFS_WARN_DEFAULT_SALT);
