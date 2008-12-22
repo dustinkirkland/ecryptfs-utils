@@ -198,12 +198,14 @@ if [ -z "$LOGINPASS" ] && [ "$BOOTSTRAP" != "1" ]; then
 	tries=0
 	while [ $tries -lt $PW_ATTEMPTS ]; do
 		stty -echo
-		read -p "$MESSAGE: " -r LOGINPASS
+		echo -n "$MESSAGE: "
+		LOGINPASS=`line`
 		stty $stty_orig
 		echo
 		if [ $WRAPPING_PASS != "LOGIN" ]; then
 			stty -echo
-			read -p "$MESSAGE (again): " -r LOGINPASS2
+			echo -n "$MESSAGE (again): "
+			LOGINPASS2=`line`
 			stty $stty_orig
 			echo
 			if [ "$LOGINPASS" != "$LOGINPASS2" ]; then
@@ -237,7 +239,8 @@ if [ -z "$MOUNTPASS" ]; then
 	tries=0
 	while [ $tries -lt $PW_ATTEMPTS ]; do
 		stty -echo
-		read -p "Enter your mount passphrase [leave blank to generate one]: " -r MOUNTPASS
+		echo -n "Enter your mount passphrase [leave blank to generate one]: "
+		MOUNTPASS=`line`
 		stty $stty_orig
 		echo
 		if [ -z "$MOUNTPASS" ]; then
@@ -246,7 +249,8 @@ if [ -z "$MOUNTPASS" ]; then
 			break
 		else
 			stty -echo
-			read -p "Enter your mount passphrase (again): " -r MOUNTPASS2
+			echo -n "Enter your mount passphrase (again): "
+			MOUNTPASS2=`line`
 			stty $stty_orig
 			echo
 			if [ "$MOUNTPASS" != "$MOUNTPASS2" ]; then
