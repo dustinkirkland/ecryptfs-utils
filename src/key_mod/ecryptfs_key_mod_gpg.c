@@ -26,7 +26,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <gpgme/gpgme.h>
+#include <gpgme.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include "config.h"
