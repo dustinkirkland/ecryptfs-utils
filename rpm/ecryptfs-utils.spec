@@ -56,8 +56,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/ecryptfs-unwrap-passphrase
 %{_bindir}/ecryptfs-wrap-passphrase
 %{_bindir}/ecryptfs-add-passphrase
-%{_bindir}/ecryptfs-zombie-kill
-%{_bindir}/ecryptfs-zombie-list
 %{_bindir}/ecryptfsd
 %{_libdir}/libecryptfs.so.0.0.0
 %{_libdir}/libecryptfs.so.0

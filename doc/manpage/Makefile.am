@@ -23,8 +23,6 @@ dist_man_MANS = \
 	ecryptfs-umount-private.1 \
 	ecryptfs-unwrap-passphrase.1 \
 	ecryptfs-wrap-passphrase.1 \
-	ecryptfs-zombie-kill.1 \
-	ecryptfs-zombie-list.1 \
 	mount.ecryptfs.8 \
 	mount.ecryptfs_private.1 \
 	pam_ecryptfs.8 \

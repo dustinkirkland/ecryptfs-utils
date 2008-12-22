@@ -8,8 +8,7 @@ bin_PROGRAMS=ecryptfs-manager ecryptfs-wrap-passphrase \
 	     ecryptfs-unwrap-passphrase \
 	     ecryptfs-insert-wrapped-passphrase-into-keyring \
 	     ecryptfs-rewrap-passphrase \
-	     ecryptfs-add-passphrase ecryptfs-zombie-kill \
-	     ecryptfs-zombie-list \
+	     ecryptfs-add-passphrase \
 	     ecryptfs-stat
 bin_SCRIPTS = ecryptfs-setup-private \
 	      ecryptfs-mount-private \
@@ -42,10 +41,6 @@ ecryptfs_rewrap_passphrase_SOURCES = ecryptfs_rewrap_passphrase.c
 ecryptfs_rewrap_passphrase_LDADD = $(top_builddir)/src/libecryptfs/libecryptfs.la
 ecryptfs_add_passphrase_SOURCES = ecryptfs_add_passphrase.c
 ecryptfs_add_passphrase_LDADD = $(top_builddir)/src/libecryptfs/libecryptfs.la
-ecryptfs_zombie_kill_SOURCES = ecryptfs_zombie_kill.c
-ecryptfs_zombie_kill_LDADD = $(top_builddir)/src/libecryptfs/libecryptfs.la
-ecryptfs_zombie_list_SOURCES = ecryptfs_zombie_list.c
-ecryptfs_zombie_list_LDADD = $(top_builddir)/src/libecryptfs/libecryptfs.la
 
 ecryptfs_generate_tpm_key_SOURCES = ecryptfs_generate_tpm_key.c
 ecryptfs_generate_tpm_key_CFLAGS = $(AM_CFLAGS) $(TSPI_CFLAGS)
