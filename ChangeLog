@@ -1,0 +1,5 @@
+ecryptfs-utils-68
+ * Released 2008-12-22
+ * Reworked mount.ecryptfs_private counter
+ * Added interactive interfaces for the /usr/bin/ecryptfs-* utilities
+ * Several bug fixes
