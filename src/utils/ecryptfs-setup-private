@@ -45,8 +45,8 @@ usage() {
 	exit 1
 }
 
-undo() {
-	MESSAGE="
+undo_msg() {
+	echo "
 In the event that you want to remove your eCryptfs Private Directory setup,
 you will need to very carefully perform the following actions manually:
 
@@ -63,7 +63,6 @@ you will need to very carefully perform the following actions manually:
  6. Uninstall the utilities (this is specific to your Linux distribution)
    $ sudo apt-get remove ecryptfs-utils libecryptfs0
 "
-	echo $MESSAGE
 }
 
 error() {
@@ -113,7 +112,7 @@ while [ ! -z "$1" ]; do
 			shift 1
 		;;
 		--undo)
-			undo()
+			undo_msg
 			exit 0
 		;;
 		-b|--bootstrap)
