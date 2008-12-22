@@ -60,7 +60,8 @@ int main(int argc, char *argv[])
 		usage();
 		goto out;
 	}
-	if (wrapping_passphrase == NULL) {
+	if (wrapping_passphrase == NULL ||
+	    strlen(wrapping_passphrase) > ECRYPTFS_MAX_PASSWORD_LENGTH) {
 		usage();
 		goto out;
 	}

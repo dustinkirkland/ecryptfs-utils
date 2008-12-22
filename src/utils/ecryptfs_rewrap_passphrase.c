@@ -65,7 +65,9 @@ int main(int argc, char *argv[])
 		usage();
 		goto out;
 	}
-	if (old_wrapping_passphrase==NULL || new_wrapping_passphrase==NULL) {
+	if (old_wrapping_passphrase==NULL || new_wrapping_passphrase==NULL ||
+	    strlen(old_wrapping_passphrase) > ECRYPTFS_MAX_PASSWORD_LENGTH ||
+	    strlen(new_wrapping_passphrase) > ECRYPTFS_MAX_PASSWORD_LENGTH) {
 		usage();
 		goto out;
 	}
