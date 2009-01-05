@@ -339,7 +339,7 @@ int bump_counter(FILE *fh, int delta) {
 	/* Write the count to file */
 	rewind(fh);
 	fprintf(fh, "%d\n", count);
-	fsync(fileno(fh));
+	fflush(fh);
 	return count;
 }
 
@@ -356,7 +356,7 @@ int decrement(FILE *fh) {
 }
 
 int zero(FILE *fh) {
-/* Remove the counter file */
+/* Zero the counter file */
 	return bump_counter(fh, -MAXINT+1);
 }
 
@@ -532,10 +532,6 @@ int main(int argc, char *argv[]) {
 		 * Do not use the umount.ecryptfs helper (-i).
  		 */
 		setresuid(0,0,0);
-		/* Unfortunately, we need to unlock the counter before the
-		 * the execl() fork takes over this process
-		 */
-		unlock_counter(fh_counter);
 		execl("/bin/umount", "umount", "-i", "-l", mnt, NULL);
 		perror("execl unmount failed");
 		goto fail;
