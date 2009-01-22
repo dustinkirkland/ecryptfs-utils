@@ -590,8 +590,8 @@ int main(int argc, char **argv)
 				rc = -rc;
 			printf("Error mounting eCryptfs; rc = [%d]; strerr = "
 			       "[%s]. Check your system logs; visit "
-			       "<http://ecryptfs.sourceforge.net/"
-			       "ecryptfs-faq.html>.\n", rc, strerror(-rc));
+			       "<http://launchpad.net/ecryptfs>\n",
+			       rc, strerror(-rc));
 			if (rc == -ENODEV)
 				printf("Try ``modprobe ecryptfs''\n");
 		} else

@@ -4,14 +4,19 @@ eCryptfs is free software. Please see the file COPYING for details.
 For documentation, please see the files in the doc/ subdirectory.  For
 building and installation instructions please see the INSTALL file.
 
-Maintainer: Phillip Hellewell
-Lead developer: Michael A. Halcrow <mhalcrow@us.ibm.com>
-Developers: Michael C. Thompson
-            Kent Yoder
-            Trevor Highland
-            Tyler Hicks
-            Theresa Nelson
-Web Site: http://ecryptfs.sf.net
+Lead developers:
+	Tyler Hicks (kernel)
+	Dustin Kirkland (userspace)
+Contributors:
+	Michael Halcrow
+	Michael C. Thompson
+	Kent Yoder
+	Trevor Highland
+	Theresa Nelson
+Former maintainers:
+	Phillip Hellewell
+	Michael Halcrow
+Web Site: http://launchpad.net/ecryptfs
 
 As you should do with any filesystem, make sure to maintain a backup
 copy of any data you write into eCryptfs.  In addition, you should
@@ -353,7 +358,7 @@ out to the system log in that case.
 TROUBLESHOOTING
 
 See <doc/ecryptfs-faq.html>. For the most up-to-date FAQ, see
-<http://ecryptfs.sourceforge.net/ecryptfs-faq.html>.
+<http://launchpad.net/ecryptfs>.
 
 
 BUGS
