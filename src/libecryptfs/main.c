@@ -197,7 +197,7 @@ generate_fnek(char *fnek, char *salt, char *passphrase)
 #endif /* #ifdef ENABLE_NSS */
 	int dig_len = SHA512_DIGEST_LENGTH;
 	char buf[SHA512_DIGEST_LENGTH];
-	int hash_iterations = ECRYPTFS_DEFAULT_NUM_HASH_ITERATIONS;
+	int hash_iterations = ECRYPTFS_DEFAULT_NUM_FNEK_HASH_ITERATIONS;
 	int rc = 0;
 
 	passphrase_size = strlen(passphrase);
