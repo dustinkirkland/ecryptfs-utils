@@ -84,7 +84,7 @@ int check_username(char *u) {
 }
 
 
-char *fetch_sig(char *pw_dir, char *append) {
+char *fetch_sig(char *pw_dir, int entry) {
 /* Read ecryptfs signature from file and validate
  * Return signature as a string, or NULL on failure
  */
@@ -110,6 +110,14 @@ char *fetch_sig(char *pw_dir, char *append) {
 	if ((sig = (char *)malloc(KEY_BYTES*sizeof(char)+1)) == NULL) {
 		perror("malloc");
 		return NULL;
+	}
+	/* Move to the correct line in the file */
+	if (entry == 1) {
+		while ((c = fgetc(fh)) != EOF) {
+			if (c == '\n') {
+				break;
+			}
+		}
 	}
 	i = 0;
 	/* Read KEY_BYTES characters from file */
@@ -449,11 +457,13 @@ int main(int argc, char *argv[]) {
 	}
 
 	/* Fetch signatures from file */
-	sig = fetch_sig(pwd->pw_dir, "");
+	/* First line is the file content encryption key signature */
+	sig = fetch_sig(pwd->pw_dir, 0);
 	if (sig == NULL) {
 		goto fail;
 	}
-	sig_fnek = fetch_sig(pwd->pw_dir, "_fnek");
+	/* Second line, if present, is the filename encryption key signature */
+	sig_fnek = fetch_sig(pwd->pw_dir, 1);
 	if (sig_fnek == NULL) {
 		fnek = 0;
 	} else {
