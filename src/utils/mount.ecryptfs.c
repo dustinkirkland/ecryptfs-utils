@@ -471,14 +471,16 @@ static int ecryptfs_do_mount(int argc, char **argv, struct val_node *mnt_params,
 				goto out;
 			}
 		}
-		rc = asprintf(&new_opts, "%s,%s", val, temp);
-		if (rc == -1) {
-			new_opts = NULL;
-			rc = -ENOMEM;
-			goto out;
+		if (!strstr(temp, val)) {
+			rc = asprintf(&new_opts, "%s,%s", val, temp);
+			if (rc == -1) {
+				new_opts = NULL;
+				rc = -ENOMEM;
+				goto out;
+			}
+			free(temp);
 		}
 		rc = 0;
-		free(temp);
 	}
 	if ((rc = ecryptfs_validate_mount_opts(new_opts)) != 0) {
 		printf("Invalid mount options; aborting. rc = [%d]\n",
