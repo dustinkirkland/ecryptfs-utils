@@ -3,12 +3,14 @@
 ecryptfs-add-passphrase \- add an eCryptfs mount passphrase to the kernel keyring.
 
 .SH SYNOPSIS
-\fBecryptfs-add-passphrase\fP
+\fBecryptfs-add-passphrase\fP [\-\-fnek]
 
-printf "%s" "passphrase" | \fBecryptfs-add-passphrase -\fP
+printf "%s" "passphrase" | \fBecryptfs-add-passphrase\fP [\-\-fnek] -
 
 .SH DESCRIPTION
 \fBecryptfs-add-passphrase\fP is a utility to manually add a passphrase to the kernel keyring.
+
+If the \-\-fnek option is specified, the filename encryption key associated with the input passphrase will also be added to the keyring.
 
 .SH SEE ALSO
 .PD 0

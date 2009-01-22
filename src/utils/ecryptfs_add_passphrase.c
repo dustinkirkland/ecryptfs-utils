@@ -28,9 +28,10 @@ void usage(void)
 {
 	printf("Usage:\n"
 	       "\n"
-	       "ecryptfs-add-passphrase"
+	       "ecryptfs-add-passphrase [--fnek]"
 	       "or\n"
-	       "printf \"%%s\" \"passphrase\" | ecryptfs-add-passphrase -\n"
+	       "printf \"%%s\" \"passphrase\" | ecryptfs-add-passphrase"
+	       " [--fnek] -\n"
 	       "\n");
 }
 
@@ -41,18 +42,26 @@ int main(int argc, char *argv[])
 	char salt[ECRYPTFS_SALT_SIZE];
 	char salt_hex[ECRYPTFS_SALT_SIZE_HEX];
 	int rc = 0;
+	int fnek = 0;
 
 	if (argc == 1) {
 		/* interactive mode */
 		passphrase = ecryptfs_get_passphrase("Passphrase");
 	} else if (argc == 2 &&
+		   strlen(argv[1]) == 6 && strncmp(argv[1], "--fnek", 6) == 0) {
+		/* interactive mode, plus fnek */
+		passphrase = ecryptfs_get_passphrase("Passphrase");
+		fnek = 1;
+	} else if (argc == 2 &&
 		   strlen(argv[1]) == 1 && strncmp(argv[1], "-", 1) == 0) {
 		/* stdin mode */
 		passphrase = ecryptfs_get_passphrase(NULL);
-	} else if (argc == 2 &&
-		   (strlen(argv[1]) != 1 || strncmp(argv[1], "-", 1) != 0)) {
-		/* argument mode */
-		passphrase = argv[1];
+	} else if (argc == 3 &&
+		/* stdin mode, plus fnek */
+		   (strlen(argv[1])==6 && strncmp(argv[1], "--fnek", 6)==0) &&
+		   (strlen(argv[2])==1 && strncmp(argv[2], "-", 1)==0)) {
+		passphrase = ecryptfs_get_passphrase(NULL);
+		fnek = 1;
 	} else {
 		usage();
 		goto out;
@@ -79,6 +88,22 @@ int main(int argc, char *argv[])
 	auth_tok_sig_hex[ECRYPTFS_SIG_SIZE_HEX] = '\0';
 	printf("Inserted auth tok with sig [%s] into the user session "
 	       "keyring\n", auth_tok_sig_hex);
+
+	if (fnek == 0) {
+		goto out;
+	}
+
+	if ((rc = ecryptfs_add_filename_key_to_keyring(auth_tok_sig_hex, 
+					passphrase, salt))) {
+		fprintf(stderr, "%s [%d]\n", ECRYPTFS_ERROR_INSERT_KEY, rc);
+		fprintf(stderr, "%s\n", ECRYPTFS_INFO_CHECK_LOG);
+		rc = 1;
+		goto out;
+	}
+	auth_tok_sig_hex[ECRYPTFS_SIG_SIZE_HEX] = '\0';
+	printf("Inserted auth tok with sig [%s] into the user session "
+	       "keyring\n", auth_tok_sig_hex);
+
 out:
 	return rc;
 }
