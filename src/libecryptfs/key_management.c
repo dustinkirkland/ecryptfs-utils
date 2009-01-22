@@ -725,8 +725,11 @@ int ecryptfs_read_salt_hex_from_rc(char *salt_hex)
 	memset(&nvp_list_head, 0, sizeof(struct ecryptfs_name_val_pair));
 	rc = ecryptfs_parse_rc_file(&nvp_list_head);
 	if (rc) {
-		syslog(LOG_WARNING, "Error attempting to parse .ecryptfsrc "
-		       "file; rc = [%d]", rc);
+		if (rc != -EIO) {
+			syslog(LOG_WARNING,
+				"Error attempting to parse .ecryptfsrc file; "
+				"rc = [%d]", rc);
+		}
 		goto out;
 	}
 	nvp = &nvp_list_head;
