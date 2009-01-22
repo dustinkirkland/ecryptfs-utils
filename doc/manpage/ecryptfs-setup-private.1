@@ -3,7 +3,7 @@
 ecryptfs-setup-private \- setup an eCryptfs private directory.
 
 .SH SYNOPSIS
-.BI "ecryptfs-setup-private [\-f|\-\-force] [\-w|\-\-wrapping] [\-a|\-\-all\-home] [\-u|\-\-username USER] [\-l|\-\-loginpass LOGINPASS] [-m|\-\-mountpass MOUNTPASS]"
+.BI "ecryptfs-setup-private [\-f|\-\-force] [\-w|\-\-wrapping] [\-a|\-\-all\-home] [\-n|\-\-no-fnek] [\-u|\-\-username USER] [\-l|\-\-loginpass LOGINPASS] [\-m|\-\-mountpass MOUNTPASS]"
 
 .SH OPTIONS
 Options available for the \fBecryptfs-setup-private\fP command:
@@ -28,6 +28,9 @@ Generate a setup for encrypting the user's entire home directory
 .TP
 .B \-\-undo
 Display instructions on how to undo an encrypted private setup
+.TP
+.B \-n, \-\-no\-fnek
+Do not encrypt filenames; otherwise, filenames will be encrypted on systems which support filename encryption
 
 .SH DESCRIPTION
 \fBecryptfs-setup-private\fP is a program that sets up a private cryptographic mountpoint for a non-root user.
