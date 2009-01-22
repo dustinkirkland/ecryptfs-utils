@@ -172,6 +172,62 @@ generate_passphrase_sig(char *passphrase_sig, char *fekek,
 }
 
 /**
+ * @fnek An allocated char array into which the generated
+ * passphrase is written; ECRYPTFS_MAX_PASSPHRASE_BYTES bytes should be
+ * allocated
+ *
+ * @passphrase A NULL-terminated char array
+ *
+ * @salt A salt
+ *
+ * @passphrase_sig An allocated char array into which the generated
+ * signature is written; PASSWORD_SIG_SIZE bytes should be allocated
+ *
+ */
+int
+generate_fnek(char *fnek, char *salt, char *passphrase)
+{
+	char salt_and_passphrase[ECRYPTFS_MAX_PASSPHRASE_BYTES
+				 + ECRYPTFS_SALT_SIZE];
+	int passphrase_size;
+#ifdef ENABLE_NSS
+	int alg = SEC_OID_SHA512;
+#else
+	int alg = GCRY_MD_SHA512;
+#endif /* #ifdef ENABLE_NSS */
+	int dig_len = SHA512_DIGEST_LENGTH;
+	char buf[SHA512_DIGEST_LENGTH];
+	int hash_iterations = ECRYPTFS_DEFAULT_NUM_HASH_ITERATIONS;
+	int rc = 0;
+
+	passphrase_size = strlen(passphrase);
+	if (passphrase_size > ECRYPTFS_MAX_PASSPHRASE_BYTES) {
+		fnek = NULL;
+		syslog(LOG_ERR, "Passphrase too large (%d bytes)\n",
+		       passphrase_size);
+		return -EINVAL;
+	}
+	memcpy(salt_and_passphrase, salt, ECRYPTFS_SALT_SIZE);
+	memcpy((salt_and_passphrase + ECRYPTFS_SALT_SIZE), passphrase,
+		passphrase_size);
+	if ((rc = do_hash(salt_and_passphrase,
+			  (ECRYPTFS_SALT_SIZE + passphrase_size), buf, alg))) {
+		return rc;
+	}
+	hash_iterations--;
+	while (hash_iterations--) {
+		if ((rc = do_hash(buf, dig_len, buf, alg))) {
+			return rc;
+		}
+	}
+	if ((rc = do_hash(buf, dig_len, buf, alg))) {
+		return rc;
+	}
+	to_hex(fnek, buf, ECRYPTFS_MAX_KEY_BYTES/4);
+	return 0;
+}
+
+/**
  * @return Zero on success
  */
 int

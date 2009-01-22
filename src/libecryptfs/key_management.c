@@ -185,6 +185,22 @@ int ecryptfs_add_blob_to_keyring(char *blob, char *sig)
 	return rc;
 }
 
+int ecryptfs_add_filename_key_to_keyring(char *auth_tok_sig, char *passphrase,
+					 char *salt)
+{
+	char fnek[ECRYPTFS_MAX_PASSPHRASE_BYTES + 1] ;
+	int rc;
+
+	rc = generate_fnek(fnek, ECRYPTFS_DEFAULT_SALT_FNEK_HEX, passphrase);
+	if (rc) {
+		syslog(LOG_ERR, "Error generating fnek; "
+				"rc = [%d]\n", rc);
+		rc = (rc < 0) ? rc : rc * -1;
+		return rc;
+	}
+	return ecryptfs_add_passphrase_key_to_keyring(auth_tok_sig, fnek, salt);
+}
+
 /**
  * This is the common functionality used to put a password generated key into
  * the keyring, shared by both non-interactive and interactive signature
@@ -612,6 +628,7 @@ int ecryptfs_insert_wrapped_passphrase_into_keyring(
 	char *salt)
 {
 	char decrypted_passphrase[ECRYPTFS_MAX_PASSPHRASE_BYTES + 1] ;
+	char dummy[ECRYPTFS_SIG_SIZE_HEX + 1];
 	int rc;
 
 	if ((rc = ecryptfs_unwrap_passphrase(decrypted_passphrase, filename,
@@ -621,12 +638,17 @@ int ecryptfs_insert_wrapped_passphrase_into_keyring(
 		rc = -EIO;
 		goto out;
 	}
+	if ((rc = ecryptfs_add_filename_key_to_keyring(dummy,
+							decrypted_passphrase,
+							salt))) {
+		syslog(LOG_ERR, "Error attempting to add filename key to "
+		       "user session keyring; rc = [%d]\n", rc);
+	}
 	if ((rc = ecryptfs_add_passphrase_key_to_keyring(auth_tok_sig,
 							 decrypted_passphrase,
 							 salt))) {
 		syslog(LOG_ERR, "Error attempting to add passphrase key to "
 		       "user session keyring; rc = [%d]\n", rc);
-		goto out;
 	}
 out:
 	return rc;

@@ -84,7 +84,7 @@ int check_username(char *u) {
 }
 
 
-char *fetch_sig(char *pw_dir) {
+char *fetch_sig(char *pw_dir, char *append) {
 /* Read ecryptfs signature from file and validate
  * Return signature as a string, or NULL on failure
  */
@@ -94,14 +94,17 @@ char *fetch_sig(char *pw_dir) {
 	int i;
 	/* Construct sig file name */
 	if (
-	    asprintf(&sig_file, "%s/.ecryptfs/%s.sig", pw_dir, PRIVATE_DIR) < 0
+	    asprintf(&sig_file, "%s/.ecryptfs/%s%s.sig", pw_dir,
+		     PRIVATE_DIR, append) < 0
 	   ) {
 		perror("asprintf");
 		return NULL;
 	}
 	fh = fopen(sig_file, "r");
 	if (fh == NULL) {
-		perror("fopen");
+		if (strlen(append) == 0) {
+			perror("fopen");
+		}
 		return NULL;
 	}
 	if ((sig = (char *)malloc(KEY_BYTES*sizeof(char)+1)) == NULL) {
@@ -130,7 +133,7 @@ char *fetch_sig(char *pw_dir) {
 	/* Validate that signature is in the current keyring,
 	 * compile with -lkeyutils
 	 */
-	if ((int)keyctl_search(KEY_SPEC_USER_KEYRING, "user", sig, 0) == -1) {
+	if (keyctl_search(KEY_SPEC_USER_KEYRING, "user", sig, 0) < 0) {
 		perror("keyctl_search");
 		fputs("Perhaps try the interactive 'ecryptfs-mount-private'\n",
 			stderr);
@@ -398,9 +401,10 @@ int zero(FILE *fh) {
 int main(int argc, char *argv[]) {
 	int uid, mounting;
 	int force = 0;
+	int fnek = 1;
 	struct passwd *pwd;
 	char *dev, *mnt, *opt;
-	char *sig;
+	char *sig, *sig_fnek;
 	FILE *fh_counter = NULL;
 
 	uid = getuid();
@@ -444,9 +448,16 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	/* Fetch signature from file */
-	if ((sig = fetch_sig(pwd->pw_dir)) == NULL) {
+	/* Fetch signatures from file */
+	sig = fetch_sig(pwd->pw_dir, "");
+	if (sig == NULL) {
 		goto fail;
+	}
+	sig_fnek = fetch_sig(pwd->pw_dir, "_fnek");
+	if (sig_fnek == NULL) {
+		fnek = 0;
+	} else {
+		fnek = 1;
 	}
 
 	/* Construct device, mount point, and mount options */
@@ -461,12 +472,24 @@ int main(int argc, char *argv[]) {
 		perror("asprintf (mnt)");
 		goto fail;
 	}
-	if ((asprintf(&opt,
-	 "ecryptfs_sig=%s,ecryptfs_cipher=%s,ecryptfs_key_bytes=%d",
-	 sig, KEY_CIPHER, KEY_BYTES) < 0) ||
-	 opt == NULL) {
-		perror("asprintf (opt)");
-		goto fail;
+	if (fnek == 1) {
+		/* Filename encryption is on, so specific the fnek sig */
+		if ((asprintf(&opt,
+"ecryptfs_sig=%s,ecryptfs_fnek_sig=%s,ecryptfs_cipher=%s,ecryptfs_key_bytes=%d",
+		 sig, sig_fnek, KEY_CIPHER, KEY_BYTES) < 0) ||
+		 opt == NULL) {
+			perror("asprintf (opt)");
+			goto fail;
+		}
+	} else {
+		/* Filename encryption is off; legacy support */
+		if ((asprintf(&opt,
+		 "ecryptfs_sig=%s,ecryptfs_cipher=%s,ecryptfs_key_bytes=%d",
+		 sig, KEY_CIPHER, KEY_BYTES) < 0) ||
+		 opt == NULL) {
+			perror("asprintf (opt)");
+			goto fail;
+		}
 	}
 
 	/* Check ownership of mnt */

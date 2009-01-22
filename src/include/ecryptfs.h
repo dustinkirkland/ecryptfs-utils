@@ -79,6 +79,7 @@
 #define ECRYPTFS_SALT_SIZE 8
 #define ECRYPTFS_SALT_SIZE_HEX (ECRYPTFS_SALT_SIZE*2)
 #define ECRYPTFS_DEFAULT_SALT_HEX "0011223344556677"
+#define ECRYPTFS_DEFAULT_SALT_FNEK_HEX "9988776655443322"
 /* The original signature size is only for what is stored on disk; all
  * in-memory representations are expanded hex, so it better adapted to
  * be passed around on the command line */
@@ -522,6 +523,8 @@ int ecryptfs_eval_decision_graph(struct ecryptfs_ctx *ctx,
 				 struct ecryptfs_name_val_pair *nvp_head);
 int ecryptfs_add_passphrase_key_to_keyring(char *auth_tok_sig, char *passphrase,
 					   char *salt);
+int ecryptfs_add_filename_key_to_keyring(char *auth_tok_sig, char *passphrase,
+					   char *salt);
 int ecryptfs_add_key_module_key_to_keyring(char *auth_tok_sig,
 					   struct ecryptfs_key_mod *key_mod);
 int ecryptfs_read_salt_hex_from_rc(char *salt_hex);
@@ -539,6 +542,7 @@ int ecryptfs_find_key_mod(struct ecryptfs_key_mod **key_mod,
 			  struct ecryptfs_ctx *ctx, char *key_mod_alias);
 int generate_passphrase_sig(char *passphrase_sig, char *fekek, char *salt,
 			    char *passphrase);
+int generate_fnek(char *fnek, char *salt, char *passphrase);
 int
 generate_payload(struct ecryptfs_auth_tok *auth_tok, char *passphrase_sig,
 		 char *salt, char *session_key_encryption_key);
