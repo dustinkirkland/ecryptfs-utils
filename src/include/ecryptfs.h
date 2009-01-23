@@ -134,9 +134,6 @@
 #define ECRYPTFS_SALTLESS 1
 /* Hash iterations are intended to make dictionary attacks more difficult */
 #define ECRYPTFS_DEFAULT_NUM_HASH_ITERATIONS 65536
-/* Filename encryption key generation starts with a salted hash, so
-   a large number of hash iteration is not that important */
-#define ECRYPTFS_DEFAULT_NUM_FNEK_HASH_ITERATIONS 1024
 
 #define ECRYPTFS_FILE_SIZE_BYTES (sizeof(uint64_t))
 

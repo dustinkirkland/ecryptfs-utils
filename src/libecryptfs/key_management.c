@@ -612,7 +612,6 @@ int ecryptfs_insert_wrapped_passphrase_into_keyring(
 	char *salt)
 {
 	char decrypted_passphrase[ECRYPTFS_MAX_PASSPHRASE_BYTES + 1] ;
-	char dummy[ECRYPTFS_SIG_SIZE_HEX + 1];
 	int rc;
 	uint32_t version;
 
