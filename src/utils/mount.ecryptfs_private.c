@@ -94,8 +94,8 @@ char *fetch_sig(char *pw_dir, int entry) {
 	int i;
 	/* Construct sig file name */
 	if (
-	    asprintf(&sig_file, "%s/.ecryptfs/%s%s.sig", pw_dir,
-		     PRIVATE_DIR, append) < 0
+	    asprintf(&sig_file, "%s/.ecryptfs/%s.sig", pw_dir,
+		     PRIVATE_DIR) < 0
 	   ) {
 		perror("asprintf");
 		return NULL;
