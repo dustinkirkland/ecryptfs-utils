@@ -12,7 +12,7 @@ PW_ATTEMPTS=3
 MESSAGE="Enter your login passphrase"
 CIPHER="aes"
 KEYBYTES="16"
-FNEK="--fnek"
+FNEK=
 
 # Zero out user-defined GREP_OPTIONS, such as --line-number
 GREP_OPTIONS=
@@ -36,9 +36,7 @@ usage() {
 	echo "                  Generates a random mount passphrase, which"
 	echo "			will be wrapped when the new login passphrase"
 	echo "			is set. SHOULD ONLY BE CALLED FROM 'adduser'."
-	echo " -n, --no-fnek    Do not encrypt filenames; otherwise, filenames"
-	echo "                  will be encrypted on systems which support"
-	echo "                  filename encryption"
+	echo " --fnek           Encrypt filenames too; Requires kernel support"
 	echo " --undo           Provide instructions on how to undo an"
 	echo "                  encrypted private setup"
 	echo
@@ -126,8 +124,9 @@ while [ ! -z "$1" ]; do
 			RANDOM_MOUNTPASS=1
 			shift 1
 		;;
-		-n|--no-fnek)
-			FNEK=
+		--fnek)
+			let "`cat /sys/fs/ecryptfs/version` & 0x00000100" || error "Your kernel does not support filename encryption"
+			FNEK="--fnek"
 			shift 1
 		;;
 		*)
