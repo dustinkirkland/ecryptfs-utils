@@ -102,9 +102,7 @@ char *fetch_sig(char *pw_dir, int entry) {
 	}
 	fh = fopen(sig_file, "r");
 	if (fh == NULL) {
-		if (strlen(append) == 0) {
-			perror("fopen");
-		}
+		perror("fopen");
 		return NULL;
 	}
 	if ((sig = (char *)malloc(KEY_BYTES*sizeof(char)+1)) == NULL) {
