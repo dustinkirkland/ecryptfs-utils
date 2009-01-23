@@ -161,6 +161,7 @@
 #define ECRYPTFS_ERROR_UNWRAP "Error: Unwrapping passphrase failed"
 #define ECRYPTFS_ERROR_UNWRAP_AND_INSERT "Error: Unwrapping passphrase and inserting into the user session keyring failed"
 #define ECRYPTFS_ERROR_WRAP "Error: Wrapping passphrase failed"
+#define ECRYPTFS_ERROR_FNEK_SUPPORT "Error: Your kernel does not support filename encryption"
 #define ECRYPTFS_INFO_CHECK_LOG "Info: Check the system log for more information from libecryptfs"
 #define ECRYPTFS_WARN_DEFAULT_SALT "Warning: Using default salt value (undefined in ~/.ecryptfsrc)"
 

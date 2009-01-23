@@ -43,6 +43,7 @@ int main(int argc, char *argv[])
 	char salt_hex[ECRYPTFS_SALT_SIZE_HEX];
 	int rc = 0;
 	int fnek = 0;
+	uint32_t version;
 
 	if (argc == 1) {
 		/* interactive mode */
@@ -71,6 +72,16 @@ int main(int argc, char *argv[])
 		usage();
 		goto out;
 	}
+	if (fnek == 1) {
+		rc = ecryptfs_get_version(&version);
+		if (rc != 0) {
+			fprintf(stderr, "%s\n", ECRYPTFS_ERROR_FNEK_SUPPORT);
+			goto out;
+		} else if (!ecryptfs_supports_filename_encryption(version)) { 
+			fprintf(stderr, "%s\n", ECRYPTFS_ERROR_FNEK_SUPPORT);
+			goto out;
+		}
+	}
 
 	rc = ecryptfs_read_salt_hex_from_rc(salt_hex);
 	if (rc) {
@@ -93,8 +104,8 @@ int main(int argc, char *argv[])
 		goto out;
 	}
 
-	if ((rc = ecryptfs_add_filename_key_to_keyring(auth_tok_sig_hex, 
-					passphrase, salt))) {
+	if ((rc = ecryptfs_add_passphrase_key_to_keyring(auth_tok_sig_hex,
+				 passphrase, ECRYPTFS_DEFAULT_SALT_FNEK_HEX))) {
 		fprintf(stderr, "%s [%d]\n", ECRYPTFS_ERROR_INSERT_KEY, rc);
 		fprintf(stderr, "%s\n", ECRYPTFS_INFO_CHECK_LOG);
 		rc = 1;
