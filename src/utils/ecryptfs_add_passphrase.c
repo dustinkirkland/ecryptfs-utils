@@ -74,10 +74,7 @@ int main(int argc, char *argv[])
 	}
 	if (fnek == 1) {
 		rc = ecryptfs_get_version(&version);
-		if (rc != 0) {
-			fprintf(stderr, "%s\n", ECRYPTFS_ERROR_FNEK_SUPPORT);
-			goto out;
-		} else if (!ecryptfs_supports_filename_encryption(version)) { 
+		if (rc!=0 || !ecryptfs_supports_filename_encryption(version)) { 
 			fprintf(stderr, "%s\n", ECRYPTFS_ERROR_FNEK_SUPPORT);
 			goto out;
 		}
@@ -104,6 +101,9 @@ int main(int argc, char *argv[])
 		goto out;
 	}
 
+	/* If we make it here, filename encryption is enabled, and it has
+	 * been requested that we add the fnek to the keyring too
+	 */
 	if ((rc = ecryptfs_add_passphrase_key_to_keyring(auth_tok_sig_hex,
 				 passphrase, ECRYPTFS_DEFAULT_SALT_FNEK_HEX))) {
 		fprintf(stderr, "%s [%d]\n", ECRYPTFS_ERROR_INSERT_KEY, rc);

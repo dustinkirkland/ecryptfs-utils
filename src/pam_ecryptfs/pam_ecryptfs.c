@@ -134,6 +134,7 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags, int argc,
 		if ((argc == 1)
 		    && (memcmp(argv[0], "unwrap\0", 7) == 0)) {
 			char *wrapped_pw_filename;
+			uint32_t version;
 			
 			rc = asprintf(
 				&wrapped_pw_filename, "%s/.ecryptfs/%s",
@@ -147,6 +148,15 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags, int argc,
 			rc = ecryptfs_insert_wrapped_passphrase_into_keyring(
 				auth_tok_sig, wrapped_pw_filename, passphrase,
 				salt);
+			rc = ecryptfs_get_version(&version);
+			if (rc==0 ||
+			    ecryptfs_supports_filename_encryption(version)) {
+				rc = ecryptfs_insert_wrapped_passphrase_into_keyring(
+					auth_tok_sig_hex, file,
+					wrapping_passphrase,
+					ECRYPTFS_DEFAULT_SALT_FNEK_HEX);
+
+			}
 			free(wrapped_pw_filename);
 		} else {
 			rc = ecryptfs_add_passphrase_key_to_keyring(
