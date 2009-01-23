@@ -86,6 +86,11 @@ random_passphrase () {
 	od -x -N $bytes --width=$bytes /dev/urandom | head -n 1 | sed "s/^0000000//" | sed "s/\s*//g"
 }
 
+filename_encryption_available() {
+	version=$(cat /sys/fs/ecryptfs/version)
+	/bin/bash -c "let '$version & 0x00000100' || exit 1"
+}
+
 if [ ! -z "$SUDO_USER" ]; then
 	USER="$SUDO_USER"
 fi
@@ -125,7 +130,7 @@ while [ ! -z "$1" ]; do
 			shift 1
 		;;
 		--fnek)
-			let "`cat /sys/fs/ecryptfs/version` & 0x00000100" || error "Your kernel does not support filename encryption"
+			filename_encryption_available || error "Your kernel does not support filename encryption"
 			FNEK="--fnek"
 			shift 1
 		;;
