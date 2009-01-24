@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
 		/* stdin mode */
 		wrapping_passphrase = ecryptfs_get_passphrase(NULL);
 	} else if (argc == 4 &&
-		   strlen(argv[2]) == 6 && strncmp(argv[2], "--fnek", 6) == 0
+		   strlen(argv[2]) == 6 && strncmp(argv[2], "--fnek", 6) == 0 &&
 		   strlen(argv[3]) == 1 && strncmp(argv[3], "-", 1) == 0) {
 		/* stdin mode, plus fnek */
 		wrapping_passphrase = ecryptfs_get_passphrase(NULL);

@@ -152,8 +152,8 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags, int argc,
 			if (rc==0 ||
 			    ecryptfs_supports_filename_encryption(version)) {
 				rc = ecryptfs_insert_wrapped_passphrase_into_keyring(
-					auth_tok_sig_hex, file,
-					wrapping_passphrase,
+					auth_tok_sig, wrapped_pw_filename,
+					passphrase,
 					ECRYPTFS_DEFAULT_SALT_FNEK_HEX);
 
 			}
