@@ -20,7 +20,7 @@ GREP_OPTIONS=
 usage() {
 	echo
 	echo "Usage:"
-	echo "# $0 [-f|--force] [-w|--wrapping] [-n,--no-fnek]"
+	echo "  $0 [-f|--force] [-w|--wrapping] [-n|--no-fnek]"
 	echo "  [-u|--username USER] [-l|--loginpass LOGINPASS]"
 	echo "  [-m|--mountpass MOUNTPASS]"
 	echo
@@ -134,7 +134,7 @@ while [ ! -z "$1" ]; do
 			RANDOM_MOUNTPASS=1
 			shift 1
 		;;
-		-n,--no-fnek)
+		-n|--no-fnek)
 			FNEK=
 			shift 1
 		;;
