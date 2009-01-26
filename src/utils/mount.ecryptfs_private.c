@@ -132,7 +132,11 @@ char *fetch_sig(char *pw_dir, int entry) {
 	fclose(fh);
 	/* Check signature length */
 	if (i != KEY_BYTES) {
-		fputs("Invalid hex signature length\n", stderr);
+		if (entry == 1 && i == 0) {
+			/* This means that we have no fnek sig; tis okay */
+		} else {
+			fputs("Invalid hex signature length\n", stderr);
+		}
 		return NULL;
 	}
 	sig[KEY_BYTES] = '\0';
