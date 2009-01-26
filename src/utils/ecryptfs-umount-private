@@ -1,7 +1,17 @@
 #!/bin/sh -e
 # This script unmounts a user's private ecryptfs folder
+# and clears the kernel keyring of the relevant keys
 #
 # Original by Michael Halcrow, IBM
 # Extracted to a stand-alone script by Dustin Kirkland <kirkland@canonical.com>
 
-/sbin/umount.ecryptfs_private
+out=`/sbin/umount.ecryptfs_private 2>&1`
+if [ -n "$out" ]; then
+	echo "$out"
+fi
+if echo "$out" | grep -q -v "Sessions still open"; then
+	for sig in `cat "$HOME/.ecryptfs/Private.sig"`; do
+		key_id=`keyctl show | grep "$sig$" | awk '{print $1}'`
+		keyctl unlink "$key_id" @u
+	done
+fi
