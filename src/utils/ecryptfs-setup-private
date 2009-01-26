@@ -20,12 +20,16 @@ GREP_OPTIONS=
 usage() {
 	echo
 	echo "Usage:"
-	echo "# $0 [-f|--force] [-w|--wrapping] [-u|--username USER]"
-	echo "  [-l|--loginpass LOGINPASS] [-m|--mountpass MOUNTPASS]"
+	echo "# $0 [-f|--force] [-w|--wrapping] [-n,--no-fnek]"
+	echo "  [-u|--username USER] [-l|--loginpass LOGINPASS]"
+	echo "  [-m|--mountpass MOUNTPASS]"
 	echo
 	echo " -f, --force      Force overwriting of an existing setup"
 	echo " -w, --wrapping   Use an independent wrapping passphrase,"
 	echo "                  different from the login passphrase"
+	echo " -n, --no-fnek    Do not encrypt filenames; If this flag is"
+	echo "                  omitted, and the kernel supports filename"
+	echo "                  encryption, then filenames will be encrypted"
 	echo " -u, --username   Username for encrypted private mountpoint,"
 	echo "                  defaults to yourself"
 	echo " -l, --loginpass  Login/Wrapping passphrase for USER,"
@@ -36,7 +40,6 @@ usage() {
 	echo "                  Generates a random mount passphrase, which"
 	echo "			will be wrapped when the new login passphrase"
 	echo "			is set. SHOULD ONLY BE CALLED FROM 'adduser'."
-	echo " --fnek           Encrypt filenames too; Requires kernel support"
 	echo " --undo           Provide instructions on how to undo an"
 	echo "                  encrypted private setup"
 	echo
@@ -91,6 +94,8 @@ filename_encryption_available() {
 	/bin/bash -c "let '$version & 0x00000100' || exit 1"
 }
 
+filename_encryption_available && FNEK="--fnek"
+
 if [ ! -z "$SUDO_USER" ]; then
 	USER="$SUDO_USER"
 fi
@@ -129,9 +134,8 @@ while [ ! -z "$1" ]; do
 			RANDOM_MOUNTPASS=1
 			shift 1
 		;;
-		--fnek)
-			filename_encryption_available || error "Your kernel does not support filename encryption"
-			FNEK="--fnek"
+		-n,--no-fnek)
+			FNEK=
 			shift 1
 		;;
 		*)
