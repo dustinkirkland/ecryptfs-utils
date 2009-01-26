@@ -377,7 +377,14 @@ if [ "$BOOTSTRAP" = "1" ]; then
 	# NOTE: it is the responsibility of 'adduser' to unmount!
 	# And ensure that $USER owns the files/dirs we've created as root
 	chown $USER:$USER "$CRYPTDIR" /dev/shm/.ecryptfs-$USER
-	mount -i -t ecryptfs -o "rw,ecryptfs_sig=$sig,ecryptfs_cipher=$CIPHER,ecryptfs_key_bytes=$KEYBYTES,user=$USER" "$CRYPTDIR" "$MOUNTPOINT" || error "Could not mount"
+	if [ "$FNEK" = "--fnek" ]; then
+		fnek_sig=`tail -n 1 "$HOME/.ecryptfs/$PRIVATE_DIR.sig"`
+		sig=`head -n 1 "$HOME/.ecryptfs/$PRIVATE_DIR.sig"`
+		sig_opt="ecryptfs_sig=$sig,ecryptfs_fnek_sig=$fnek_sig"
+	else
+		sig_opt="ecryptfs_sig=$sig"
+	fi
+	mount -i -t ecryptfs -o "rw,$sig_opt,ecryptfs_cipher=$CIPHER,ecryptfs_key_bytes=$KEYBYTES" "$CRYPTDIR" "$MOUNTPOINT" || error "Could not mount"
 	ln -sf /var/lib/ecryptfs/$USER $MOUNTPOINT/.ecryptfs
 	for i in auto-mount \
 		 auto-umount \
