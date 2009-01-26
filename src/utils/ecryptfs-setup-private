@@ -410,7 +410,9 @@ md5sum1=`md5sum "$temp"` || error_testing "$temp" "Could not read encrypted file
 /sbin/mount.ecryptfs_private || error_testing "$temp" "Could not mount private ecryptfs directory (2)"
 md5sum2=`md5sum "$temp"` || error_testing "$temp" "Could not read encrypted file (2)"
 rm -f "$temp"
-/sbin/umount.ecryptfs_private || error_testing "$temp" "Could not unmount private ecryptfs directory (2)"
+# Use ecryptfs-umount-private on the final run, to clear the used keys
+# out of the keyring
+ecryptfs-umount-private || error_testing "$temp" "Could not unmount private ecryptfs directory (2)"
 if [ "$md5sum1" != "$md5sum2" ]; then
 	error "Testing failed."
 else
