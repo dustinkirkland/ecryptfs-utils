@@ -525,6 +525,8 @@ int main(int argc, char **argv)
 		goto out;
 	}
 	rc = ecryptfs_get_version(&version);
+	if (rc && system("modprobe ecryptfs") != -1)
+		rc = ecryptfs_get_version(&version);
 	if (rc) {
 		printf("\nUnable to get the version number of the kernel\n");
 		printf("module. Please make sure that you have the eCryptfs\n");
