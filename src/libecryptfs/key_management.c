@@ -271,19 +271,21 @@ int ecryptfs_wrap_passphrase(char *filename, char *wrapping_passphrase,
 {
 	char wrapping_auth_tok_sig[ECRYPTFS_SIG_SIZE_HEX + 1];
 	char wrapping_key[ECRYPTFS_MAX_KEY_BYTES];
-	char padded_decrypted_passphrase[ECRYPTFS_MAX_PASSPHRASE_BYTES + 1];
-	char encrypted_passphrase[ECRYPTFS_MAX_PASSPHRASE_BYTES + 1];
+	char padded_decrypted_passphrase[ECRYPTFS_MAX_PASSPHRASE_BYTES +
+		ECRYPTFS_AES_BLOCK_SIZE + 1];
+	char encrypted_passphrase[ECRYPTFS_MAX_PASSPHRASE_BYTES +
+		ECRYPTFS_AES_BLOCK_SIZE + 1];
 	int encrypted_passphrase_pos = 0;
 	int decrypted_passphrase_pos = 0;
 #ifdef ENABLE_NSS
-	int tmp1_outlen;
-	int tmp2_outlen;
+	int tmp1_outlen = 0;
+	int tmp2_outlen = 0;
 	SECStatus err;
 	SECItem key_item;
-	PK11SymKey *sym_key;
-	PK11SlotInfo *slot;
-	PK11Context *enc_ctx;
-	SECItem *sec_param;
+	PK11SymKey *sym_key = NULL;
+	PK11SlotInfo *slot = NULL;
+	PK11Context *enc_ctx = NULL;
+	SECItem *sec_param = NULL;
 #else
 #warning Building against gcrypt instead of nss
 	gcry_cipher_hd_t gcry_handle;
@@ -336,41 +338,51 @@ int ecryptfs_wrap_passphrase(char *filename, char *wrapping_passphrase,
 	sec_param = PK11_ParamFromIV(CKM_AES_ECB, NULL);
 	enc_ctx = PK11_CreateContextBySymKey(CKM_AES_ECB, CKA_ENCRYPT,
 					     sym_key, sec_param);
-	while (decrypted_passphrase_bytes > 0) {
-		err = PK11_CipherOp(
-			enc_ctx,
-			(unsigned char *)
-			  &encrypted_passphrase[encrypted_passphrase_pos],
-			&tmp1_outlen, ECRYPTFS_MAX_PASSPHRASE_BYTES,
-			(unsigned char *)
-			  &decrypted_passphrase[decrypted_passphrase_pos],
-			ECRYPTFS_MAX_PASSPHRASE_BYTES);
-		if (err == SECFailure) {
-			syslog(LOG_ERR, "%s: PK11_CipherOp() error; "
-			       "SECFailure = [%d]; PORT_GetError() = [%d]\n",
-			       __FUNCTION__, SECFailure, PORT_GetError());
-			rc = -EIO;
-			goto out;
-		}
-		err = PK11_DigestFinal(
-			enc_ctx,
-			(unsigned char *)
-			  (&encrypted_passphrase[encrypted_passphrase_pos]
-			 + tmp1_outlen),(unsigned int *)&tmp2_outlen,
-			(ECRYPTFS_MAX_PASSPHRASE_BYTES -
-			 (encrypted_passphrase_pos + tmp1_outlen)));
-		if (err == SECFailure) {
-			syslog(LOG_ERR, "%s: PK11 error on digest final; "
-			       "SECFailure = [%d]; PORT_GetError() = [%d]\n",
-			       __FUNCTION__, SECFailure, PORT_GetError());
-			rc = -EIO;
-			goto out;
-		}
-		encrypted_passphrase_pos += ECRYPTFS_AES_BLOCK_SIZE;
-		decrypted_passphrase_pos += ECRYPTFS_AES_BLOCK_SIZE;
-		decrypted_passphrase_bytes -= ECRYPTFS_AES_BLOCK_SIZE;
+	err = PK11_CipherOp(
+		enc_ctx, (unsigned char *) encrypted_passphrase,
+		&tmp1_outlen, ECRYPTFS_MAX_PASSPHRASE_BYTES +
+		  ECRYPTFS_AES_BLOCK_SIZE,
+		(unsigned char *) padded_decrypted_passphrase,
+		decrypted_passphrase_bytes);//ECRYPTFS_MAX_PASSPHRASE_BYTES);
+	if (err == SECFailure) {
+		syslog(LOG_ERR, "%s: PK11_CipherOp() error; "
+			"SECFailure = [%d]; PORT_GetError() = [%d]\n",
+			__FUNCTION__, SECFailure, PORT_GetError());
+		rc = - EIO;
+		goto nss_finish;
 	}
-	PK11_DestroyContext(enc_ctx, PR_TRUE);
+	err = PK11_DigestFinal(
+		enc_ctx, 
+		(unsigned char *) encrypted_passphrase + tmp1_outlen,
+		(unsigned int *) &tmp2_outlen,
+		(ECRYPTFS_MAX_PASSPHRASE_BYTES + 
+		  ECRYPTFS_AES_BLOCK_SIZE - tmp1_outlen));
+	if (err == SECFailure) {
+		syslog(LOG_ERR, "%s: PK11 error on digest final; "
+			"SECFailure = [%d]; PORT_GetError() = [%d]\n",
+			__FUNCTION__, SECFailure, PORT_GetError());
+		rc = - EIO;
+	}
+
+nss_finish:
+	if (enc_ctx)
+		PK11_DestroyContext(enc_ctx, PR_TRUE);
+	if (sym_key)
+		PK11_FreeSymKey(sym_key);
+	if (sec_param)
+		SECITEM_FreeItem(sec_param, PR_TRUE);
+	if (slot)
+		PK11_FreeSlot(slot);
+	if (rc)
+		goto out;
+	encrypted_passphrase_pos += tmp1_outlen + tmp2_outlen;
+	decrypted_passphrase_pos += tmp1_outlen + tmp2_outlen;
+	decrypted_passphrase_bytes -= tmp1_outlen + tmp2_outlen;
+	if (decrypted_passphrase_bytes != 0) {
+		syslog(LOG_ERR, "Wrong size of wrapped passphrase\n");
+		rc = - EIO;
+		goto out;
+	}
 #else
 	if ((gcry_err = gcry_cipher_open(&gcry_handle, GCRY_CIPHER_AES,
 					 GCRY_CIPHER_MODE_ECB, 0))) {
@@ -452,14 +464,14 @@ int ecryptfs_unwrap_passphrase(char *decrypted_passphrase, char *filename,
 	int encrypted_passphrase_pos = 0;
 	int decrypted_passphrase_pos = 0;
 #ifdef ENABLE_NSS
-	int tmp1_outlen;
-	int tmp2_outlen;
+	int tmp1_outlen = 0;
+	int tmp2_outlen = 0;
 	SECStatus err;
 	SECItem key_item;
-	PK11SymKey *sym_key;
-	PK11SlotInfo *slot;
-	PK11Context *enc_ctx;
-	SECItem *sec_param;
+	PK11SymKey *sym_key = NULL;
+	PK11SlotInfo *slot = NULL;
+	PK11Context *enc_ctx = NULL;
+	SECItem *sec_param = NULL;
 #else
 	gcry_cipher_hd_t gcry_handle;
 	gcry_error_t gcry_err;
@@ -526,41 +538,50 @@ int ecryptfs_unwrap_passphrase(char *decrypted_passphrase, char *filename,
 	sec_param = PK11_ParamFromIV(CKM_AES_ECB, NULL);
 	enc_ctx = PK11_CreateContextBySymKey(CKM_AES_ECB, CKA_DECRYPT,
 					     sym_key, sec_param);
-	while (encrypted_passphrase_bytes > 0) {
-		err = PK11_CipherOp(
-			enc_ctx,
-			(unsigned char *)
-			 &decrypted_passphrase[decrypted_passphrase_pos],
-			&tmp1_outlen, ECRYPTFS_MAX_PASSPHRASE_BYTES,
-			(unsigned char *)
-			 &encrypted_passphrase[encrypted_passphrase_pos],
-			ECRYPTFS_MAX_PASSPHRASE_BYTES);
-		if (err == SECFailure) {
-			syslog(LOG_ERR, "%s: PK11_CipherOp() error; "
-			       "SECFailure = [%d]; PORT_GetError() = [%d]\n",
-			       __FUNCTION__, SECFailure, PORT_GetError());
-			rc = -EIO;
-			goto out;
-		}
-		err = PK11_DigestFinal(
-			enc_ctx,
-			(unsigned char *)
-			 (&decrypted_passphrase[decrypted_passphrase_pos]
-			 + tmp1_outlen), (unsigned int *)&tmp2_outlen,
-			(ECRYPTFS_MAX_PASSPHRASE_BYTES -
-			 (decrypted_passphrase_pos + tmp1_outlen)));
-		if (err == SECFailure) {
-			syslog(LOG_ERR, "%s: PK11 error on digest final; "
-			       "SECFailure = [%d]; PORT_GetError() = [%d]\n",
-			       __FUNCTION__, SECFailure, PORT_GetError());
-			rc = -EIO;
-			goto out;
-		}
-		encrypted_passphrase_pos += ECRYPTFS_AES_BLOCK_SIZE;
-		decrypted_passphrase_pos += ECRYPTFS_AES_BLOCK_SIZE;
-		encrypted_passphrase_bytes -= ECRYPTFS_AES_BLOCK_SIZE;
+	memset(decrypted_passphrase, 0, ECRYPTFS_MAX_PASSPHRASE_BYTES + 1);
+	err = PK11_CipherOp(
+		enc_ctx, (unsigned char *) decrypted_passphrase,
+		&tmp1_outlen, ECRYPTFS_MAX_PASSPHRASE_BYTES,
+		(unsigned char *) encrypted_passphrase,
+		encrypted_passphrase_bytes);//ECRYPTFS_MAX_PASSPHRASE_BYTES);
+	if (err == SECFailure) {
+		syslog(LOG_ERR, "%s: PK11_CipherOp() error; "
+			"SECFailure = [%d]; PORT_GetError() = [%d]\n",
+			__FUNCTION__, SECFailure, PORT_GetError());
+		rc = - EIO;
+		goto nss_finish;
 	}
-	PK11_DestroyContext(enc_ctx, PR_TRUE);
+	err = PK11_DigestFinal(
+		enc_ctx, 
+		(unsigned char *) decrypted_passphrase + tmp1_outlen,
+		(unsigned int *) &tmp2_outlen,
+		(ECRYPTFS_MAX_PASSPHRASE_BYTES - tmp1_outlen));
+	if (err == SECFailure) {
+		syslog(LOG_ERR, "%s: PK11 error on digest final; "
+			"SECFailure = [%d]; PORT_GetError() = [%d]\n",
+			__FUNCTION__, SECFailure, PORT_GetError());
+		rc = - EIO;
+	}
+
+nss_finish:
+	if (enc_ctx)
+		PK11_DestroyContext(enc_ctx, PR_TRUE);
+	if (sym_key)
+		PK11_FreeSymKey(sym_key);
+	if (sec_param)
+		SECITEM_FreeItem(sec_param, PR_TRUE);
+	if (slot)
+		PK11_FreeSlot(slot);
+	if (rc)
+		goto out;
+	encrypted_passphrase_pos += tmp1_outlen + tmp2_outlen;
+	decrypted_passphrase_pos += tmp1_outlen + tmp2_outlen;
+	encrypted_passphrase_bytes -= tmp1_outlen + tmp2_outlen;
+	if (encrypted_passphrase_bytes != 0) {
+		syslog(LOG_ERR, "Wrong size of unwrapped passphrase\n");
+		rc = - EIO;
+		goto out;
+	}
 #else
 	if ((gcry_err = gcry_cipher_open(&gcry_handle, GCRY_CIPHER_AES,
 					 GCRY_CIPHER_MODE_ECB, 0))) {
