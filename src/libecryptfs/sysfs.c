@@ -88,6 +88,12 @@ int ecryptfs_get_version(uint32_t *version)
 	}
 	rc = 0;
 	fd = open(handle, O_RDONLY);
+	/* We can attempt to modprobe ecryptfs, which might help if we're
+	 * being called by code running as root
+	 */
+	if (fd == -1 && errno == ENOENT &&
+	    system("/sbin/modprobe ecryptfs 2>/dev/null") != -1)
+		fd = open(handle, O_RDONLY);
 	free(handle);
 	if (fd == -1) {
 		rc = -EINVAL;
