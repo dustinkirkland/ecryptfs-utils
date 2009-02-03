@@ -31,6 +31,8 @@
 #include <getopt.h>
 #include <pthread.h>
 #include <libgen.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <sys/wait.h>
 #include <sys/resource.h>
 #include "config.h"
@@ -171,7 +173,7 @@ static void ecryptfsd_exit(struct ecryptfs_messaging_ctx *mctx, int retval)
 	if (rc)
 		syslog(LOG_ERR, "%s: Error attempting to shut down messaging; "
 		       "rc = [%d]\n", __FUNCTION__, rc);
-out:
+
 	ecryptfs_syslog(LOG_INFO, "Closing eCryptfs userspace daemon\n");
 	exit(retval);
 }
@@ -193,7 +195,10 @@ void daemonize(void)
 		exit(0);
 	setsid();
 	umask(027);
-	chdir("/");
+	if (chdir("/") == -1 ) {
+		syslog(LOG_ERR, "Failed to change directory: %m");
+		exit(1);
+	}
 	if ((pid=fork()) == -1) { /* Fork in new session */
 		syslog(LOG_ERR, "Failed to create daemon process: %s",
 		       strerror(errno));

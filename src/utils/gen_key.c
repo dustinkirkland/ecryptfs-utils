@@ -18,6 +18,7 @@
  * 02111-1307, USA.
  */
 
+#include "config.h"
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -27,7 +28,6 @@
 #include <termios.h>
 #include <string.h>
 #include <errno.h>
-#include "config.h"
 #include "ecryptfs.h"
 #include "io.h"
 

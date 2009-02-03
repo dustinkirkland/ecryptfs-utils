@@ -19,11 +19,11 @@
  * 02111-1307, USA.
  */
 
+#include "config.h"
 #include <errno.h>
 #ifdef ENABLE_NSS
-#include <nss/pk11func.h>
-#include <nss/secmod.h>
-#include <nss/secmodt.h>
+#include <nss.h>
+#include <pk11func.h>
 #else
 #include <gcrypt.h>
 #endif /* #ifdef ENABLE_NSS */
@@ -42,7 +42,6 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <sys/sem.h>
-#include "config.h"
 #include "../include/ecryptfs.h"
 
 int ecryptfs_verbosity = 0;
@@ -88,8 +87,9 @@ int do_hash(char *src, int src_size, char *dst, int algo)
 #endif /* #ifdef ENABLE_NSS */
 
 #ifdef ENABLE_NSS
-	NSS_NoDB_Init();
-	err = PK11_HashBuf(algo, dst, src, src_size);
+	NSS_NoDB_Init(NULL);
+	err = PK11_HashBuf(algo, (unsigned char *)dst, (unsigned char *)src,
+			   src_size);
 	if (err == SECFailure) {
 		syslog(LOG_ERR, "%s: PK11_HashBuf() error; SECFailure = [%d]; "
 		       "PORT_GetError() = [%d]\n", __FUNCTION__, SECFailure,
@@ -186,7 +186,7 @@ generate_payload(struct ecryptfs_auth_tok *auth_tok, char *passphrase_sig,
 	auth_tok->version = (((uint16_t)(major << 8) & 0xFF00)
 			     | ((uint16_t)minor & 0x00FF));
 	auth_tok->token_type = ECRYPTFS_PASSWORD;
-	strncpy(auth_tok->token.password.signature, passphrase_sig,
+	strncpy((char *)auth_tok->token.password.signature, passphrase_sig,
 		ECRYPTFS_PASSWORD_SIG_SIZE);
 	memcpy(auth_tok->token.password.salt, salt, ECRYPTFS_SALT_SIZE);
 	memcpy(auth_tok->token.password.session_key_encryption_key,
@@ -257,7 +257,7 @@ ecryptfs_generate_key_payload(struct ecryptfs_auth_tok *auth_tok,
 	}
 	if (key_data_len == 0) {
 		if ((rc = (key_mod->ops->get_key_sig)(
-			     sig,
+			     (unsigned char *)sig,
 			     auth_tok->token.private_key.data))) {
 			syslog(LOG_ERR, "Call into key module's get_key_sig "
 			       "failed; rc = [%d]\n", rc);
@@ -276,14 +276,14 @@ ecryptfs_generate_key_payload(struct ecryptfs_auth_tok *auth_tok,
 			goto out;
 		}
 		if ((rc = ecryptfs_generate_sig_from_key_data(
-			     sig, key_data, key_data_len))) {
+			     (unsigned char *)sig, key_data, key_data_len))) {
 			syslog(LOG_ERR, "Error attempting to generate "
 			       "signature from key data; rc = [%d]\n", rc);
 			goto out;
 		}
 		if (sig[0] == '\0') {
 			if ((rc = (key_mod->ops->get_key_sig)(
-				     sig,
+				     (unsigned char *)sig,
 				     auth_tok->token.private_key.data))) {
 				syslog(LOG_ERR, "Call into key module's "
 				       "get_key_sig failed; rc = [%d]\n", rc);
@@ -309,7 +309,6 @@ int ecryptfs_mount(char *source, char *target, unsigned long flags, char *opts)
 	struct mntent mountent;
 	char *fullpath_source = NULL;
 	char *fullpath_target = NULL;
-	int i;
 	int rc;
 
 	mountent.mnt_opts = NULL;
@@ -475,7 +474,7 @@ static void zombie_semaphore_lock(int sem_id)
 			sleep(1);
 		} else if (rc == -1) {
 			syslog(LOG_ERR, "Error locking semaphore; errno "
-			       "string = [%m]\n", errno);
+			       "string = [%m]\n");
 			goto out;
 		} else
 			goto out;
@@ -524,7 +523,7 @@ static int get_zombie_shared_mem_locked(int *shm_id, int *sem_id)
 		shm_virt = shmat((*shm_id), NULL, 0);
 		if (shm_virt == (void *)-1) {
 			syslog(LOG_ERR, "Error attaching to newly allocated "
-			       "shared memory; errno string = [%m]\n", errno);
+			       "shared memory; errno string = [%m]\n");
 			rc = -EIO;
 			zombie_semaphore_unlock((*sem_id));
 			goto out;
@@ -539,7 +538,7 @@ static int get_zombie_shared_mem_locked(int *shm_id, int *sem_id)
 	}
 	if (rc == -1) {
 		syslog(LOG_ERR, "Error attempting to get identifier for "
-		       "shared memory with key [0x.8x]\n", ECRYPTFS_SHM_KEY);
+		       "shared memory with key [0x%.8x]\n", ECRYPTFS_SHM_KEY);
 		rc = -EIO;
 		zombie_semaphore_unlock((*sem_id));
 		goto out;
@@ -737,11 +736,11 @@ static int add_sid_pid_pair_to_shm(int shm_id)
 	shm_virt = shmat(shm_id, NULL, 0);
 	if (shm_virt == (void *)-1) {
 		syslog(LOG_ERR, "Error attaching to shared memory; error "
-		       "string = [%m]\n", errno);
+		       "string = [%m]\n");
 		shm_virt = shmat(shm_id, NULL, 0);
 		if (shm_virt == (void *)-1) {
 			syslog(LOG_ERR, "Error attaching to shared memory; error "
-			       "string = [%m]\n", errno);
+			       "string = [%m]\n");
 			rc = -EIO;
 			goto out;
 		}
@@ -849,7 +848,7 @@ int ecryptfs_kill_and_clear_zombie_session_placeholder(void)
 		if ((rc = kill(pid, SIGKILL))) {
 			syslog(LOG_ERR, "Error attempting to kill process "
 			       "[%d]; rc = [%d]; errno string = [%m]\n", pid,
-			       rc, errno);
+			       rc);
 		}
 		if ((rc = remove_pid_for_this_sid(shm_id))) {
 			syslog(LOG_ERR, "Error attempting to remove pid/sid "

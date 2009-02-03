@@ -19,10 +19,11 @@
  * 02111-1307, USA.
  */
 
+#include "config.h"
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
-#include "config.h"
+#include <stdio.h>
 #include "../include/ecryptfs.h"
 #include "../include/decision_graph.h"
 

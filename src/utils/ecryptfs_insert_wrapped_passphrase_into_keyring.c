@@ -38,7 +38,6 @@ void usage(void)
 int main(int argc, char *argv[])
 {
 	char *file;
-	char passphrase[ECRYPTFS_MAX_PASSWORD_LENGTH + 1];
 	char *wrapping_passphrase;
 	char auth_tok_sig_hex[ECRYPTFS_SIG_SIZE_HEX + 1];
 	char salt[ECRYPTFS_SALT_SIZE];

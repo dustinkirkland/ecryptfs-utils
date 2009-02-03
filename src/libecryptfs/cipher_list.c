@@ -20,6 +20,7 @@
  * 02111-1307, USA.
  */
 
+#include "config.h"
 #include <dirent.h>
 #include <stdlib.h>
 #include <string.h>
@@ -35,7 +36,6 @@
 #include <sys/types.h>
 #include <sys/utsname.h>
 #endif
-#include "config.h"
 #include "../include/ecryptfs.h"
 
 #define MAX_BUF_LEN 128
@@ -57,8 +57,10 @@ int ecryptfs_get_proc_mount_point(char **proc_mount_point)
 	}
 	while ((mntent = getmntent(fp)))
 		if (strcmp(mntent->mnt_type, "proc") == 0) {
-			asprintf(proc_mount_point, "%s", mntent->mnt_dir);
 			fclose(fp);
+			if (asprintf(proc_mount_point, "%s", 
+				     mntent->mnt_dir) == -1)
+				rc = -ENOMEM;
 			goto out;
 		}
 	rc = -EINVAL;

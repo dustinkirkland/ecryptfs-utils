@@ -19,6 +19,7 @@
  * 02111-1307, USA.
  */
 
+#include "config.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -30,7 +31,8 @@
 #include <unistd.h>
 #include <errno.h>
 #include <trousers/tss.h>
-#include "config.h"
+#include <trousers/trousers.h>
+#include <openssl/sha.h>
 #include "../include/ecryptfs.h"
 #include "../include/decision_graph.h"
 
@@ -82,8 +84,8 @@ static void ecryptfs_tspi_to_hex(char *dst, char *src, int src_size)
 static int ecryptfs_tspi_generate_signature(char *sig, BYTE *n, uint32_t nbytes)
 {
 	int len, i;
-	char hash[SHA1_DIGEST_LENGTH];
-	char *data = NULL;
+	unsigned char hash[SHA1_DIGEST_LENGTH];
+	unsigned char *data = NULL;
 	BYTE e[] = { 1, 0, 1 }; /* The e for all TPM RSA keys */
 	int rc = 0;
 
@@ -95,24 +97,24 @@ static int ecryptfs_tspi_generate_signature(char *sig, BYTE *n, uint32_t nbytes)
 	}
 	i = 0;
 	data[i++] = '\x99';
-	data[i++] = (char)(len >> 8);
-	data[i++] = (char)len;
+	data[i++] = (len >> 8);
+	data[i++] = len;
 	data[i++] = '\x04';
 	data[i++] = '\00';
 	data[i++] = '\00';
 	data[i++] = '\00';
 	data[i++] = '\00';
 	data[i++] = '\02';
-	data[i++] = (char)((nbytes * 8) >> 8);
-	data[i++] = (char)(nbytes * 8);
+	data[i++] = ((nbytes * 8) >> 8);
+	data[i++] = (nbytes * 8);
 	memcpy(&data[i], n, nbytes);
 	i += nbytes;
-	data[i++] = (char)((sizeof(e) * 8) >> 8);
-	data[i++] = (char)(sizeof(e) * 8);
+	data[i++] = ((sizeof(e) * 8) >> 8);
+	data[i++] = (sizeof(e) * 8);
 	memcpy(&data[i], e, sizeof(e));
 	i += sizeof(e);
 	SHA1(data, len + 3, hash);
-	ecryptfs_tspi_to_hex(sig, hash, ECRYPTFS_SIG_SIZE);
+	ecryptfs_tspi_to_hex(sig, (char *)hash, ECRYPTFS_SIG_SIZE);
 	sig[ECRYPTFS_SIG_SIZE_HEX] = '\0';
 out:
 	free(data);
@@ -125,7 +127,7 @@ ecryptfs_tspi_deserialize(struct tspi_data *tspi_data, unsigned char *blob)
 	int rc = 0;
 
 	memcpy(&tspi_data->uuid, blob, sizeof(TSS_UUID));
-out:
+
 	return rc;
 }
 
@@ -164,7 +166,7 @@ static int ecryptfs_tspi_get_key_sig(unsigned char *sig, unsigned char *blob)
 		rc = -EIO;
 		goto out;
 	}
-	rc = ecryptfs_tspi_generate_signature(sig, n, size_n);
+	rc = ecryptfs_tspi_generate_signature((char *)sig, n, size_n);
 out:
 	return rc;
 }
@@ -369,7 +371,8 @@ ecryptfs_tspi_encrypt(char *to, size_t *to_size, char *from, size_t from_size,
 		rc = -EIO;
 		goto out;
 	}
-	if ((result = Tspi_Data_Seal(h_encdata, hKey, from_size, from, 0))
+	if ((result = Tspi_Data_Seal(h_encdata, hKey, from_size, 
+				     (unsigned char *)from, 0))
 	    != TSS_SUCCESS) {
 		syslog(LOG_ERR, "Tspi_Data_Seal failed: [%s]\n",
 		       Trspi_Error_String(result));
@@ -544,7 +547,7 @@ static void string_to_uuid(TSS_UUID *uuid, char *str)
 	for (i = 0; i < (sizeof(TSS_UUID) * 2);
 	     i += (sizeof(unsigned long) * 2)) {
 		memcpy(tmp, &str[i], sizeof(unsigned long) * 2);
-		l = strtoul(tmp, NULL, 16);
+		l = strtoul((char *)tmp, NULL, 16);
 		l = htonl(l);
 		memcpy(&((BYTE *)uuid)[i/2], &l, sizeof(unsigned long));
 	}

@@ -282,7 +282,7 @@ int ecryptfs_encrypt_page(int page_cache_size, int extent_size,
 	struct ecryptfs_crypt_stat *crypt_stat;
 	int rc = 0;
 	int lower_byte_offset;
-	int orig_byte_offset;
+	int orig_byte_offset = 0;
 	int num_extents_per_page;
 #define ECRYPTFS_PAGE_STATE_UNREAD    0
 #define ECRYPTFS_PAGE_STATE_READ      1
@@ -334,7 +334,7 @@ int ecryptfs_encrypt_page(int page_cache_size, int extent_size,
 		rc = ecryptfs_encrypt_page_offset(
 			crypt_stat, lower_page, lower_byte_offset, page,
 			(extent_offset * crypt_stat->extent_size),
-			crypt_stat->extent_size, extent_iv);
+			crypt_stat->extent_size, (unsigned char *)extent_iv);
 		page_state = ECRYPTFS_PAGE_STATE_MODIFIED;
 		extent_offset++;
 	}
@@ -440,7 +440,6 @@ int test_nv_list_from_file(void)
 {
 	int rc = 0;
 	struct ecryptfs_name_val_pair nv_pair_head;
-	struct ecryptfs_name_val_pair nv_pair_head_2;
 	struct ecryptfs_name_val_pair *cursor;
 	int fd;
 

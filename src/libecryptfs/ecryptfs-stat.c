@@ -1,4 +1,5 @@
 #include <unistd.h>
+#include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
 #include <errno.h>
@@ -17,7 +18,6 @@ static uint64_t swab64(uint64_t x)
 
 static int host_is_big_endian(void)
 {
-	int i;
 	uint32_t tmp_u32;
 	char tmp_str[sizeof(uint32_t)];
 
@@ -129,7 +129,7 @@ ecryptfs_parse_header_metadata(struct ecryptfs_crypt_stat_user *crypt_stat,
 	    && (crypt_stat->num_header_bytes_at_front
 		< ECRYPTFS_MINIMUM_HEADER_EXTENT_SIZE)) {
 		rc = -EINVAL;
-		printf("%s Invalid header size: [%d]\n", __FUNCTION__,
+		printf("%s Invalid header size: [%zu]\n", __FUNCTION__,
 		       crypt_stat->num_header_bytes_at_front);
 	}
 	return rc;
@@ -183,7 +183,7 @@ static int ecryptfs_parse_packet_set(struct ecryptfs_crypt_stat_user *crypt_stat
 	size_t packet_size;
 	struct ecryptfs_auth_tok *new_auth_tok;
 	unsigned char sig_tmp_space[ECRYPTFS_SIG_SIZE];
-	size_t tag_11_contents_size;
+	size_t tag_11_contents_size = 0;
 	size_t tag_11_packet_size;
 	int next_packet_is_auth_tok_packet = 1;
 	int rc = 0;
@@ -227,14 +227,14 @@ static int ecryptfs_parse_packet_set(struct ecryptfs_crypt_stat_user *crypt_stat
 			if (ECRYPTFS_SIG_SIZE != tag_11_contents_size) {
 				printf("%s: Expected "
 				       "signature of size [%d]; "
-				       "read size [%d]\n", __FUNCTION__,
+				       "read size [%zu]\n", __FUNCTION__,
 				       ECRYPTFS_SIG_SIZE,
 				       tag_11_contents_size);
 				rc = -EINVAL;
 				goto out_wipe_list;
 			}
-			ecryptfs_to_hex(new_auth_tok->token.password.signature,
-					sig_tmp_space, tag_11_contents_size);
+			ecryptfs_to_hex((char *)new_auth_tok->token.password.signature,
+					(char *)sig_tmp_space, tag_11_contents_size);
 			new_auth_tok->token.password.signature[
 				ECRYPTFS_PASSWORD_SIG_SIZE] = '\0';
 			break;
@@ -261,7 +261,7 @@ static int ecryptfs_parse_packet_set(struct ecryptfs_crypt_stat_user *crypt_stat
 			break;
 		default:
 			printf("%s: No packet at offset "
-			       "[%d] of the file header; hex value of "
+			       "[%zu] of the file header; hex value of "
 			       "character is [0x%.2x]\n", __FUNCTION__, i,
 			       src[i]);
 			next_packet_is_auth_tok_packet = 0;
@@ -300,8 +300,8 @@ int ecryptfs_parse_stat(struct ecryptfs_crypt_stat_user *crypt_stat, char *buf,
 	if (buf_size < (ECRYPTFS_FILE_SIZE_BYTES
 			+ MAGIC_ECRYPTFS_MARKER_SIZE_BYTES
 			+ 4)) {
-		printf("%s: Invalid metadata size; must have at least [%d] "
-		       "bytes; there are only [%d] bytes\n", __FUNCTION__,
+		printf("%s: Invalid metadata size; must have at least [%lu] "
+		       "bytes; there are only [%zu] bytes\n", __FUNCTION__,
 		       (ECRYPTFS_FILE_SIZE_BYTES
 			+ MAGIC_ECRYPTFS_MARKER_SIZE_BYTES
 			+ 4), buf_size);

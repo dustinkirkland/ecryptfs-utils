@@ -241,7 +241,11 @@ prompt_user:
                 curr = curr->next;
         }
 	printf("\nSelect desired key module [%d]: ", default_key_mod);
-        fgets(str, 4, stdin);
+	if (fgets(str, 4, stdin) == NULL) {
+		printf("\nError reading input\n");
+		rc = -EIO;
+		goto out;
+	}
 	printf("\n");
         str[strlen(str)] = '\0';
 	if (str[0] == '\n')

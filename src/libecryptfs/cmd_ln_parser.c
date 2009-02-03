@@ -19,6 +19,7 @@
  * 02111-1307, USA.
  */
 
+#include "config.h"
 #ifndef S_SPLINT_S
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -33,7 +34,6 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <pwd.h>
-#include "config.h"
 #include "../include/ecryptfs.h"
 
 #define MAX_TOK_LEN 128

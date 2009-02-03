@@ -502,11 +502,14 @@ int ecryptfs_supports_plaintext_passthrough(uint32_t version);
 int ecryptfs_supports_hmac(uint32_t version);
 int ecryptfs_supports_filename_encryption(uint32_t version);
 int ecryptfs_supports_policy(uint32_t version);
+int ecryptfs_supports_xattr(uint32_t version);
 #define ECRYPTFS_ASK_FOR_ALL_MOUNT_OPTIONS 0
 #define ECRYPTFS_KEY_MODULE_ONLY 1
 int ecryptfs_process_decision_graph(struct ecryptfs_ctx *ctx,
                                     struct val_node **head, uint32_t version,
                                     char *opts_str, int key_module_only);
+int ecryptfs_process_key_gen_decision_graph(struct ecryptfs_ctx *ctx,
+					    uint32_t version);
 int get_string(char *val, int len, int echo);
 int get_string_stdin(char **val, char *prompt, int echo);
 int stack_pop_val(struct val_node **head, void **val);
@@ -518,6 +521,7 @@ int ecryptfs_default_cipher(struct ecryptfs_cipher_elem **default_cipher,
 int stack_push(struct val_node **head, void *val);
 int ecryptfs_free_cipher_list(struct ecryptfs_cipher_elem cipher_list_head);
 int ecryptfs_get_key_mod_list(struct ecryptfs_ctx* ctx);
+int ecryptfs_parse_rc_file(struct ecryptfs_name_val_pair *nvp_list_head);
 int ecryptfs_parse_options(char *opts, struct ecryptfs_name_val_pair *head);
 int ecryptfs_eval_decision_graph(struct ecryptfs_ctx *ctx,
 				 struct val_node **head,
@@ -588,6 +592,8 @@ int ecryptfs_kill_and_clear_zombie_session_placeholder(void);
 int ecryptfs_list_zombie_session_placeholders(void);
 int ecryptfs_build_linear_subgraph_from_nvp(struct transition_node **trans_node,
 					    struct ecryptfs_key_mod *key_mod);
+int ecryptfs_build_linear_subgraph(struct transition_node **trans_node,
+				   struct ecryptfs_key_mod *key_mod);
 int ecryptfs_generate_sig_from_key_data(unsigned char *sig,
 					unsigned char *key_data,
 					size_t key_data_len);
@@ -602,6 +608,7 @@ int ecryptfs_send_message(struct ecryptfs_messaging_ctx *mctx,
 			  struct ecryptfs_message *msg,
 			  unsigned char msg_type, uint16_t msg_flags,
 			  uint32_t msg_seq);
+int ecryptfs_init_miscdev(struct ecryptfs_miscdev_ctx *miscdev_ctx);
 int ecryptfs_send_miscdev(struct ecryptfs_miscdev_ctx *miscdev_ctx,
 			  struct ecryptfs_message *msg, uint8_t msg_type,
 			  uint16_t msg_flags, uint32_t msg_seq);
@@ -620,6 +627,7 @@ int ecryptfs_add_blob_to_keyring(char *blob, char *sig);
 int ecryptfs_disable_echo(struct termios *saved_settings);
 int ecryptfs_enable_echo(struct termios *saved_settings);
 char *ecryptfs_get_passphrase(char *prompt);
+int ecryptfs_run_daemon(struct ecryptfs_messaging_ctx *mctx);
 
 
 #endif

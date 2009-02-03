@@ -39,7 +39,6 @@ int main(int argc, char **argv)
 	char passphrase[ECRYPTFS_MAX_PASSWORD_LENGTH];
 	char salt[ECRYPTFS_SALT_SIZE];
 	struct ecryptfs_ctx ecryptfs_ctx;
-	struct ecryptfs_key_mod *key_mod = NULL;
 	struct val_node *dummy_mnt_params;
 	char auth_tok_sig[ECRYPTFS_SIG_SIZE_HEX+1];
 

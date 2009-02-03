@@ -33,14 +33,14 @@ int main(int argc, const char *argv[])
 	fd = open(filename, O_RDONLY);
 	if (fd == -1) {
 		printf("Error opening file [%s] for RD_ONLY access; errno msg "
-		       "= [%m]\n", filename, errno);
+		       "= [%m]\n", filename);
 		rc = -EIO;
 		goto out;
 	}
 	quant_read = read(fd, buf, 4096);
 	if (quant_read == -1) {
 		printf("Error attempting to read from file [%s]; errno msg "
-		       "= [%m]\n", filename, errno);
+		       "= [%m]\n", filename);
 		rc = -EIO;
 		goto out;
 	}
@@ -52,8 +52,9 @@ int main(int argc, const char *argv[])
 		goto out;
 	}
 	printf("File version: [%d]\n", crypt_stat.file_version);
-	printf("Decrypted file size: [%llu]\n", crypt_stat.file_size);
-	printf("Number of header bytes at front of file: [%d]\n",
+	printf("Decrypted file size: [%llu]\n",
+	       (unsigned long long)crypt_stat.file_size);
+	printf("Number of header bytes at front of file: [%zu]\n",
 	       crypt_stat.num_header_bytes_at_front);
 	if (crypt_stat.flags & ECRYPTFS_METADATA_IN_XATTR)
 		printf("Metadata in the extended attribute region\n");

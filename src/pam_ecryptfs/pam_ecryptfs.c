@@ -22,6 +22,7 @@
  * 02111-1307, USA.
  */
 
+#include "config.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -37,7 +38,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <security/pam_modules.h>
-#include "config.h"
 #include "../include/ecryptfs.h"
 
 #define PRIVATE_DIR "Private"
@@ -104,7 +104,7 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags, int argc,
 	rc = pam_get_item(pamh, PAM_AUTHTOK, (const void **)&passphrase);
 	seteuid(saved_uid);
 	if (rc != PAM_SUCCESS) {
-		syslog(LOG_ERR, "Error retrieving passphrase; rc = [%d]\n",
+		syslog(LOG_ERR, "Error retrieving passphrase; rc = [%ld]\n",
 		       rc);
 		goto out;
 	}
@@ -161,14 +161,14 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags, int argc,
 		}
 		if (rc) {
 			syslog(LOG_ERR, "Error adding passphrase key token to "
-			       "user session keyring; rc = [%d]\n", rc);
+			       "user session keyring; rc = [%ld]\n", rc);
 			goto out_child;
 		}
 		if (fork() == 0) {
 			if ((rc = ecryptfs_set_zombie_session_placeholder())) {
 				syslog(LOG_ERR, "Error attempting to create "
 				       "and register zombie process; "
-				       "rc = [%d]\n", rc);
+				       "rc = [%ld]\n", rc);
 			}
 		}
 out_child:

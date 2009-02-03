@@ -231,7 +231,9 @@ int main(int argc, char **argv)
 	}
 	printf("Success: Key created bound to:\n");
 	for (i = 0; i < numPcrsSelected; i++) {
-		uuidString = util_bytes_to_string(pcrsSelectedValues[i], 20);
+		uuidString = (unsigned char *) 
+			      util_bytes_to_string((char *)
+						   pcrsSelectedValues[i], 20);
 		if (uuidString == NULL) {
 			PRINT_ERR("malloc of 41 bytes failed");
 			Tspi_Context_Close(hContext);
@@ -242,7 +244,7 @@ int main(int argc, char **argv)
 		free(uuidString);
 		Tspi_Context_FreeMemory(hContext, pcrsSelectedValues[i]);
 	}
-	uuidString = util_bytes_to_string((BYTE*)uuid, 16);
+	uuidString = (BYTE *)util_bytes_to_string((char *)uuid, 16);
 	if (uuidString == NULL) {
 		PRINT_ERR("malloc of 33 bytes failed");
 		Tspi_Context_Close(hContext);

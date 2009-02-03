@@ -51,7 +51,7 @@ int ecryptfs_write_packet_length(char *dest, size_t size,
 		(*packet_size_length) = 2;
 	} else {
 		rc = -EINVAL;
-		syslog(LOG_ERR, "Unsupported packet size: [%d]\n",
+		syslog(LOG_ERR, "Unsupported packet size: [%zu]\n",
 		       size);
 	}
 	return rc;

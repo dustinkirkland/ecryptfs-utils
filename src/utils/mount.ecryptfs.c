@@ -21,6 +21,7 @@
  * 02111-1307, USA.
  */
 
+#include "config.h"
 #include <errno.h>
 #include <fcntl.h>
 #include <gcrypt.h>
@@ -313,7 +314,9 @@ static int process_sig(char *auth_tok_sig)
 		goto out;
 	}
 	mkdir(dot_ecryptfs_dir, S_IRWXU);
-	chown(dot_ecryptfs_dir, getuid(), getgid());
+	if (chown(dot_ecryptfs_dir, getuid(), getgid()) == -1)
+		printf("Can't change ownership of sig file; "
+		       "errno = [%d]; [%m]\n", errno);
 	free(dot_ecryptfs_dir);
 	rc = asprintf(&sig_cache_filename, "%s/.ecryptfs/sig-cache.txt",
 		      home);
@@ -458,7 +461,11 @@ static int ecryptfs_do_mount(int argc, char **argv, struct val_node *mnt_params,
 	if (rc)
 		goto out;
 	num_opts = ecryptfs_generate_mount_flags(opts, &flags);
-	asprintf(&new_opts, "%s", opts);
+	if (asprintf(&new_opts, "%s", opts) == -1) {
+		new_opts = NULL;
+		rc = -ENOMEM;
+		goto out;
+	}
 	printf("Attempting to mount with the following options:\n");
 	while (!stack_pop_val(&mnt_params, (void *)&val)) {
 		if(!val)

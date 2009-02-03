@@ -17,6 +17,7 @@
  * 02111-1307, USA.
  */
 
+#include "config.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -27,7 +28,6 @@
 #include <errno.h>
 #include <mntent.h>
 #include <stdlib.h>
-#include "config.h"
 #include "../include/ecryptfs.h"
 
 static int get_sysfs_mountpoint(char *mnt, int *mnt_size)

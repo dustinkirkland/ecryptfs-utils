@@ -101,7 +101,7 @@ key_mod_encrypt(char **encrypted_key, size_t *encrypted_key_size,
 	if ((*encrypted_key_size) > ECRYPTFS_MAX_ENCRYPTED_KEY_BYTES) {
 		rc = -EINVAL;
 		syslog(LOG_ERR, "Encrypted key size reported by key module "
-		       "encrypt function is [%d]; max is [%d]\n",
+		       "encrypt function is [%zu]; max is [%d]\n",
 		       (*encrypted_key_size), ECRYPTFS_MAX_ENCRYPTED_KEY_BYTES);
 		free(*encrypted_key);
 		(*encrypted_key_size) = 0;
@@ -157,7 +157,7 @@ key_mod_decrypt(char **decrypted_key, size_t *decrypted_key_size,
 	if ((*decrypted_key_size) > ECRYPTFS_MAX_KEY_BYTES) {
 		rc = -EINVAL;
 		syslog(LOG_ERR, "Decrypted key size reported by key module "
-		       "decrypt function is [%d]; max is [%d]\n",
+		       "decrypt function is [%zu]; max is [%d]\n",
 		       (*decrypted_key_size), ECRYPTFS_MAX_KEY_BYTES);
 		free(*decrypted_key);
 		(*decrypted_key_size) = 0;
@@ -209,7 +209,7 @@ static int write_tag_65_packet(unsigned char *key, size_t key_size,
 	data = (*reply)->data;
 	data[i++] = ECRYPTFS_TAG_65_PACKET;
 	data[i++] = ECRYPTFS_PACKET_STATUS_GOOD;
-	rc = ecryptfs_write_packet_length(&data[i], key_size, &length_size);
+	rc = ecryptfs_write_packet_length((char*)&data[i], key_size, &length_size);
 	if (rc) {
 		syslog(LOG_ERR, "Invalid packet format\n");
 		goto out;
@@ -243,7 +243,7 @@ write_tag_67_packet(char *key, size_t key_size,
 	data = (*reply)->data;
 	data[i++] = ECRYPTFS_TAG_67_PACKET;
 	data[i++] = ECRYPTFS_PACKET_STATUS_GOOD;
-	rc = ecryptfs_write_packet_length(&data[i], key_size, &length_size);
+	rc = ecryptfs_write_packet_length((char *)&data[i], key_size, &length_size);
 	if (rc) {
 		syslog(LOG_ERR, "Invalid packet format\n");
 		goto out;
@@ -266,7 +266,7 @@ int parse_packet(struct ecryptfs_ctx *ctx,
 	size_t key_size;
 	size_t length_size;
 	size_t key_out_size;
-	unsigned char *signature;
+	unsigned char *signature = NULL;
 	unsigned char packet_type;
 	char *key = NULL;
 	char *key_out = NULL;
@@ -304,7 +304,8 @@ int parse_packet(struct ecryptfs_ctx *ctx,
 	}
 	memcpy(key, &emsg->data[i], key_size);
 	i += key_size;
-	key_sub = request_key("user", signature, NULL, KEY_SPEC_USER_KEYRING);
+	key_sub = request_key("user", (char *)signature, NULL,
+			      KEY_SPEC_USER_KEYRING);
 	if (key_sub < 0) {
 		syslog(LOG_ERR, "Could not find key with signature: "
 		       "[%s]\n", signature);
@@ -322,7 +323,8 @@ int parse_packet(struct ecryptfs_ctx *ctx,
 						  reply);
 			goto write_failure;
 		}
-		if ((rc = write_tag_65_packet(key_out, key_out_size, reply))) {
+		if ((rc = write_tag_65_packet((unsigned char *)key_out,
+					      key_out_size, reply))) {
 			syslog(LOG_ERR, "Failed to write decrypted "
 			       "key via tag 65 packet\n");
 			goto write_failure;

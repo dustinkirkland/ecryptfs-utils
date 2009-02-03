@@ -18,6 +18,7 @@
  * 02111-1307, USA.
  */
 
+#include "config.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <syslog.h>
@@ -26,7 +27,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include "config.h"
 #include "../include/ecryptfs.h"
 #include "../include/decision_graph.h"
 
@@ -59,8 +59,7 @@ static int tf_pass_file(struct ecryptfs_ctx *ctx, struct param_node *node,
 		fd = open(node->val, O_RDONLY);
 		if (fd == -1) {
 			syslog(LOG_ERR, "%s: Error whilst attempting to open "
-			       "[%s]; errno = [%m]\n", __FUNCTION__, node->val,
-			       errno);
+			       "[%s]; errno = [%m]\n", __FUNCTION__, node->val);
 			rc = MOUNT_ERROR;
 			goto out;
 		}
@@ -84,7 +83,10 @@ static int tf_pass_file(struct ecryptfs_ctx *ctx, struct param_node *node,
 	while (walker) {
 		if (strcmp(walker->name, "passphrase_passwd") == 0
 		    || strcmp(walker->name, "passwd") == 0) {
-			asprintf(&tmp_val, "%s", walker->value);
+			if (asprintf(&tmp_val, "%s", walker->value) < 0) {
+				rc = -ENOMEM;
+				goto out;
+			}
 			stack_push(head, tmp_val);
 			break;
 		}

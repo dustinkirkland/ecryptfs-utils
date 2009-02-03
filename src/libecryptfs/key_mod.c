@@ -18,6 +18,7 @@
  * 02111-1307, USA.
  */
 
+#include "config.h"
 #include <dirent.h>
 #include <stdlib.h>
 #include <string.h>
@@ -29,7 +30,6 @@
 #include <fcntl.h>
 #include <dlfcn.h>
 #include <sys/stat.h>
-#include "config.h"
 #include "../include/ecryptfs.h"
 
 static struct ecryptfs_key_mod_ops *

@@ -20,9 +20,8 @@
 
 #include <errno.h>
 #ifdef ENABLE_NSS
-#include <nss/pk11func.h>
-#include <nss/secmod.h>
-#include <nss/secmodt.h>
+#include <nss.h>
+#include <pk11func.h>
 #else
 #include <gcrypt.h>
 #endif /* #ifdef ENABLE_NSS */
@@ -112,7 +111,7 @@ binary_data ecryptfs_passphrase_sig_from_blob(char *blob)
  */
 binary_data ecryptfs_passphrase_blob(char *salt, char *passphrase)
 {
-	char *blob;
+	unsigned char *blob;
 	struct ecryptfs_auth_tok *auth_tok;
 	char auth_tok_sig[ECRYPTFS_SIG_SIZE_HEX + 1];
 	char fekek[ECRYPTFS_MAX_KEY_BYTES];
@@ -129,7 +128,7 @@ binary_data ecryptfs_passphrase_blob(char *salt, char *passphrase)
 		blob = NULL;
 		goto out;
 	}
-	blob = (char *)auth_tok;
+	blob = (unsigned char *)auth_tok;
 	bd.size = sizeof(struct ecryptfs_auth_tok);
 	bd.data = blob;
 out:
@@ -144,7 +143,8 @@ int ecryptfs_add_auth_tok_to_keyring(struct ecryptfs_auth_tok *auth_tok,
 	rc = (int)keyctl_search(KEY_SPEC_USER_KEYRING, "user", auth_tok_sig, 0);
 	if (rc != -1) { /* we already have this key in keyring; we're done */
 		rc = 1;
-		syslog(LOG_WARNING, "Passphrase key already in keyring\n", rc);
+		syslog(LOG_WARNING, "Passphrase key already in keyring;"
+		       " rc = [%d]\n", rc);
 		goto out;
 	} else if ((rc == -1) && (errno != ENOKEY)) {
 		int errnum = errno;
@@ -244,7 +244,7 @@ int ecryptfs_wrap_passphrase_file(char *dest, char *wrapping_passphrase,
 	if ((size = read(fd, decrypted_passphrase,
 			 ECRYPTFS_MAX_PASSPHRASE_BYTES)) <= 0) {
 		syslog(LOG_ERR, "Error attempting to read encrypted "
-		       "passphrase from file [%s]; size = [%d]\n",
+		       "passphrase from file [%s]; size = [%zd]\n",
 		       src, size);
                 p = strrchr(decrypted_passphrase, '\n');
                 if (p) *p = '\0';
@@ -279,9 +279,7 @@ int ecryptfs_wrap_passphrase(char *filename, char *wrapping_passphrase,
 	int tmp1_outlen;
 	int tmp2_outlen;
 	SECStatus err;
-	CK_MECHANISM_TYPE cipher_mech;
 	SECItem key_item;
-	PK11Context *pk11_ctx;
 	PK11SymKey *sym_key;
 	PK11SlotInfo *slot;
 	PK11Context *enc_ctx;
@@ -323,9 +321,9 @@ int ecryptfs_wrap_passphrase(char *filename, char *wrapping_passphrase,
 						  % ECRYPTFS_AES_BLOCK_SIZE));
 	encrypted_passphrase_bytes = decrypted_passphrase_bytes;
 #ifdef ENABLE_NSS
-	NSS_NoDB_Init();
+	NSS_NoDB_Init(NULL);
 	slot = PK11_GetBestSlot(CKM_AES_ECB, NULL);
-	key_item.data = wrapping_key;
+	key_item.data = (unsigned char *)wrapping_key;
 	key_item.len = ECRYPTFS_AES_KEY_BYTES;
 	sym_key = PK11_ImportSymKey(slot, CKM_AES_ECB, PK11_OriginUnwrap,
 				    CKA_ENCRYPT, &key_item, NULL);
@@ -341,9 +339,11 @@ int ecryptfs_wrap_passphrase(char *filename, char *wrapping_passphrase,
 	while (decrypted_passphrase_bytes > 0) {
 		err = PK11_CipherOp(
 			enc_ctx,
-			&encrypted_passphrase[encrypted_passphrase_pos],
+			(unsigned char *)
+			  &encrypted_passphrase[encrypted_passphrase_pos],
 			&tmp1_outlen, ECRYPTFS_MAX_PASSPHRASE_BYTES,
-			&decrypted_passphrase[decrypted_passphrase_pos],
+			(unsigned char *)
+			  &decrypted_passphrase[decrypted_passphrase_pos],
 			ECRYPTFS_MAX_PASSPHRASE_BYTES);
 		if (err == SECFailure) {
 			syslog(LOG_ERR, "%s: PK11_CipherOp() error; "
@@ -354,8 +354,9 @@ int ecryptfs_wrap_passphrase(char *filename, char *wrapping_passphrase,
 		}
 		err = PK11_DigestFinal(
 			enc_ctx,
-			(&encrypted_passphrase[encrypted_passphrase_pos]
-			 + tmp1_outlen), &tmp2_outlen,
+			(unsigned char *)
+			  (&encrypted_passphrase[encrypted_passphrase_pos]
+			 + tmp1_outlen),(unsigned int *)&tmp2_outlen,
 			(ECRYPTFS_MAX_PASSPHRASE_BYTES -
 			 (encrypted_passphrase_pos + tmp1_outlen)));
 		if (err == SECFailure) {
@@ -416,7 +417,7 @@ int ecryptfs_wrap_passphrase(char *filename, char *wrapping_passphrase,
 	if ((size = write(fd, wrapping_auth_tok_sig,
 			  ECRYPTFS_SIG_SIZE_HEX)) <= 0) {
 		syslog(LOG_ERR, "Error attempting to write encrypted "
-		       "passphrase ([%d] bytes) to file [%s]; size = [%d]\n",
+		       "passphrase ([%d] bytes) to file [%s]; size = [%zu]\n",
 		       encrypted_passphrase_bytes, filename, size);
 		rc = -EIO;
 		close(fd);
@@ -425,7 +426,7 @@ int ecryptfs_wrap_passphrase(char *filename, char *wrapping_passphrase,
 	if ((size = write(fd, encrypted_passphrase,
 			  encrypted_passphrase_bytes)) <= 0) {
 		syslog(LOG_ERR, "Error attempting to write encrypted "
-		       "passphrase ([%d] bytes) to file [%s]; size = [%d]\n",
+		       "passphrase ([%d] bytes) to file [%s]; size = [%zu]\n",
 		       encrypted_passphrase_bytes, filename, size);
 		rc = -EIO;
 		close(fd);
@@ -454,9 +455,7 @@ int ecryptfs_unwrap_passphrase(char *decrypted_passphrase, char *filename,
 	int tmp1_outlen;
 	int tmp2_outlen;
 	SECStatus err;
-	CK_MECHANISM_TYPE cipher_mech;
 	SECItem key_item;
-	PK11Context *pk11_ctx;
 	PK11SymKey *sym_key;
 	PK11SlotInfo *slot;
 	PK11Context *enc_ctx;
@@ -487,7 +486,7 @@ int ecryptfs_unwrap_passphrase(char *decrypted_passphrase, char *filename,
 	if ((size = read(fd, wrapping_auth_tok_sig_from_file,
 			 ECRYPTFS_SIG_SIZE_HEX)) <= 0) {
 		syslog(LOG_ERR, "Error attempting to read encrypted "
-		       "passphrase from file [%s]; size = [%d]\n",
+		       "passphrase from file [%s]; size = [%zu]\n",
 		       filename, size);
 		rc = -EIO;
 		close(fd);
@@ -496,7 +495,7 @@ int ecryptfs_unwrap_passphrase(char *decrypted_passphrase, char *filename,
 	if ((size = read(fd, encrypted_passphrase,
 			 ECRYPTFS_MAX_PASSPHRASE_BYTES)) <= 0) {
 		syslog(LOG_ERR, "Error attempting to read encrypted "
-		       "passphrase from file [%s]; size = [%d]\n",
+		       "passphrase from file [%s]; size = [%zu]\n",
 		       filename, size);
 		rc = -EIO;
 		close(fd);
@@ -512,9 +511,9 @@ int ecryptfs_unwrap_passphrase(char *decrypted_passphrase, char *filename,
 	}
 	encrypted_passphrase_bytes = size;
 #ifdef ENABLE_NSS
-	NSS_NoDB_Init();
+	NSS_NoDB_Init(NULL);
 	slot = PK11_GetBestSlot(CKM_AES_ECB, NULL);
-	key_item.data = wrapping_key;
+	key_item.data = (unsigned char *)wrapping_key;
 	key_item.len = ECRYPTFS_AES_KEY_BYTES;
 	sym_key = PK11_ImportSymKey(slot, CKM_AES_ECB, PK11_OriginUnwrap,
 				    CKA_ENCRYPT, &key_item, NULL);
@@ -530,9 +529,11 @@ int ecryptfs_unwrap_passphrase(char *decrypted_passphrase, char *filename,
 	while (encrypted_passphrase_bytes > 0) {
 		err = PK11_CipherOp(
 			enc_ctx,
-			&decrypted_passphrase[decrypted_passphrase_pos],
+			(unsigned char *)
+			 &decrypted_passphrase[decrypted_passphrase_pos],
 			&tmp1_outlen, ECRYPTFS_MAX_PASSPHRASE_BYTES,
-			&encrypted_passphrase[encrypted_passphrase_pos],
+			(unsigned char *)
+			 &encrypted_passphrase[encrypted_passphrase_pos],
 			ECRYPTFS_MAX_PASSPHRASE_BYTES);
 		if (err == SECFailure) {
 			syslog(LOG_ERR, "%s: PK11_CipherOp() error; "
@@ -543,8 +544,9 @@ int ecryptfs_unwrap_passphrase(char *decrypted_passphrase, char *filename,
 		}
 		err = PK11_DigestFinal(
 			enc_ctx,
-			(&decrypted_passphrase[decrypted_passphrase_pos]
-			 + tmp1_outlen), &tmp2_outlen,
+			(unsigned char *)
+			 (&decrypted_passphrase[decrypted_passphrase_pos]
+			 + tmp1_outlen), (unsigned int *)&tmp2_outlen,
 			(ECRYPTFS_MAX_PASSPHRASE_BYTES -
 			 (decrypted_passphrase_pos + tmp1_outlen)));
 		if (err == SECFailure) {
@@ -665,7 +667,7 @@ ecryptfs_add_key_module_key_to_keyring(char *auth_tok_sig,
 				       struct ecryptfs_key_mod *key_mod)
 {
 	size_t blob_size;
-	struct ecryptfs_auth_tok *auth_tok;
+	struct ecryptfs_auth_tok *auth_tok = NULL;
 	int rc;
 
 	if (key_mod->blob == NULL) {
@@ -703,8 +705,10 @@ ecryptfs_add_key_module_key_to_keyring(char *auth_tok_sig,
 		       " [%d]\n", auth_tok_sig, rc);
 	else rc = 0;
 out:
-	memset(auth_tok, 0, (sizeof(struct ecryptfs_auth_tok) + blob_size));
-	free(auth_tok);
+	if (auth_tok != NULL) {
+		memset(auth_tok, 0, (sizeof(struct ecryptfs_auth_tok) + blob_size));
+		free(auth_tok);
+	}
 	return rc;
 }
 
@@ -790,13 +794,16 @@ int ecryptfs_append_sig(char *auth_tok_sig, char *sig_cache_filename)
 		rc = -EIO;
 		goto out;
 	}
-	fchown(fd, getuid(), getgid());
+	if (fchown(fd, getuid(), getgid()) == -1) {
+		syslog(LOG_WARNING, "Can't change ownership of sig file; "
+				    "errno = [%d]; [%m]\n", errno);
+	}
 	lseek(fd, 0, SEEK_END);
 	memcpy(tmp, auth_tok_sig, ECRYPTFS_SIG_SIZE_HEX);
 	tmp[ECRYPTFS_SIG_SIZE_HEX] = '\n';
 	if ((size = write(fd, tmp, (ECRYPTFS_SIG_SIZE_HEX + 1))) !=
 	    (ECRYPTFS_SIG_SIZE_HEX + 1)) {
-		syslog(LOG_ERR, "Write of sig resulted in [%d]; errno = [%d]; "
+		syslog(LOG_ERR, "Write of sig resulted in [%zu]; errno = [%d]; "
 		       "[%s]\n", size, errno, strerror(errno));
 		rc = -EIO;
 		close(fd);

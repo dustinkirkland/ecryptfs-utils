@@ -19,6 +19,7 @@
  * 02111-1307, USA.
  */
 
+#include "config.h"
 #include <fcntl.h>
 #include <pwd.h>
 #include <stdio.h>
@@ -34,7 +35,6 @@
 #include <openssl/engine.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include "config.h"
 #include "../include/ecryptfs.h"
 #include "../include/decision_graph.h"
 
@@ -70,7 +70,7 @@ static int ecryptfs_openssl_deserialize(struct openssl_data *openssl_data,
 	i += path_length;
 	passphrase_length = blob[i++] % 256;
 	passphrase_length += blob[i++] << 8;
-	openssl_data->path = blob + 2;
+	openssl_data->path = (char *) blob + 2;
 	openssl_data->passphrase = (openssl_data->path + path_length + 2);
 	return 0;
 }
@@ -130,8 +130,8 @@ static int ecryptfs_openssl_generate_signature(char *sig, RSA *key)
 {
 	int len, nbits, ebits, i;
 	int nbytes, ebytes;
-	char *hash;
-	char *data = NULL;
+	unsigned char *hash;
+	unsigned char *data = NULL;
 	int rc = 0;
 
 	hash = malloc(SHA_DIGEST_LENGTH);
@@ -157,24 +157,24 @@ static int ecryptfs_openssl_generate_signature(char *sig, RSA *key)
 	}
 	i = 0;
 	data[i++] = '\x99';
-	data[i++] = (char)(len >> 8);
-	data[i++] = (char)len;
+	data[i++] = (len >> 8);
+	data[i++] = len;
 	data[i++] = '\x04';
 	data[i++] = '\00';
 	data[i++] = '\00';
 	data[i++] = '\00';
 	data[i++] = '\00';
 	data[i++] = '\02';
-	data[i++] = (char)(nbits >> 8);
-	data[i++] = (char)nbits;
+	data[i++] = (nbits >> 8);
+	data[i++] = nbits;
 	BN_bn2bin(key->n, &(data[i]));
 	i += nbytes;
-	data[i++] = (char)(ebits >> 8);
-	data[i++] = (char)ebits;
+	data[i++] = (ebits >> 8);
+	data[i++] = ebits;
 	BN_bn2bin(key->e, &(data[i]));
 	i += ebytes;
 	SHA1(data, len + 3, hash);
-	to_hex(sig, hash, ECRYPTFS_SIG_SIZE);
+	to_hex(sig, (char *)hash, ECRYPTFS_SIG_SIZE);
 	sig[ECRYPTFS_SIG_SIZE_HEX] = '\0';
 out:
 	free(data);
@@ -318,7 +318,7 @@ int ecryptfs_openssl_get_key_sig(unsigned char *sig, unsigned char *blob)
 		       " rc = [%d]\n", rc);
 		goto out;
 	}
-	if ((rc = ecryptfs_openssl_generate_signature(sig, rsa))) {
+	if ((rc = ecryptfs_openssl_generate_signature((char *)sig, rsa))) {
 		syslog(LOG_ERR, "%s: Error attempting to generate key "
 		       "signature; rc = [%d]\n", __FUNCTION__, rc);
 		goto out_free_rsa;
@@ -384,7 +384,8 @@ static int ecryptfs_openssl_encrypt(char *to, size_t *to_size, char *from,
 	}
 	(*to_size) = RSA_size(rsa);
 	if (to) {
-		if ((rc = RSA_public_encrypt(from_size, from, to, rsa,
+		if ((rc = RSA_public_encrypt(from_size, (unsigned char *)from,
+					     (unsigned char *)to, rsa,
 					     RSA_PKCS1_OAEP_PADDING)) == -1) {
 			rc = -(int)ERR_get_error();
 			syslog(LOG_ERR, "Error attempting to perform RSA "
@@ -428,7 +429,8 @@ static int ecryptfs_openssl_decrypt(char *to, size_t *to_size, char *from,
 	}
 	(*to_size) = RSA_size(rsa);
 	if (to) {
-		if ((rc = RSA_private_decrypt(from_size, from, to, rsa,
+		if ((rc = RSA_private_decrypt(from_size, (unsigned char *)from,
+					      (unsigned char *)to, rsa,
 					      RSA_PKCS1_OAEP_PADDING)) == -1) {
 			rc = -(int)ERR_get_error();
 			syslog(LOG_ERR, "Error attempting to perform RSA "
@@ -444,7 +446,7 @@ out_free_rsa:
 out:
 	return rc;
 }
-
+int ecryptfs_openssl_init_from_param_vals(struct openssl_data *, struct key_mod_param_val *, uint32_t);
 static int ecryptfs_openssl_get_blob(unsigned char *blob, size_t *blob_size,
 				     struct key_mod_param_val *param_vals,
 				     uint32_t num_param_vals)
@@ -519,7 +521,8 @@ ecryptfs_openssl_process_key(struct ecryptfs_subgraph_ctx *subgraph_ctx,
 		rc = MOUNT_ERROR;
 		goto out;
 	}
-	if ((rc = ecryptfs_openssl_serialize(subgraph_ctx->key_mod->blob,
+	if ((rc = ecryptfs_openssl_serialize((unsigned char *) 
+					     subgraph_ctx->key_mod->blob,
 					     &subgraph_ctx->key_mod->blob_size, 
 					     &subgraph_ctx->openssl_data))) {
 		syslog(LOG_ERR, "Error serializing openssl; rc = [%d]\n", rc);
@@ -584,13 +587,13 @@ out:
 static int tf_ssl_file(struct ecryptfs_ctx *ctx, struct param_node *node,
 		       struct val_node **mnt_params, void **foo)
 {
+	return 0;
 }
 
 static int tf_ssl_passwd_file(struct ecryptfs_ctx *ctx, struct param_node *node,
 			      struct val_node **mnt_params, void **foo)
 {
 	int rc = 0;
-	char *tmp_val = NULL;
 	int fd;
 	struct ecryptfs_subgraph_ctx *subgraph_ctx;
 	struct ecryptfs_name_val_pair file_head;
@@ -659,6 +662,7 @@ out:
 static int tf_ssl_passwd_fd(struct ecryptfs_ctx *ctx, struct param_node *node,
 			    struct val_node **mnt_params, void **foo)
 {
+	return 0;
 }
 
 static int tf_ecryptfs_openssl_gen_key_param_node_keyfile(
@@ -993,7 +997,7 @@ static int ecryptfs_openssl_get_params(struct key_mod_param **params,
 
 	(*params) = NULL;
 	(*num_params) = 0;	
-out:
+
 	return rc;
 }
 

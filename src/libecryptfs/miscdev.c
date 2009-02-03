@@ -91,7 +91,7 @@ int ecryptfs_send_miscdev(struct ecryptfs_miscdev_ctx *miscdev_ctx,
 	if (written == -1) {
 		rc = -EIO;
 		syslog(LOG_ERR, "Failed to send eCryptfs miscdev message; "
-		       "errno msg = [%m]\n", errno);
+		       "errno msg = [%m]\n");
 	}
 	free(miscdev_msg_data);
 out:
@@ -113,7 +113,7 @@ int ecryptfs_recv_miscdev(struct ecryptfs_miscdev_ctx *miscdev_ctx,
 	uint32_t msg_seq_be32;
 	uint32_t i;
 	char *miscdev_msg_data;
-	int rc;
+	int rc = 0;
 
 	miscdev_msg_data = malloc(ECRYPTFS_MSG_MAX_SIZE);
 	if (!miscdev_msg_data) {
@@ -125,13 +125,13 @@ int ecryptfs_recv_miscdev(struct ecryptfs_miscdev_ctx *miscdev_ctx,
 	if (read_bytes == -1) {
 		rc = -EIO;
 	syslog(LOG_ERR, "%s: Error attempting to read message from "
-	       "miscdev handle; errno msg = [%m]\n", __FUNCTION__, errno);
+	       "miscdev handle; errno msg = [%m]\n", __FUNCTION__);
 		goto out;
 	}
 	if (read_bytes < (1 + 4)) {
 		rc = -EINVAL;
 		syslog(LOG_ERR, "%s: Received invalid packet from kernel; "
-		       "read_bytes = [%d]; minimum possible packet site is "
+		       "read_bytes = [%zu]; minimum possible packet site is "
 		       "[%d]\n", __FUNCTION__, read_bytes,
 		       (1 + 4));
 		goto out;
@@ -142,7 +142,8 @@ int ecryptfs_recv_miscdev(struct ecryptfs_miscdev_ctx *miscdev_ctx,
 	i += 4;
 	(*msg_seq) = ntohl(msg_seq_be32);
 	if ((*msg_type) == ECRYPTFS_MSG_REQUEST) {
-		rc = ecryptfs_parse_packet_length(&miscdev_msg_data[i],
+		rc = ecryptfs_parse_packet_length((unsigned char *)
+						    &miscdev_msg_data[i],
 						  &packet_len,
 						  &packet_len_size);
 		if (rc)
@@ -156,8 +157,8 @@ int ecryptfs_recv_miscdev(struct ecryptfs_miscdev_ctx *miscdev_ctx,
 	if (miscdev_msg_data_size != read_bytes) {
 		rc = -EINVAL;
 		syslog(LOG_ERR, "%s: Invalid packet. (1 + 4 + "
-		       "packet_len_size=[%d] + packet_len=[%d])=[%d] != "
-		       "read_bytes=[%d]\n", __FUNCTION__, packet_len_size,
+		       "packet_len_size=[%zu] + packet_len=[%zu])=[%zu] != "
+		       "read_bytes=[%zu]\n", __FUNCTION__, packet_len_size,
 		       packet_len, (1 + 4 + packet_len_size + packet_len),
 		       read_bytes);
 		goto out;
@@ -182,7 +183,7 @@ int ecryptfs_init_miscdev(struct ecryptfs_miscdev_ctx *miscdev_ctx)
 	if (miscdev_ctx->miscdev_fd == -1) {
 		syslog(LOG_ERR, "%s: Error whilst attempting to open "
 		       "[%s]; errno msg = [%m]\n", __FUNCTION__,
-		       ECRYPTFS_DEFAULT_MISCDEV_FULLPATH_0, errno);
+		       ECRYPTFS_DEFAULT_MISCDEV_FULLPATH_0);
 	} else
 		goto out;
 	miscdev_ctx->miscdev_fd = open(ECRYPTFS_DEFAULT_MISCDEV_FULLPATH_1,
@@ -190,7 +191,7 @@ int ecryptfs_init_miscdev(struct ecryptfs_miscdev_ctx *miscdev_ctx)
 	if (miscdev_ctx->miscdev_fd == -1) {
 		syslog(LOG_ERR, "%s: Error whilst attempting to open "
 		       "[%s]; errno msg = [%m]\n", __FUNCTION__,
-		       ECRYPTFS_DEFAULT_MISCDEV_FULLPATH_1, errno);
+		       ECRYPTFS_DEFAULT_MISCDEV_FULLPATH_1);
 		rc = -EIO;
 	}
 out:
@@ -211,7 +212,7 @@ int ecryptfs_run_miscdev_daemon(struct ecryptfs_miscdev_ctx *miscdev_ctx)
 {
 	struct ecryptfs_message *emsg = NULL;
 	struct ecryptfs_ctx ctx;
-	int msg_seq;
+	uint32_t msg_seq;
 	uint8_t msg_type;
 	int error_count = 0;
 	int rc;

@@ -19,6 +19,7 @@
  * 02111-1307, USA.
  */
 
+#include "config.h"
 #include <errno.h>
 #include <stdint.h>
 #ifndef S_SPLINT_S
@@ -28,7 +29,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include "config.h"
 #include "../include/ecryptfs.h"
 #include "../include/decision_graph.h"
 
@@ -557,8 +557,11 @@ get_value:
 			val = atoi(node->val);
 			if (val > 0 && val <= node->num_transitions) {
 				free(node->val);
-				asprintf(&(node->val), "%s",
-					 node->tl[val - 1].val);
+				if (asprintf(&(node->val), "%s",
+					     node->tl[val - 1].val) == -1) {
+					rc = -ENOMEM;
+					goto out;
+				}
 			} else {
 				int valid_val;
 
@@ -594,10 +597,15 @@ get_value:
 				       "VALS not set\n", __FUNCTION__);
 obtain_value:
 			if (node->suggested_val)
-				asprintf(&prompt, "%s [%s]", node->prompt,
+				rc = asprintf(&prompt, "%s [%s]", node->prompt,
 					 node->suggested_val);
 			else
-				asprintf(&prompt, "%s", node->prompt);
+				rc = asprintf(&prompt, "%s", node->prompt);
+			if (rc == -1) {
+				rc = -ENOMEM;
+				goto out;
+			}
+			rc = 0;
 			if (ecryptfs_verbosity)
 				syslog(LOG_INFO,
 				       "%s: node->mnt_opt_names[0] = [%s]\n; "
@@ -827,7 +835,7 @@ int ecryptfs_insert_params_in_subgraph(struct ecryptfs_name_val_pair *nvp,
 
 	if (trans_node->next_token)
 		rc = ecryptfs_insert_params(nvp, trans_node->next_token);
-out:
+
 	return rc;
 }
 
@@ -991,8 +999,8 @@ ecryptfs_exit_linear_subgraph_tf(struct ecryptfs_ctx *ctx,
 	curr = subgraph_ctx->head_val_node.next;
 	while (curr) {
 		if (curr->val) {
-			if ((rc = asprintf(&param_vals[i].val, "%s", curr->val))
-			    == -1) {
+			if ((rc = asprintf(&param_vals[i].val, "%s",
+					   (char *)curr->val)) == -1) {
 				rc = -ENOMEM;
 				goto out_free_list_and_subgraph_ctx;
 			}
@@ -1028,7 +1036,7 @@ out_free_list_and_subgraph_ctx:
 	}
 out_free_subgraph_ctx:
 	free(subgraph_ctx);
-out:
+
 	return rc;
 }
 
@@ -1117,13 +1125,13 @@ int ecryptfs_build_linear_subgraph(struct transition_node **trans_node,
 			goto out;
 		}
 		param_node->num_mnt_opt_names = 1;
-		if (params[i].description)
+		if (params[i].description) {
 			if ((rc = asprintf(&param_node->prompt, "%s",
 					   params[i].description)) == -1) {
 				rc = -ENOMEM;
 				goto out;
 			}
-		else
+		} else
 			if ((rc = asprintf(&param_node->prompt, "%s",
 					   params[i].option)) == -1) {
 				rc = -ENOMEM;
