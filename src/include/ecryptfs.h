@@ -620,6 +620,7 @@ int ecryptfs_parse_stat(struct ecryptfs_crypt_stat_user *crypt_stat, char *buf,
 binary_data ecryptfs_passphrase_blob(char *salt, char *passphrase);
 binary_data ecryptfs_passphrase_sig_from_blob(char *blob);
 int ecryptfs_add_passphrase_blob_to_keyring(char *blob, char *sig);
+int ecryptfs_remove_auth_tok_from_keyring(char *auth_tok_sig);
 int ecryptfs_add_auth_tok_to_keyring(struct ecryptfs_auth_tok *auth_tok,
 				     char *auth_tok_sig);
 int ecryptfs_add_blob_to_keyring(char *blob, char *sig);

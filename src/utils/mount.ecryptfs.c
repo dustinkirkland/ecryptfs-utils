@@ -461,7 +461,7 @@ static int ecryptfs_do_mount(int argc, char **argv, struct val_node *mnt_params,
 	if (rc)
 		goto out;
 	num_opts = ecryptfs_generate_mount_flags(opts, &flags);
-	if (asprintf(&new_opts, "%s", opts) == -1) {
+	if (asprintf(&new_opts, "%secryptfs_unlink_sigs,", opts) == -1) {
 		new_opts = NULL;
 		rc = -ENOMEM;
 		goto out;
