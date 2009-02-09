@@ -87,8 +87,7 @@ key_mod_encrypt(char **encrypted_key, size_t *encrypted_key_size,
 	 * second call. */
 	if (((*encrypted_key) = malloc(*encrypted_key_size)) == NULL) {
 		rc = -errno;
-		syslog(LOG_ERR, "Failed to allocate memory: [%s]\n",
-		       strerror(errno));
+		syslog(LOG_ERR, "Failed to allocate memory: [%m]\n");
 		goto out;
 	}
 	if ((rc = key_mod->ops->encrypt((*encrypted_key), encrypted_key_size,
@@ -177,8 +176,7 @@ static int write_failure_packet(size_t tag,
 	*reply = malloc(sizeof(struct ecryptfs_message) + 2);
 	if (!*reply) {
 		rc = -errno;
-		syslog(LOG_ERR, "Failed to allocate memory: %s\n",
-		       strerror(errno));
+		syslog(LOG_ERR, "Failed to allocate memory: %m\n");
 		goto out;
 	}
 	data = (*reply)->data;
@@ -202,8 +200,7 @@ static int write_tag_65_packet(unsigned char *key, size_t key_size,
 	*reply = malloc(sizeof(struct ecryptfs_message) + data_len);
 	if (!*reply) {
 		rc = -errno;
-		syslog(LOG_ERR, "Failed to allocate memory: %s\n",
-		       strerror(errno));
+		syslog(LOG_ERR, "Failed to allocate memory: %m\n");
 		goto out;
 	}
 	data = (*reply)->data;
@@ -236,8 +233,7 @@ write_tag_67_packet(char *key, size_t key_size,
 	*reply = malloc(sizeof(struct ecryptfs_message) + data_len);
 	if (!*reply) {
 		rc = -errno;
-		syslog(LOG_ERR, "Failed to allocate memory: %s\n",
-		       strerror(errno));
+		syslog(LOG_ERR, "Failed to allocate memory: %m\n");
 		goto out;
 	}
 	data = (*reply)->data;
@@ -283,8 +279,7 @@ int parse_packet(struct ecryptfs_ctx *ctx,
 	signature = malloc(data_size + 1);
 	if (!signature) {
 		rc = -errno;
-		syslog(LOG_ERR, "Failed to allocate memory: %s\n",
-		       strerror(errno));
+		syslog(LOG_ERR, "Failed to allocate memory: %m\n");
 		goto write_failure;
 	}
 	memcpy(signature, &emsg->data[i], data_size);

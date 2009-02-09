@@ -584,19 +584,13 @@ out:
 	return rc;
 }
 
-static int tf_ssl_file(struct ecryptfs_ctx *ctx, struct param_node *node,
-		       struct val_node **mnt_params, void **foo)
-{
-	return 0;
-}
-
 static int tf_ssl_passwd_file(struct ecryptfs_ctx *ctx, struct param_node *node,
 			      struct val_node **mnt_params, void **foo)
 {
 	int rc = 0;
 	int fd;
 	struct ecryptfs_subgraph_ctx *subgraph_ctx;
-	struct ecryptfs_name_val_pair file_head;
+	struct ecryptfs_name_val_pair file_head = { 0, };
 	struct ecryptfs_name_val_pair *walker = NULL;
 
 	syslog(LOG_INFO, "%s: Called\n", __FUNCTION__);
@@ -641,8 +635,7 @@ static int tf_ssl_passwd_file(struct ecryptfs_ctx *ctx, struct param_node *node,
 		rc = MOUNT_ERROR;
 		goto out;
 	}
-#warning MEMORY LEAK: something is wrong with freeing file_head
-/*	free_name_val_pairs(&file_head); */
+// #warning MEMORY LEAK: something is wrong with freeing file_head
 	walker = NULL;
 	if ((rc = ecryptfs_openssl_process_key(subgraph_ctx, mnt_params))) {
 		syslog(LOG_ERR, "Error processing OpenSSL key; rc = [%d]", rc);
@@ -653,6 +646,9 @@ static int tf_ssl_passwd_file(struct ecryptfs_ctx *ctx, struct param_node *node,
 	(*foo) = NULL;
 	rc = DEFAULT_TOK;
 out:
+	free_name_val_pairs(file_head.next);
+	free(file_head.name);
+	free(file_head.value);
 	free(node->val);
 	node->val = NULL;
 	syslog(LOG_INFO, "%s: Exiting\n", __FUNCTION__);
@@ -853,25 +849,6 @@ static struct param_node ssl_param_nodes[] = {
 
 };
 
-#define ECRYPTFS_OPENSSL_PARAM_PATH 1
-#define ECRYPTFS_OPENSSL_PARAM_PASSPHRASE 2
-static struct key_mod_param key_mod_params[] = {
-	{.id = ECRYPTFS_OPENSSL_PARAM_PATH,
-	 .flags = 0,
-	 .option = "path",
-	 .description = "Path to PEM file containing RSA key",
-	 .suggested_val = NULL,
-	 .default_val = NULL,
-	 .val = NULL},
-	{.id = ECRYPTFS_OPENSSL_PARAM_PASSPHRASE,
-	 .flags = (ECRYPTFS_NO_ECHO | ECRYPTFS_PARAM_FLAG_LOCK_MEM),
-	 .option = "passphrase",
-	 .description = "Path to file containing RSA key passphrase",
-	 .suggested_val = NULL,
-	 .default_val = NULL,
-	 .val = NULL},
-};
-
 /**
  * tf_openssl_enter
  * @ctx: The current applicable libecryptfs context struct
@@ -987,17 +964,6 @@ static int ecryptfs_openssl_init(char **alias)
 	}
 	rc = 0;
 out:
-	return rc;
-}
-
-static int ecryptfs_openssl_get_params(struct key_mod_param **params,
-				       uint32_t *num_params)
-{
-	int rc = 0;
-
-	(*params) = NULL;
-	(*num_params) = 0;	
-
 	return rc;
 }
 

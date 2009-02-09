@@ -30,8 +30,8 @@ int main(int argc, char *argv[])
 		fd = open(filename, (O_CREAT | O_EXCL));
 		if (fd == -1) {
 			printf("Error creating file [%s]; errno = [%d]; "
-			       "string = [%s].  Died on iteration [%d].\n",
-			       filename, errno, strerror(errno), i);
+			       "string = [%m].  Died on iteration [%d].\n",
+			       filename, errno, i);
 			return 1;
 		}
 		if (do_close)
@@ -39,8 +39,7 @@ int main(int argc, char *argv[])
 		rc = unlink(filename);
 		if (rc == -1) {
 			printf("Error unlinking file [%s]; errno = [%d]; "
-			       "string = [%s]\n", filename, errno,
-			       strerror(errno));
+			       "string = [%m]\n", filename, errno);
 		}
 		free(filename);	
 	}

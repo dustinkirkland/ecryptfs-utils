@@ -48,7 +48,7 @@ int ecryptfs_send_netlink(struct ecryptfs_nl_ctx *nl_ctx,
 	nlh = malloc(NLMSG_SPACE(payload_len));
 	if (!nlh) {
 		ecryptfs_syslog(LOG_ERR, "Failed to allocate memory for "
-				"netlink header: %s\n", strerror(errno));
+				"netlink header: %m\n");
 		rc = -ENOMEM;
 		goto out;
 	}
@@ -68,7 +68,7 @@ int ecryptfs_send_netlink(struct ecryptfs_nl_ctx *nl_ctx,
 	if (rc < 0) {
 		rc = -errno;
 		syslog(LOG_ERR, "Failed to send eCryptfs netlink "
-		       "message: %s\n", strerror(errno));
+		       "message: %m\n");
 		goto out;
 	}
 out:
@@ -93,7 +93,7 @@ receive:
 	if (!nlh) {
 		rc = -errno;
 		syslog(LOG_ERR, "Failed to allocate memory for "
-		       "netlink message: %s\n", strerror(errno));
+		       "netlink message: %m\n");
 		goto out;
 	}
 	rc = recvfrom(nl_ctx->socket_fd, nlh, buf_len, flags,
@@ -101,7 +101,7 @@ receive:
 	if (rc < 0) {
 		rc = -errno;
 		syslog(LOG_ERR, "Failed to receive netlink header; errno = "
-		       "[%d]; errno msg = [%s]\n", errno, strerror(errno));
+		       "[%d]; errno msg = [%m]\n", errno);
 		goto free_out;
 	}
 	if (flags & MSG_PEEK) {
@@ -128,8 +128,7 @@ receive:
 		if (!*emsg) {
 			rc = -errno;
 			syslog(LOG_ERR, "Failed to allocate memory "
-					"for eCryptfs netlink message: %s\n",
-					strerror(errno));
+					"for eCryptfs netlink message: %m\n");
 			goto free_out;
 		}
 		memcpy(*emsg, NLMSG_DATA(nlh), pl_len);
@@ -151,7 +150,7 @@ int ecryptfs_init_netlink(struct ecryptfs_nl_ctx *nl_ctx)
 	if (nl_ctx->socket_fd == -1) {
 		rc = -errno;
 		syslog(LOG_ERR, "Failed to create the eCryptfs "
-		       "netlink socket: [%s]\n", strerror(errno));
+		       "netlink socket: [%m]\n");
 		goto out;
 	}
 	memset(&src_addr, 0, sizeof(src_addr));
@@ -163,7 +162,7 @@ int ecryptfs_init_netlink(struct ecryptfs_nl_ctx *nl_ctx)
 	if (rc) {
 		rc = -errno;
 		syslog(LOG_ERR, "Failed to bind the eCryptfs netlink "
-		       "socket: %s\n", strerror(errno));
+		       "socket: %m\n");
 		goto out;
 	}
 	syslog(LOG_DEBUG, "eCryptfs netlink socket was successfully "
@@ -197,8 +196,7 @@ receive:
 	rc = ecryptfs_recv_netlink(nl_ctx, &emsg, &msg_seq, &msg_type);
 	if (rc < 0) {
 		syslog(LOG_ERR, "Error while receiving eCryptfs netlink "
-		       "message; errno = [%d]; errno msg = [%s]\n", errno,
-		       strerror(errno));
+		       "message; errno = [%d]; errno msg = [%m]\n", errno);
 		error_count++;
 		if (error_count > ECRYPTFS_NETLINK_ERROR_COUNT_THRESHOLD) {
 			syslog(LOG_ERR, "Netlink error threshold exceeded "

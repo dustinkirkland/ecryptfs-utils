@@ -345,8 +345,7 @@ int ecryptfs_mount(char *source, char *target, unsigned long flags, char *opts)
 
 	if (mount(fullpath_source, fullpath_target, "ecryptfs", flags, opts)) {
 		rc = -errno;
-		syslog(LOG_ERR, "Failed to perform eCryptfs mount: "
-		       "[%s]\n", strerror(errno));
+		syslog(LOG_ERR, "Failed to perform eCryptfs mount: [%m]\n");
 		goto out;
 	}
 	mtab_fd = setmntent("/etc/mtab", "a");

@@ -172,8 +172,8 @@ int ecryptfs_add_auth_tok_to_keyring(struct ecryptfs_auth_tok *auth_tok,
 	} else if ((rc == -1) && (errno != ENOKEY)) {
 		int errnum = errno;
 
-		syslog(LOG_ERR, "keyctl_search failed: %s errno=[%d]\n",
-		       strerror(errnum), errnum);
+		syslog(LOG_ERR, "keyctl_search failed: %m errno=[%d]\n",
+		       errnum);
 		rc = (errnum < 0) ? errnum : errnum * -1;
 		goto out;
 	}
@@ -183,7 +183,7 @@ int ecryptfs_add_auth_tok_to_keyring(struct ecryptfs_auth_tok *auth_tok,
 		int errnum = errno;
 
 		syslog(LOG_ERR, "Error adding key with sig [%s]; rc = [%d] "
-		       "\%s\"\n", auth_tok_sig, rc, strerror(errnum));
+		       "\"%m\"\n", auth_tok_sig, rc);
 		rc = (errnum < 0) ? errnum : errnum * -1;
 		goto out;
 	}
@@ -833,8 +833,7 @@ int ecryptfs_append_sig(char *auth_tok_sig, char *sig_cache_filename)
 	fd = open(sig_cache_filename, (O_WRONLY | O_CREAT),
 		  (S_IRUSR | S_IWUSR));
 	if (fd == -1) {
-		syslog(LOG_ERR, "Open resulted in [%d]; [%s]\n", errno,
-		       strerror(errno));
+		syslog(LOG_ERR, "Open resulted in [%d]; [%m]\n", errno);
 		rc = -EIO;
 		goto out;
 	}
@@ -848,7 +847,7 @@ int ecryptfs_append_sig(char *auth_tok_sig, char *sig_cache_filename)
 	if ((size = write(fd, tmp, (ECRYPTFS_SIG_SIZE_HEX + 1))) !=
 	    (ECRYPTFS_SIG_SIZE_HEX + 1)) {
 		syslog(LOG_ERR, "Write of sig resulted in [%zu]; errno = [%d]; "
-		       "[%s]\n", size, errno, strerror(errno));
+		       "[%m]\n", size, errno);
 		rc = -EIO;
 		close(fd);
 		goto out;

@@ -21,6 +21,7 @@
 #include <errno.h>
 #include <mntent.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include "ecryptfs.h"
@@ -34,7 +35,7 @@
  */
 static int get_mount_opt_value(char *mnt_opts, char *name, char **value)
 {
-	char *name_start, *val_start, *val_stop, *copied_val;
+	char *name_start, *val_start, *val_stop;
 	size_t name_len, val_len;
 	int rc = 0;
 
@@ -100,7 +101,7 @@ static int unlink_keys_from_keyring(const char *mnt_point)
 		fekek_fail = ecryptfs_remove_auth_tok_from_keyring(fekek_sig);
 		if (fekek_fail)
 			fprintf(stderr, "Failed to remove fekek with sig [%s] "
-				"from keyring: %s\n", strerror(rc));
+				"from keyring: %s\n", fekek_sig, strerror(rc));
 	} else {
 		fekek_fail = rc;
 	}
@@ -110,7 +111,7 @@ static int unlink_keys_from_keyring(const char *mnt_point)
 		fnek_fail = ecryptfs_remove_auth_tok_from_keyring(fnek_sig);
 		if (fekek_fail) {
 			fprintf(stderr, "Failed to remove fnek with sig [%s] "
-				"from keyring: %s\n", strerror(rc));
+				"from keyring: %s\n", fekek_sig, strerror(rc));
 		}
 	}
 	free(fekek_sig);
@@ -145,7 +146,6 @@ out:
 int main(int argc, char **argv)
 {
 	char **new_argv;
-	char *mnt_opts, *fekek_sig, *fnek_sig;
 	int rc;
 
 	if (unlink_keys_from_keyring(argv[1]))

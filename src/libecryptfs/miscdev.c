@@ -50,7 +50,7 @@ int ecryptfs_send_miscdev(struct ecryptfs_miscdev_ctx *miscdev_ctx,
 	ssize_t written;
 	char packet_len_str[3];
 	char *miscdev_msg_data;
-	int rc;
+	int rc = 0;
 
 	/* miscdevfs packet format:
 	 *  Octet 0: Type
@@ -228,8 +228,7 @@ receive:
 	rc = ecryptfs_recv_miscdev(miscdev_ctx, &emsg, &msg_seq, &msg_type);
 	if (rc < 0) {
 		syslog(LOG_ERR, "Error while receiving eCryptfs netlink "
-		       "message; errno = [%d]; errno msg = [%s]\n", errno,
-		       strerror(errno));
+		       "message; errno = [%d]; errno msg = [%m]\n", errno);
 		error_count++;
 		if (error_count > ECRYPTFS_NETLINK_ERROR_COUNT_THRESHOLD) {
 			syslog(LOG_ERR, "Netlink error threshold exceeded "

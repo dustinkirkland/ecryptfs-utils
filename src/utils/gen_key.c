@@ -120,13 +120,13 @@ create_subdirectory(char *file, char *home, struct ecryptfs_key_mod *key_mod)
 		if (asprintf(&directory, "%s/.ecryptfs/pki/%s/%s",
 			     home, key_mod->alias, file) < 0) {
 			rc = errno;
-			fprintf(stderr, "Error: %s", strerror(errno));
+			fprintf(stderr, "Error: %m\n");
 			goto out;
 		}
 		printf("%s\n",directory);
 		if (mkdir(directory,0700) != 0 && errno != EEXIST) {
 			rc = errno;
-			fprintf(stderr, "Error: %s\n", strerror(errno));
+			fprintf(stderr, "Error: %m\n");
 			goto out;
 		}
                	free(directory);
@@ -144,35 +144,35 @@ int create_default_dir(char *home, struct ecryptfs_key_mod *key_mod)
 
 	if (asprintf(&directory, "%s/.ecryptfs/", home) < 0) {
 		rc = errno;
-		fprintf(stderr, "Error: %s", strerror(errno));
+		fprintf(stderr, "Error: %m\n");
 		goto out;
 	}
 	if (mkdir(directory,0700) != 0 && errno != EEXIST) {
 		rc = errno;
-		fprintf(stderr, "Error: %s", strerror(errno));
+		fprintf(stderr, "Error: %m\n");
 		goto out;
 	}
 	free(directory);
 	if (asprintf(&directory, "%s/.ecryptfs/pki/", home) < 0) {
 		rc = errno;
-		fprintf(stderr, "Error: %s", strerror(errno));
+		fprintf(stderr, "Error: %m\n");
 		goto out;
 	}
 	if (mkdir(directory,0700) != 0 && errno != EEXIST) {
 		rc = errno;
-		fprintf(stderr, "Error: %s", strerror(errno));
+		fprintf(stderr, "Error: %m");
 		goto out;
 	}
 	free(directory);
 	if (asprintf(&directory, "%s/.ecryptfs/pki/%s/", home,
 		     key_mod->alias) < 0) {
 		rc = errno;
-		fprintf(stderr, "Error: %s", strerror(errno));
+		fprintf(stderr, "Error: %m\n");
 		goto out;
 	}
 	if (mkdir(directory,0700) != 0 && errno != EEXIST) {
 		rc = errno;
-		fprintf(stderr, "Error: %s", strerror(errno));
+		fprintf(stderr, "Error: %m\n");
 		goto out;
 	}
 	free(directory);
