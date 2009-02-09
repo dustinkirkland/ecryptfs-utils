@@ -3,6 +3,7 @@ MAINTAINERCLEANFILES = $(srcdir)/Makefile.in
 EXTRA_DIST=ecryptfsrc ecryptfs-setup-private ecryptfs-mount-private ecryptfs-umount-private
 
 rootsbin_PROGRAMS=mount.ecryptfs \
+		  umount.ecryptfs \
 		  mount.ecryptfs_private
 bin_PROGRAMS=ecryptfs-manager ecryptfs-wrap-passphrase \
 	     ecryptfs-unwrap-passphrase \
@@ -28,6 +29,9 @@ INCLUDES = -I$(top_srcdir)/src/include
 mount_ecryptfs_SOURCES = mount.ecryptfs.c io.c io.h gen_key.c plaintext_decision_graph.c
 mount_ecryptfs_CFLAGS = $(AM_CFLAGS) $(KEYUTILS_CFLAGS) $(LIBGCRYPT_CFLAGS)
 mount_ecryptfs_LDADD = $(top_builddir)/src/libecryptfs/libecryptfs.la $(KEYUTILS_LIBS) $(LIBGCRYPT_LIBS)
+umount_ecryptfs_SOURCES = umount.ecryptfs.c
+umount_ecryptfs_CFLAGS = $(AM_CFLAGS) $(KEYUTILS_CFLAGS)
+umount_ecryptfs_LDADD = $(top_builddir)/src/libecryptfs/libecryptfs.la
 ecryptfs_manager_SOURCES = manager.c io.c io.h gen_key.c
 ecryptfs_manager_CFLAGS = $(AM_CFLAGS) $(KEYUTILS_CFLAGS) $(LIBGCRYPT_CFLAGS)
 ecryptfs_manager_LDADD = $(top_builddir)/src/libecryptfs/libecryptfs.la $(KEYUTILS_LIBS) $(LIBGCRYPT_LIBS)

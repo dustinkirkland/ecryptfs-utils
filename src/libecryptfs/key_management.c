@@ -135,6 +135,29 @@ out:
 	return bd;
 }
 
+
+int ecryptfs_remove_auth_tok_from_keyring(char *auth_tok_sig)
+{
+	int rc;
+
+	rc = (int)keyctl_search(KEY_SPEC_USER_KEYRING, "user", auth_tok_sig, 0);
+	if (rc < 0) {
+		rc = errno;
+		syslog(LOG_ERR, "Failed to find key with sig [%s]: %m\n",
+		       auth_tok_sig);
+		goto out;
+	}
+	rc = keyctl_unlink(rc, KEY_SPEC_USER_KEYRING);
+	if (rc < 0) {
+		rc = errno;
+		syslog(LOG_ERR, "Failed to unlink key with sig [%s]: %s\n",
+		       auth_tok_sig, strerror(rc));
+		goto out;
+	}
+	rc = 0;
+out:
+	return rc;
+}
 int ecryptfs_add_auth_tok_to_keyring(struct ecryptfs_auth_tok *auth_tok,
 				     char *auth_tok_sig)
 {
