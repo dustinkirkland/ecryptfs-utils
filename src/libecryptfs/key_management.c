@@ -899,7 +899,7 @@ char *ecryptfs_get_passphrase(char *prompt) {
 	struct termios current_settings;
 
 	if ((passphrase =
-	    (char *)malloc(ECRYPTFS_MAX_PASSWORD_LENGTH+1)) == NULL) {
+	    (char *)malloc(ECRYPTFS_MAX_PASSWORD_LENGTH+2)) == NULL) {
 		perror("malloc");
 		printf("\n");
 		return NULL;
@@ -909,14 +909,22 @@ char *ecryptfs_get_passphrase(char *prompt) {
 	}
 	ecryptfs_disable_echo(&current_settings);
 	if (fgets(passphrase,
-		  ECRYPTFS_MAX_PASSWORD_LENGTH, stdin) == NULL) {
+		  ECRYPTFS_MAX_PASSWORD_LENGTH+2, stdin) == NULL) {
 		ecryptfs_enable_echo(&current_settings);
 		printf("\n");
+		free(passphrase);
 		return NULL;
 	}
 	ecryptfs_enable_echo(&current_settings);
 	p = strrchr(passphrase, '\n');
 	if (p) *p = '\0';
 	printf("\n");
+	if (strlen(passphrase) > ECRYPTFS_MAX_PASSWORD_LENGTH) {
+		fprintf(stderr,"Passphrase is too long. Use at most %u "
+			       "characters long passphrase.\n",
+			ECRYPTFS_MAX_PASSWORD_LENGTH);
+		free(passphrase);
+		return NULL;
+	}
 	return passphrase;
 }

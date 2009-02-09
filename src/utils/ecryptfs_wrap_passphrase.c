@@ -20,6 +20,7 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <ecryptfs.h>
 #include <string.h>
 #include "config.h"
@@ -33,14 +34,16 @@ void usage(void)
 	       "printf \"%%s\\n%%s\" \"passphrase to wrap\" "
 	       "\"wrapping passphrase\" "
 	       "| ecryptfs-wrap-passphrase [file] -\n"
-	       "\n");
+	       "\n"
+	       "note: passphrase can be at most %d bytes long\n",
+	       ECRYPTFS_MAX_PASSWORD_LENGTH);
 }
 
 int main(int argc, char *argv[])
 {
 	char *file;
-	char *passphrase;
-	char *wrapping_passphrase;
+	char *passphrase = NULL;
+	char *wrapping_passphrase = NULL;
 	char salt[ECRYPTFS_SALT_SIZE];
 	char salt_hex[ECRYPTFS_SALT_SIZE_HEX];
 	int rc = 0;
@@ -48,13 +51,15 @@ int main(int argc, char *argv[])
 	if (argc == 2) {
 		/* interactive mode */
 		passphrase = ecryptfs_get_passphrase("Passphrase to wrap");
-		wrapping_passphrase =
-			ecryptfs_get_passphrase("Wrapping passphrase");
+		if (passphrase)
+			wrapping_passphrase =
+				ecryptfs_get_passphrase("Wrapping passphrase");
 	} else if (argc == 3 && strlen(argv[2]) == 1 &&
 		   strncmp(argv[2], "-", 1) == 0) {
 		/* stdin mode */
 		passphrase = ecryptfs_get_passphrase(NULL);
-		wrapping_passphrase = ecryptfs_get_passphrase(NULL);
+		if (passphrase)
+			wrapping_passphrase = ecryptfs_get_passphrase(NULL);
 	} else if (argc == 4) {
 		/* argument mode */
 		passphrase = argv[2];
@@ -67,6 +72,7 @@ int main(int argc, char *argv[])
 	    strlen(passphrase) > ECRYPTFS_MAX_PASSWORD_LENGTH ||
 	    strlen(wrapping_passphrase) > ECRYPTFS_MAX_PASSWORD_LENGTH) {
 		usage();
+		rc = 1;
 		goto out;
 	}
 	file = argv[1];
@@ -84,5 +90,9 @@ int main(int argc, char *argv[])
 		goto out;
 	}
 out:
+	if (argc != 4) {
+		free(passphrase);
+		free(wrapping_passphrase);
+	}
 	return rc;
 }
