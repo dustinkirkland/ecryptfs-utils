@@ -187,8 +187,7 @@ void daemonize(void)
 	if(getppid() == 1)
 		return; /* Already a daemon */
 	if ((pid=fork()) == -1) {
-		fprintf(stderr, "Failed to create daemon process: %s\n",
-			strerror(errno));
+		fprintf(stderr, "Failed to create daemon process: %m\n");
 		exit(1);
 	}
 	if (pid != 0)
@@ -200,8 +199,7 @@ void daemonize(void)
 		exit(1);
 	}
 	if ((pid=fork()) == -1) { /* Fork in new session */
-		syslog(LOG_ERR, "Failed to create daemon process: %s",
-		       strerror(errno));
+		syslog(LOG_ERR, "Failed to create daemon process: %m\n");
 		exit(1);
 	}
 	if (pid != 0)
@@ -213,8 +211,7 @@ void daemonize(void)
 	}
 	for (fd=0; fd < 3; fd++) {
 		if (dup2(null, 0) == -1) {
-			syslog(LOG_ERR, "Failed to dup null: %s",
-			       strerror(errno));
+			syslog(LOG_ERR, "Failed to dup null: %m\n");
 			exit(1);
 		}
 	}
@@ -356,14 +353,14 @@ int main(int argc, char **argv)
 	/* Disallow core file; secret values may be in it */
 	if (setrlimit(RLIMIT_CORE, &core) == -1) {
 		rc = -errno;
-		syslog(LOG_ERR, "Cannot setrlimit: %s", strerror (errno));
+		syslog(LOG_ERR, "Cannot setrlimit: %m");
 		goto daemon_out;
 	}
 	if (chrootdir != NULL) {
 		if (chroot(chrootdir) == -1) {
 			rc = -errno;
-			syslog(LOG_ERR, "Failed to chroot to '%s': %s",
-			       chrootdir, strerror(errno));
+			syslog(LOG_ERR, "Failed to chroot to '%s': %m\n",
+			       chrootdir);
 			goto daemon_out;
 		}
 		free(chrootdir);
@@ -374,8 +371,8 @@ int main(int argc, char **argv)
 
 		if (fp == NULL) {
 			rc = -errno;
-			syslog(LOG_ERR, "Failed to open pid file '%s': %s",
-			       pidfile, strerror(errno));
+			syslog(LOG_ERR, "Failed to open pid file '%s': %m\n",
+			       pidfile);
 			goto daemon_out;
 		}
 		fprintf(fp, "%d", (int)getpid());

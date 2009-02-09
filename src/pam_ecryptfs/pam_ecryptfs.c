@@ -44,8 +44,7 @@
 
 static void error(const char *msg)
 {
-	syslog(LOG_ERR, "errno = [%i]; strerror = [%s]\n", errno,
-	       strerror(errno));
+	syslog(LOG_ERR, "errno = [%i]; strerror = [%m]\n", errno);
 	switch (errno) {
 	case ENOKEY:
 		syslog(LOG_ERR, "%s: Requested key not available\n", msg);

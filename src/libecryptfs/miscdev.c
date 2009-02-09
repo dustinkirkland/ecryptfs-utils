@@ -228,8 +228,7 @@ receive:
 	rc = ecryptfs_recv_miscdev(miscdev_ctx, &emsg, &msg_seq, &msg_type);
 	if (rc < 0) {
 		syslog(LOG_ERR, "Error while receiving eCryptfs netlink "
-		       "message; errno = [%d]; errno msg = [%s]\n", errno,
-		       strerror(errno));
+		       "message; errno = [%d]; errno msg = [%m]\n", errno);
 		error_count++;
 		if (error_count > ECRYPTFS_NETLINK_ERROR_COUNT_THRESHOLD) {
 			syslog(LOG_ERR, "Netlink error threshold exceeded "

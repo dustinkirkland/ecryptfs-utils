@@ -27,15 +27,14 @@ int main(int argc, char *argv[])
 		rc = mkdir(filename, 0755);
 		if (rc) {
 			printf("Error creating directory [%s]; errno = [%d]; "
-			       "string = [%s].  Died on iteration [%d]\n",
-			       filename, errno, strerror(errno), i);
+			       "string = [%m].  Died on iteration [%d]\n",
+			       filename, errno, i);
 			return 1;
 		}
 		rc = rmdir(filename);
 		if (rc) {
 			printf("Error unlinking file [%s]; errno = [%d]; "
-			       "string = [%s]\n", filename, errno,
-			       strerror(errno));
+			       "string = [%m]\n", filename, errno);
 		}
 		free(filename);	
 	}

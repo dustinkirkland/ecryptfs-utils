@@ -464,8 +464,7 @@ ecryptfs_tspi_decrypt(char *to, size_t *to_size, char *from, size_t from_size,
 	if (!walker) {
 		if ((new_mapper = calloc(1, sizeof(struct key_mapper)))
 		    == NULL) {
-			syslog(LOG_ERR, "calloc failed: [%s]\n",
-			       strerror(errno));
+			syslog(LOG_ERR, "calloc failed: [%m]\n");
 			rc = -EIO;
 			goto out;
 		}
