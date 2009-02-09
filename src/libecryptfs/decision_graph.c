@@ -78,6 +78,8 @@ int free_name_val_pairs(struct ecryptfs_name_val_pair *pair)
 	while (pair) {
 		if (pair->value)
 			free(pair->value);
+		if (pair->name)
+			free(pair->name);
 		next = pair->next;
 		free(pair);
 		pair = next;

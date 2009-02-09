@@ -50,7 +50,7 @@ int ecryptfs_send_miscdev(struct ecryptfs_miscdev_ctx *miscdev_ctx,
 	ssize_t written;
 	char packet_len_str[3];
 	char *miscdev_msg_data;
-	int rc;
+	int rc = 0;
 
 	/* miscdevfs packet format:
 	 *  Octet 0: Type
