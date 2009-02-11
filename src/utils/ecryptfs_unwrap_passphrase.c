@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
 		rc = 1;
 		goto out;
 	}
-	printf("%s", passphrase);
+	printf("%s\n", passphrase);
 out:
 	return rc;
 }
