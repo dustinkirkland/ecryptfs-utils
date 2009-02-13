@@ -9,12 +9,13 @@ rm -f ./ecryptfs-utils*.tar.*
 make dist
 for i in `ls ecryptfs-utils-*.tar.gz`; do
 	ver=`echo $i | sed 's/^.*-//' | sed 's/\..*$//'`
-	mv $i ecryptfs-utils_$ver.orig.tar.gz
+	mv $i ../ecryptfs-utils_$ver.orig.tar.gz
+	rm -f ecryptfs-utils-*.tar.bz2
 done
-gpg --armor --sign --detach-sig ecryptfs-utils_*.orig.tar.gz
+gpg --armor --sign --detach-sig ../ecryptfs-utils_*.orig.tar.gz
 echo
 echo "TO MAKE THE RELEASE OFFICIAL, UPLOAD:"
 echo -n "  "
-ls *.orig.tar.gz
+ls ../ecryptfs-utils*.orig.tar.gz
 echo "---->  https://launchpad.net/ecryptfs/trunk"
 echo
