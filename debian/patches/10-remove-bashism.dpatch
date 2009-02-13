@@ -1,0 +1,21 @@
+#!/bin/sh /usr/share/dpatch/dpatch-run
+# 10-remove-bashism.dpatch
+# Dustin Kirkland <kirkland@canonical.com>
+#
+# Remove dependency on bash (breaks installer)
+
+@DPATCH@
+
+diff -uprN 1/ecryptfs-utils-69/src/utils/ecryptfs-setup-private 2/ecryptfs-utils-69/src/utils/ecryptfs-setup-private
+--- ecryptfs-utils-69/src/utils/ecryptfs-setup-private	2009-01-26 19:18:17.000000000 +0100
++++ ecryptfs-utils-69/src/utils/ecryptfs-setup-private	2009-02-06 16:55:34.774286167 +0100
+@@ -91,7 +91,8 @@ random_passphrase () {
+ 
+ filename_encryption_available() {
+ 	version=$(cat /sys/fs/ecryptfs/version)
+-	/bin/bash -c "let '$version & 0x00000100' || exit 1"
++	[ $(($version & 0x100)) -eq 0 ] && return 1
++	return 0
+ }
+ 
+ filename_encryption_available && FNEK="--fnek"

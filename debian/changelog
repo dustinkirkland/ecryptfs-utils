@@ -1,0 +1,614 @@
+ecryptfs-utils (69-0ubuntu2) jaunty; urgency=low
+
+  * debian/patches/10-remove-bashism.dpatch: fix installer bug, LP: #326184
+  * debian/control: Added libnss3-1d dependency (trying to cut over from
+    openssl linkage)
+
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Fri, 06 Feb 2009 17:58:11 +0100
+
+ecryptfs-utils (69-0ubuntu1) jaunty; urgency=low
+
+  * New upstream release, dropped all patches (included upstream)
+  * This release includes support for filename encryption (LP: #264977)
+  * This release promotes keyutils from a 'recommends' to a 'depends,
+    for access to the keyctl command, which is used by the helper scripts
+    to clear the keyring on unmount (LP: #313812)
+
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Mon, 26 Jan 2009 13:51:21 -0500
+
+ecryptfs-utils (68-1ubuntu2) jaunty; urgency=low
+
+  * debian/patches/05-mount_opts.dpatch: Clean up mount options, LP: #277723
+
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Mon, 05 Jan 2009 15:34:05 -0600
+
+ecryptfs-utils (68-1ubuntu1) jaunty; urgency=low
+
+  * Merge from debian unstable (LP: #311193), remaining changes:
+    - debian/ecryptfs-utils.postinst: handle pam-auth-update
+    - debian/control: keep the dpatch build dep; libpam-runtime dep for
+      pam-auth-update
+    - debian/ecryptfs-utils.install: install the pam-auth-update file
+    - debian/rules:keep the dpatch infrastructure around as we'll likely need
+      it again; install the pam-auth-update file
+    - debian/ecryptfs-utils.pam-auth-update: pam stack configuration
+    - debian/ecryptfs-utils.dirs: usr share install dirs
+    - debian/ecryptfs-utils.prerm: remove pam-auth-update configuration
+  * Upstream merge also fixes LP: #304043.
+
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Wed, 24 Dec 2008 10:24:53 -0600
+
+ecryptfs-utils (68-1) unstable; urgency=high
+
+  * Merging upstream version 68:
+    - Contains upstream changelog (Closes: #507942).
+    - Fixes syntax error in ecryptfs-setup-private (Closes: #509339).
+  * Updating rules to install changelog.
+
+ -- Daniel Baumann <daniel@debian.org>  Tue, 23 Dec 2008 08:04:00 +0100
+
+ecryptfs-utils (67-1ubuntu1) jaunty; urgency=low
+
+  * Merge from debian unstable, remaining changes (Debian Bug: #506172):
+    - debian/ecryptfs-utils.postinst: handle pam-auth-update
+    - debian/rules:keep the dpatch infrastructure around as we'll likely need
+      it again; install the pam-auth-update file
+    - debian/ecryptfs-utils.install: install the pam-auth-update file
+    - debian/control: keep the dpatch build dep; libpam-runtime dep for
+      pam-auth-update
+    - debian/ecryptfs-utils.pam-auth-update: pam stack configuration
+    - debian/ecryptfs-utils.dirs: usr share install dirs
+    - debian/ecryptfs-utils.prerm: remove pam-auth-update configuration
+  * Dropped changes
+    - debian/patches/10-counter_increment_fix.dpatch: included upstream
+    - debian/ecryptfs-mount-private.desktop: included upstream
+    - debian/ecryptfs-mount-private.txt: included upstream
+    - debian/rules: desktop, readme files installed by upstream
+    - debian/ecryptfs-utils.install: desktop, readme installed by upstream
+
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 04 Dec 2008 12:09:35 -0600
+
+ecryptfs-utils (67-1) unstable; urgency=low
+
+  * Merging upstream version 67.
+
+ -- Daniel Baumann <daniel@debian.org>  Wed,  3 Dec 2008 09:54:00 +0100
+
+ecryptfs-utils (66-2ubuntu3) jaunty; urgency=low
+
+  * debian/patches/10-counter_increment_fix.dpatch: fix broken mount counter
+    for encrypted home users (LP: #301085).
+
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Sat, 22 Nov 2008 14:59:52 -0600
+
+ecryptfs-utils (66-2ubuntu2) jaunty; urgency=low
+
+  * debian/control: depend on python-dev and swig to fix FTBFS (LP: #299888)
+  * debian/changelog: fix references to Debian bugs
+
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Wed, 19 Nov 2008 07:09:19 -0600
+
+ecryptfs-utils (66-2ubuntu1) jaunty; urgency=low
+
+  * Merge from debian unstable,
+    (LP: #259631, #293433, #286265, #247421, #294888, #298421)
+  * Remaining changes:
+    - debian/ecryptfs-utils.postinst: handle pam-auth-update
+      (Debian Bug: #506172)
+    - debian/rules:
+      + keep the dpatch infrastructure around, as we'll likely
+        need it again at some point soon
+      + install the desktop, readme, and pam-auth-update files ()
+    - debian/ecryptfs-utils.install: install the desktop, readme shared files
+      (Debian Bug: #506172)
+    - debian/control:
+      + keep the dpatch build dep
+      + depend on libpam-runtime (Debian Bug: #506172)
+    - debian/ecryptfs-utils.prerm: remove pam-auth-update configuration
+      (Debian Bug: #506172)
+    - debian/ecryptfs-mount-private.txt: readme to install in unmounted
+      private dir (Debian Bug: #506172)
+    - debian/ecryptfs-mount-private.desktop: desktop link to install in
+      unmounted private dir (Debian Bug: #506172)
+    - debian/ecryptfs-utils.dirs: usr share install dirs (Debian Bug: #506172)
+    - debian/ecryptfs-utils.pam-auth-update: pam stack configuration
+      (Debian Bug: #506172)
+
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Tue, 18 Nov 2008 22:55:19 -0600
+
+ecryptfs-utils (66-2) unstable; urgency=low
+
+  * Removing auth-client-config support, no longer used.
+  * Adding ecryptfs-utils recommends to keyutils.
+  * Building without ssl, ecryptfs_key_mod_openssl.c has incompatible
+    license (GPL-2+).
+  * Building without pkcs11 helper, ecryptfs_key_mod_pkcs11_helper.c
+    links against openssl and has incompatible license (GPL-2+).
+  * Building without pkcs11 helper, ecryptfs_key_mod_tspi.c links
+    against openssl and has incompatible license (GPL-2+).
+
+ -- Daniel Baumann <daniel@debian.org>  Tue, 18 Nov 2008 20:02:00 +0100
+
+ecryptfs-utils (66-1) unstable; urgency=low
+
+  * Manually adding second line of the commit message when merging
+    upstream version 65 to changelog.
+  * Merging upstream version 66.
+  * Adding ecryptfs-utils.postinst to create /var/lib/ecryptfs on
+    package installation time.
+
+ -- Daniel Baumann <daniel@debian.org>  Tue, 18 Nov 2008 12:39:00 +0100
+
+ecryptfs-utils (65-1) unstable; urgency=low
+
+  * Merging upstream version 65:
+    - Adds --wrapping option to ecryptfs-setup-private command to use an
+      independent wrapping passphrase, different from the login passphrase
+      (Closes: #505008).
+  * Removing pam-doc.dpatch, went upstream.
+  * Adding build-depends to swig.
+  * Adding build-depends to python-dev.
+  * Including python bindings in libecryptfs0.
+
+ -- Daniel Baumann <daniel@debian.org>  Sat, 15 Nov 2008 07:49:00 +0100
+
+ecryptfs-utils (64-3) unstable; urgency=low
+
+  * Replacing obsolete dh_clean -k with dh_prep.
+  * Adding patch from Osamu Aoki <osamu@debian.org> to update
+    ecryptfs-pam-doc.txt contents with s/Confidential/Private/
+    (Closes: #504934).
+  * Updating homepage and download location in control and copyright
+    (Closes: #504930).
+  * Updating author information in copyright.
+  * Installing desktop shortcut and readme to /usr/share/ecryptfs-utils.
+    Together with the fixes of upstream version 64, this interactively prompts
+    for passwords now (Closes: #504370).
+
+ -- Daniel Baumann <daniel@debian.org>  Sat,  8 Nov 2008 07:01:00 +0100
+
+ecryptfs-utils (64-2) unstable; urgency=low
+
+  * Adding build-depends to python (Closes: #504719).
+
+ -- Daniel Baumann <daniel@debian.org>  Thu,  6 Nov 2008 17:45:00 +0100
+
+ecryptfs-utils (64-1) unstable; urgency=low
+
+  * Removing sbin-path.dpatch, not needed anymore.
+  * Building with --enable-static, was default previously.
+
+ -- Daniel Baumann <daniel@debian.org>  Wed,  5 Nov 2008 20:45:00 +0100
+
+ecryptfs-utils (63-1) unstable; urgency=low
+
+  * Merging upstream version 63.
+
+ -- Daniel Baumann <daniel@debian.org>  Fri, 24 Oct 2008 06:42:00 +0200
+
+ecryptfs-utils (61-1) unstable; urgency=low
+
+  * Using patch-stamp rather than patch in rules file.
+  * Merging upstream version 61.
+  * Rediffing sbin-path.dpatch.
+
+ -- Daniel Baumann <daniel@debian.org>  Thu, 23 Oct 2008 19:42:00 +0200
+
+ecryptfs-utils (58-2) unstable; urgency=low
+
+  * Adding patch from situert <situert@yahoo.com> to call ecryptfs
+    helper scripts in /sbin with full path to avoid problem if /sbin is
+    not in PATH (Closes: #498543).
+
+ -- Daniel Baumann <daniel@debian.org>  Thu, 11 Sep 2008 08:11:00 +0200
+
+ecryptfs-utils (58-1) unstable; urgency=low
+
+  * Merging upstream version 58.
+
+ -- Daniel Baumann <daniel@debian.org>  Tue,  9 Sep 2008 07:08:00 +0200
+
+ecryptfs-utils (57-1) unstable; urgency=low
+
+  * Updating vcs fields in control file.
+  * Merging upstream version 57.
+
+ -- Daniel Baumann <daniel@debian.org>  Mon,  8 Sep 2008 13:44:00 +0200
+
+ecryptfs-utils (56-1) unstable; urgency=low
+
+  * Setting permissions for ecryptfs.acc when installing it in rules.
+  * Merging upstream version 56.
+
+ -- Daniel Baumann <daniel@debian.org>  Mon, 25 Aug 2008 01:25:00 +0200
+
+ecryptfs-utils (55-1) unstable; urgency=low
+
+  * Merging upstream version 55.
+
+ -- Daniel Baumann <daniel@debian.org>  Mon, 25 Aug 2008 01:19:00 +0200
+
+ecryptfs-utils (53-2) unstable; urgency=low
+
+  * Adding auth-client-config support, thanks to Dustin Kirkland
+    <kirkland@ubuntu.com>.
+
+ -- Daniel Baumann <daniel@debian.org>  Tue,  5 Aug 2008 23:59:00 +0200
+
+ecryptfs-utils (53-1ubuntu13) intrepid-proposed; urgency=low
+
+  Fixes for LP: #259631, add interactive mounting capability
+  * debian/rules, debian/ecryptfs-utils.dirs,
+    debian/ecryptfs-utils.install, debian/ecryptfs-mount-private.desktop,
+    debian/ecryptfs-mount-private.txt: install the new desktop shortcut
+    file and readme.txt to /usr/share/ecryptfs-utils
+  * debian/patches/60_interactive_mount.dpatch: modify ecryptfs-mount-private
+    utility to interactively prompt for password
+  * debian/patches/00list: updated accordingly
+
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Tue, 04 Nov 2008 09:34:41 -0600
+
+ecryptfs-utils (53-1ubuntu12) intrepid-proposed; urgency=low
+
+  * debian/patches/55_check_password_and_remove_from_proc.dpatch:
+    use the printf function properly (LP: #290445)
+
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Tue, 28 Oct 2008 16:50:11 -0500
+
+ecryptfs-utils (53-1ubuntu11) intrepid; urgency=low
+
+  * debian/patches/55_check_password_and_remove_from_proc.dpatch:
+    Fix ecryptfs-add-passphrase and ecryptfs-wrap-passphrase to take
+    passphrases on standard, to protect from disclosure on the process
+    table; fix callers in ecryptfs-setup-private (LP: #287908).
+    Validate that the user password is correct with unix_chkpwd (LP: #287906).
+  * debian/patches/00list: updated accordingly
+
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 23 Oct 2008 12:53:30 -0500
+
+ecryptfs-utils (53-1ubuntu10) intrepid; urgency=low
+
+  [Dustin Kirkland]
+  * debian/patches/45-mount_private_counter.dpatch: implement a counter to
+    track mounts/unmounts of the private directory; unmount if the
+    counter is 0; allow a -f override to force unmount. LP: #259293.
+
+  [Steve Langasek]
+  * debian/patches/50-error-on-empty-password.dpatch: return
+    PAM_AUTHTOK_RECOVER_ERR from the password changing module if we
+    didn't get a password from the other modules in the stack, instead
+    of returning success.  LP: #272232.
+
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Sun, 19 Oct 2008 10:30:08 -0500
+
+ecryptfs-utils (53-1ubuntu9) intrepid; urgency=low
+
+  * debian/patches/35-silence_useless_mount_messages.dpatch: silence error
+    messages (LP: #277343)
+  * debian/patches/40-zero_out_grep_options.dpatch: zero out GREP_OPTIONS
+    (LP: #257984)
+  * debian/patches/00list: updated accordingly
+
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Fri, 03 Oct 2008 12:58:21 -0500
+
+ecryptfs-utils (53-1ubuntu8) intrepid; urgency=low
+
+  * debian/rules: change the installed permissions of pam-auth-update
+    config to r--r--r-- (LP: #260458).
+
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Fri, 22 Aug 2008 18:45:09 +0100
+
+ecryptfs-utils (53-1ubuntu7) intrepid; urgency=low
+
+  * debian/00list: added 30-ecryptfs-setup-private_empty-dir-check.dpatch 
+    (LP: #260346).
+  * debian/30-ecryptfs-setup-private_empty-dir-check.dpatch: Patch checks that
+    ~/Private and ~/.Private are empty before proceeding.
+
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Fri, 22 Aug 2008 12:16:50 +0100
+
+ecryptfs-utils (53-1ubuntu6) intrepid; urgency=low
+
+  * Fixes (LP: #259915).
+  * debian/control: drop suggests of auth-client-config, add depends on
+    libpam-runtime.
+  * debian/ecryptfs-utils.postinst: initial creation, use pam-auth-update,
+    be sure to 'force' if pam stack was precisely written by
+    auth-client-config.
+  * debian/ecryptfs-utils.prerm: remove pam-auth-update config on uninstall
+  * debian/ecryptfs-utils.pam-auth-update: initial creation of pam-auth-update
+    configuration.
+  * debian/ecryptfs.acc: drop auth-client-config profile.
+  * debian/rules, debian/ecryptfs-utils.install, debian/ecryptfs-utils.dirs:
+    remove auth-client-config installation, add pam-auth-update.
+
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Fri, 22 Aug 2008 01:22:48 +0100
+
+ecryptfs-utils (53-1ubuntu5) intrepid; urgency=low
+
+  * debian/patches/00list: add 25-ecryptfs-setup-private_fix-pw-echo.dpatch
+    (LP: #259746).
+  * debian/patches/25-ecryptfs-setup-private_fix-pw-echo.dpatch: comment out
+    mostly-debugish echo's; conditionally print randomly generated passphrase;
+    always remind the user to print/record the mount passphrase for data
+    recovery.
+
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Wed, 20 Aug 2008 23:20:36 +0100
+
+ecryptfs-utils (53-1ubuntu4) intrepid; urgency=low
+
+  * debian/patches/00list: add 20-ecryptfs-setup-private-force.dpatch.
+  * debian/patches/20-ecryptfs-setup-private-force.dpatch: error out if a
+    pre-existing ecryptfs setup is found, allow for a --force override,
+  * (LP: #258388). 
+
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Fri, 15 Aug 2008 13:54:03 -0500
+
+ecryptfs-utils (53-1ubuntu3) intrepid; urgency=low
+
+  * debian/patches/00list: add 15-pam_ecryptfs-auth_fork_exit.dpatch.
+  * debian/patches/15-pam_ecryptfs-auth_fork_exit.dpatch: fix broken
+    exit condition causing screensaver unlocking to fail (LP: #255795).
+
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Mon, 11 Aug 2008 13:50:59 -0500
+
+ecryptfs-utils (53-1ubuntu2) intrepid; urgency=low
+
+  * debian/control: add build dependency on dpatch.
+  * debian/rules: add relevant patch bits.
+  * debian/patches/00list: add 10-pam_ecryptfs-automount.dpatch.
+  * debian/patches/10-pam_ecryptfs-automount.dpatch: patch pam_ecryptfs to
+    respect ~/.ecryptfs/auto-mount and ~/.ecryptfs/auto-umount files
+    (LP: #256154).
+
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Fri, 08 Aug 2008 13:00:53 -0500
+
+ecryptfs-utils (53-1ubuntu1) intrepid; urgency=low
+
+   * Merge from debian unstable (LP: #254714, #251245), remaining changes:
+    - debian/rules: install ecryptfs auth-client-config profile
+    - debian/control: Update maintainer, suggest auth-client-config
+    - debian/ecryptfs.acc: define auth-client-config profile
+    - debian/ecryptfs-utils.install: install auth-client-config profile
+   * Dropped changes:
+    - debian/ecryptfs-utils.dirs: handled by install -D rule
+   * Additional changes
+    - debian/ecryptfs.acc: Add to common-password stack, make all pam_ecryptfs
+      entries optional (LP: #253816).
+
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Mon, 04 Aug 2008 15:58:24 -0500
+
+ecryptfs-utils (53-1) unstable; urgency=low
+
+  * Updating to install newly added manpages.
+  * Removing 01-manpage.dpatch, not required anymore.
+  * Merging upstream version 53.
+
+ -- Daniel Baumann <daniel@debian.org>  Sun,  3 Aug 2008 00:11:00 +0200
+
+ecryptfs-utils (52-1) unstable; urgency=low
+
+  * Merging upstream version 52.
+
+ -- Daniel Baumann <daniel@debian.org>  Fri,  1 Aug 2008 03:50:00 +0200
+
+ecryptfs-utils (51-1) unstable; urgency=low
+
+  * Merging upstream version 51.
+
+ -- Daniel Baumann <daniel@debian.org>  Fri,  1 Aug 2008 01:22:00 +0200
+
+ecryptfs-utils (50-4ubuntu2) intrepid; urgency=low
+
+   * debian/patches/00list, debian/patches/05-pam_ecryptfs_waitpid.dpatch:
+     Cherry pick this patch from upstream, which fixes gdm/kdm hangs on logout
+     (LP: #250988).
+
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Tue, 22 Jul 2008 18:34:59 -0500
+
+ecryptfs-utils (50-4ubuntu1) intrepid; urgency=low
+
+   * Merge from debian unstable (LP: #249503), remaining changes:
+    - debian/control: Update maintainer, suggest auth-client-config
+    - debian/ecryptfs-utils.dirs: add etc/auth-client-config/profile.d
+    - debian/ecryptfs-utils.install: add ecryptfs auth-client-config profile
+    - debian/ecryptfs.acc: define auth-client-config profile
+    - debian/rules: support ecryptfs auth-client-config profile
+   * Dropped changes:
+    - debian/libecryptfs0.dirs: moved auth-client-config bit to
+      debian/ecryptfs-utils.dirs
+    - debian/libecryptfs.install: moved auth-client-config bit to
+      debian/ecryptfs-utils.install
+
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 17 Jul 2008 10:39:51 -0500
+
+ecryptfs-utils (50-4) unstable; urgency=medium
+
+  * Adding /usr/lib/libecryptfs.so.0.0 symlink.
+  * Moving /lib/security/pam_ecryptfs.so and /usr/lib/ecryptfs/*.so from
+    libecryptfs0 to ecryptfs-utils.
+
+ -- Daniel Baumann <daniel@debian.org>  Wed, 16 Jul 2008 20:34:00 +0200
+
+ecryptfs-utils (50-3ubuntu1) intrepid; urgency=low
+
+  * Merge from debian unstable (LP: #248420), remaining changes:
+   - debian/libecryptfs0.install: add ecryptfs auth-client-config profile
+   - debian/rules: support ecryptfs auth-client-config profile
+   - debian/control: Update maintainer, suggest auth-client-config
+   - debian/libecryptfs0.dirs: add etc/auth-client-config/profile.d
+   - debian/ecryptfs.acc: define auth-client-config profile
+
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Mon, 14 Jul 2008 09:48:23 -0500
+
+ecryptfs-utils (50-3) unstable; urgency=low
+
+  * Adding missing build-depends to pkg-config (Closes: #490415).
+
+ -- Daniel Baumann <daniel@debian.org>  Sat, 12 Jul 2008 11:12:00 +0200
+
+ecryptfs-utils (50-2) unstable; urgency=low
+
+  * Removing currently unused libgtk2.0-dev from build-depends (Closes:#490233).
+  * Building ecryptfs-utils with TPM support on all supported Debian
+    architectures, except s390.
+  * Installing /sbin/mount.ecryptfs_private with suid root.
+
+ -- Daniel Baumann <daniel@debian.org>  Thu, 10 Jul 2008 23:48:00 +0200
+
+ecryptfs-utils (50-1ubuntu1) intrepid; urgency=low
+
+  * auth-client-config support (LP: #247641)
+    + debian/ecryptfs.acc: create an auth-client-config profile
+    + debian/libecryptfs0.install: install the auth-client-config profile
+    + debian/control: modify maintainer value; add auth-client-config to
+      Suggests
+    + debian/libecryptfs0.dirs: create with etc/auth-client-config/profile.d
+
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Fri, 11 Jul 2008 12:00:36 -0500
+
+ecryptfs-utils (50-1) unstable; urgency=low
+
+  * Merging upstream version 50.
+
+ -- Daniel Baumann <daniel@debian.org>  Sun, 29 Jun 2008 22:19:00 +0200
+
+ecryptfs-utils (49-1) unstable; urgency=low
+
+  * Merging upstream version 49.
+
+ -- Daniel Baumann <daniel@debian.org>  Sun, 29 Jun 2008 22:09:00 +0200
+
+ecryptfs-utils (48-1) unstable; urgency=medium
+
+  * Updating debhelper shlibs file.
+  * Updating rules fileto reflect upstreams removal of documentation.
+  * Merging upstream version 48.
+
+ -- Daniel Baumann <daniel@debian.org>  Mon, 16 Jun 2008 21:35:00 +0200
+
+ecryptfs-utils (47-1) unstable; urgency=low
+
+  * Merging upstream version 47.
+
+ -- Daniel Baumann <daniel@debian.org>  Mon, 16 Jun 2008 20:39:00 +0200
+
+ecryptfs-utils (46-1) unstable; urgency=low
+
+  * Removing superfluous empty line from rules file.
+  * Removing trailing slash in install debhelper file.
+  * Merging upstream version 46.
+  * Updating to standards 3.8.0.
+
+ -- Daniel Baumann <daniel@debian.org>  Tue, 10 Jun 2008 08:06:00 +0200
+
+ecryptfs-utils (45-1) unstable; urgency=low
+
+  * Merging upstream version 45.
+
+ -- Daniel Baumann <daniel@debian.org>  Fri, 16 May 2008 08:22:00 +0200
+
+ecryptfs-utils (44-1) unstable; urgency=low
+
+  * Reordering rules file.
+  * Updating debhelper shlibs file.
+  * Rewriting copyright file in machine-interpretable format.
+  * Adding vcs fields in control file.
+  * Upgrading package to debhelper 7.
+  * Merging upstream version 44.
+
+ -- Daniel Baumann <daniel@debian.org>  Sat,  3 May 2008 12:17:00 +0200
+
+ecryptfs-utils (43-1) unstable; urgency=low
+
+  * New upstream release.
+  * Removing watch file.
+
+ -- Daniel Baumann <daniel@debian.org>  Wed,  9 Apr 2008 09:54:00 +0200
+
+ecryptfs-utils (41-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Daniel Baumann <daniel@debian.org>  Tue,  1 Apr 2008 11:25:00 +0200
+
+ecryptfs-utils (40-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Daniel Baumann <daniel@debian.org>  Sun, 24 Feb 2008 22:09:00 +0100
+
+ecryptfs-utils (38-2) unstable; urgency=low
+
+  * Temporarily only use tpm toolchain on i386 (Closes: #461233).
+  * Current upstream should build without patches on amd64 (Closes: #445619).
+  * Added --fail-missing to dh_install call in rules.
+  * Updated .install files to cover additional files.
+
+ -- Daniel Baumann <daniel@debian.org>  Thu, 17 Jan 2008 23:47:00 +0100
+
+ecryptfs-utils (38-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Daniel Baumann <daniel@debian.org>  Sat, 12 Jan 2008 17:14:00 +0100
+
+ecryptfs-utils (37-1) unstable; urgency=low
+
+  * New upstream release (Closes: #457316).
+  * Compling with trousers support now.
+  * Bumping to new policy.
+
+ -- Daniel Baumann <daniel@debian.org>  Fri, 21 Dec 2007 14:54:00 +0100
+
+ecryptfs-utils (30-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Daniel Baumann <daniel@debian.org>  Fri, 16 Nov 2007 12:10:00 +0100
+
+ecryptfs-utils (27-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Daniel Baumann <daniel@debian.org>  Fri, 19 Oct 2007 21:50:00 +0200
+
+ecryptfs-utils (26-1) unstable; urgency=low
+
+  * New upstream release.
+  * Dropped 02-ia64.dpatch; not required anymore.
+  * Building with --disable-tspi for the time beeing until trousers is
+    uploaded.
+  * Downgrading recommends to opencryptoki to a suggests for the time beeing
+    until opencryptoki is uploaded.
+
+ -- Daniel Baumann <daniel@debian.org>  Sun, 14 Oct 2007 11:17:00 +0200
+
+ecryptfs-utils (24-2) unstable; urgency=low
+
+  * Enforcing libdir (Closes: #445619).
+
+ -- Daniel Baumann <daniel@debian.org>  Wed, 10 Oct 2007 23:41:00 +0200
+
+ecryptfs-utils (24-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Daniel Baumann <daniel@debian.org>  Tue,  9 Oct 2007 12:03:00 +0200
+
+ecryptfs-utils (23-1) unstable; urgency=low
+
+  * New upstream release.
+  * Added libgpgme11-dev to build-depends.
+  * Rediffed 02-ia64.dpatch.
+
+ -- Daniel Baumann <daniel@debian.org>  Mon, 27 Aug 2007 16:32:00 +0200
+
+ecryptfs-utils (21-1) unstable; urgency=low
+
+  * Initial release (Closes: #401800).
+  * Added patch from William Lima <wlima.amadeus@gmail.com> to fix FTBFS on
+    ia64.
+
+ -- Daniel Baumann <daniel@debian.org>  Sun, 12 Aug 2007 15:20:00 +0200
+
