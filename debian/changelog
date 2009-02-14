@@ -1,3 +1,23 @@
+ecryptfs-utils (70-0ubuntu1) jaunty; urgency=low
+
+  * New upstream release, dropped all patches (included upstream)
+
+  [ Michal Hlavinka ]
+  * Auto module loading improvements
+  * Fix nss passphrase (un)wrapping
+  * Fix error handling when wrapping passphrase is too long
+  * Use %m instead of strerror(errno) everywhere
+  * Make the code compile with -Werror
+
+  [ Tyler Hicks ]
+  * umount.ecryptfs wrapper, clears keys
+
+  [ Dustin Kirkland ]
+  * Add a trailing newline to passphrase printing
+  * Hack around glibc/kernel mlock limit issue
+
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Fri, 13 Feb 2009 19:22:16 -0600
+
 ecryptfs-utils (69-0ubuntu2) jaunty; urgency=low
 
   * debian/patches/10-remove-bashism.dpatch: fix installer bug, LP: #326184
