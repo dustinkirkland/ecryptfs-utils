@@ -289,10 +289,9 @@ static int strip_userland_opts(char *options)
 	return 0;
 }
 
-static int process_sig(char *auth_tok_sig)
+static int process_sig(char *auth_tok_sig, struct passwd *pw)
 {
 	char *home;
-	struct passwd *pw;
 	uid_t id;
 	char *sig_cache_filename = NULL;
 	char *dot_ecryptfs_dir;
@@ -301,12 +300,6 @@ static int process_sig(char *auth_tok_sig)
 	int i;
 	int rc;
 
-	id = getuid();
-	pw = getpwuid(id);
-	if (!pw) {
-		rc = -EIO;
-		goto out;
-	}
 	home = pw->pw_dir;
 	rc = asprintf(&dot_ecryptfs_dir, "%s/.ecryptfs", home);
 	if (rc == -1) {
@@ -445,7 +438,7 @@ out:
  * -> trans_func(head). 
  */
 static int ecryptfs_do_mount(int argc, char **argv, struct val_node *mnt_params,
-			     int sig_cache)
+			     int sig_cache, struct passwd *pw)
 {
 	int rc;
 	int flags = 0;
@@ -473,7 +466,7 @@ static int ecryptfs_do_mount(int argc, char **argv, struct val_node *mnt_params,
 		temp = new_opts;
 		printf("  %s\n", val);
 		if (sig_cache && memcmp(val, "ecryptfs_sig=", 13) == 0) {
-			if ((rc = process_sig(&val[13]))) {
+			if ((rc = process_sig(&val[13], pw))) {
 				printf("Error processing sig; rc = [%d]\n", rc);
 				goto out;
 			}
@@ -513,6 +506,18 @@ int main(int argc, char **argv)
 	struct ecryptfs_ctx ctx;
 	int sig_cache = 1;
 	int rc;
+	struct passwd *pw;
+
+	/* Nasty hack;  On some systems, this need to run before we mlock.
+	 * See:
+	 *     https://bugs.launchpad.net/ubuntu/+source/glibc/+bug/329264
+	 */
+	pw = getpwuid(getuid());
+	if (!pw) {
+		fprintf(stderr, "Exiting. Unable to obtain passwd info\n");
+		rc = -EIO;
+		goto out;
+	}
 
 	rc = mlockall(MCL_FUTURE);
 	if (rc) {
@@ -593,7 +598,7 @@ int main(int argc, char **argv)
 			       "Launchpad.\n", rc);
 			goto out;
 		}
-		rc = ecryptfs_do_mount(argc, argv, mnt_params, sig_cache);
+		rc = ecryptfs_do_mount(argc, argv, mnt_params, sig_cache, pw);
 		if (rc) {
 			if (rc > 0)
 				rc = -rc;
