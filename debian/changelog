@@ -14,9 +14,9 @@ ecryptfs-utils (70-0ubuntu1) jaunty; urgency=low
 
   [ Dustin Kirkland ]
   * Add a trailing newline to passphrase printing
-  * Hack around glibc/kernel mlock limit issue
+  * Hack around glibc/kernel mlock limit issue, LP: #329176
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Fri, 13 Feb 2009 19:22:16 -0600
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Fri, 13 Feb 2009 19:33:22 -0600
 
 ecryptfs-utils (69-0ubuntu2) jaunty; urgency=low
 
