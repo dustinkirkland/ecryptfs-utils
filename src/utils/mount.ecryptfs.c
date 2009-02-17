@@ -100,10 +100,7 @@ static int parse_arguments(int argc, char **argv, char **src, char **target,
 		if ((*target)[len - 1] == '/')
 			(*target)[len - 1] = '\0';
 	}
-	if (options && (argc == NUM_REQUIRED_ARGS)) {
-		fprintf(stderr, "Not enough remaining data for options\n");
-		return -EINVAL;
-	} else if ((options) && (argc > NUM_REQUIRED_ARGS)) {
+	if ((options) && (argc >= NUM_REQUIRED_ARGS)) {
 		int i;
 
 		ptr = NULL;
@@ -116,8 +113,7 @@ static int parse_arguments(int argc, char **argv, char **src, char **target,
 			fprintf(stderr, "Unable to find a list of options to "
 					"parse, defaulting to interactive "
 					"mount\n");
-			rc = -ENOENT;
-			goto out;
+			return 0;
 		}
 		len = strlen(ptr) + 1; /* + NULL-terminator */
 		*options = malloc(len);
@@ -146,6 +142,9 @@ static int ecryptfs_generate_mount_flags(char *options, int *flags)
 	char *next_opt;
 	char *end;
 	int num_options = 0;
+
+	if (!options)
+		return 0;
 
 	end = strchr(options, '\0');
 	opt = options;
@@ -255,6 +254,9 @@ static int strip_userland_opts(char *options)
 	size_t len;
 	int used = 0, first = 1;
 
+	if (!options)
+		return 0;
+
 	len = (strlen(options) + 1);
 	if ((temp = (char*)malloc(len)) == NULL) {
 		fprintf(stderr, "Out of memory\n");
@@ -292,7 +294,6 @@ static int strip_userland_opts(char *options)
 static int process_sig(char *auth_tok_sig, struct passwd *pw)
 {
 	char *home;
-	uid_t id;
 	char *sig_cache_filename = NULL;
 	char *dot_ecryptfs_dir;
 	int flags;
@@ -362,7 +363,7 @@ static int process_sig(char *auth_tok_sig, struct passwd *pw)
 				       "file; continuing with mount.\n");
 		} else {
 			printf("Aborting mount.\n");
-			rc = -EINVAL;
+			rc = ECANCELED;
 			goto out;
 		}
 	}
@@ -376,6 +377,10 @@ static int opts_str_contains_option(char *options, char *option)
 	char *opt;
 	char *next_opt;
 	char *end;
+
+	if (!options || !option)
+		return 0;
+
 	int option_len = strlen(option);
 
 	end = strchr(options, '\0');
@@ -418,7 +423,7 @@ static int ecryptfs_validate_mount_opts(char *opts)
 		if (!opts_str_contains_option(opts, required_mount_opts[i])) {
 			printf("Required mount option not provided: [%s]\n",
 			       required_mount_opts[i]);
-			rc = 1;
+			rc = -EINVAL;
 			goto out;
 		}
 		i++;
@@ -454,12 +459,15 @@ static int ecryptfs_do_mount(int argc, char **argv, struct val_node *mnt_params,
 	if (rc)
 		goto out;
 	num_opts = ecryptfs_generate_mount_flags(opts, &flags);
-	if (asprintf(&new_opts, "%secryptfs_unlink_sigs,", opts) == -1) {
-		new_opts = NULL;
+	if (!(temp = strdup("ecryptfs_unlink_sigs"))) {
 		rc = -ENOMEM;
 		goto out;
 	}
+	if ((rc = stack_push(&mnt_params, (void *)temp)))
+		goto out;
 	printf("Attempting to mount with the following options:\n");
+	new_opts = opts;
+	opts = NULL;
 	while (!stack_pop_val(&mnt_params, (void *)&val)) {
 		if(!val)
 			break;
@@ -467,12 +475,15 @@ static int ecryptfs_do_mount(int argc, char **argv, struct val_node *mnt_params,
 		printf("  %s\n", val);
 		if (sig_cache && memcmp(val, "ecryptfs_sig=", 13) == 0) {
 			if ((rc = process_sig(&val[13], pw))) {
-				printf("Error processing sig; rc = [%d]\n", rc);
+				if (rc != ECANCELED)
+					printf("Error processing sig; "
+					       "rc = [%d]\n", rc);
 				goto out;
 			}
 		}
-		if (!strstr(temp, val)) {
-			rc = asprintf(&new_opts, "%s,%s", val, temp);
+		if (!temp || !strstr(temp, val)) {
+			rc = asprintf(&new_opts, "%s%c%s", val,
+				      ((temp && *temp) ? ',' : '\0'), temp);
 			if (rc == -1) {
 				new_opts = NULL;
 				rc = -ENOMEM;
@@ -521,8 +532,8 @@ int main(int argc, char **argv)
 
 	rc = mlockall(MCL_FUTURE);
 	if (rc) {
-		fprintf(stderr, "Exiting. Unable to mlockall address space\n");
-		return 0;
+		fprintf(stderr, "Exiting. Unable to mlockall address space: %m\n");
+		return -1;
 	}
 	if (dump_args) {
 		int i;
@@ -588,22 +599,24 @@ int main(int argc, char **argv)
 			&ctx, &mnt_params, version, opts_str,
 			ECRYPTFS_ASK_FOR_ALL_MOUNT_OPTIONS);
 		if (rc) {
-			printf("Error attempting to evaluate mount options; "
-			       "rc = [%d]. See your system logs for more "
-			       "details on why this happened. Try "
-			       "updating/reinstalling your "
-			       "ecryptfs-utils package, contact your operating "
-			       "system vendor, and/or submit a bug "
-			       "report on the ecryptfs-devel mailing list on "
-			       "Launchpad.\n", rc);
+			printf("Error attempting to evaluate mount options: "
+			       "[%d] %s\nCheck your system logs for details "
+			       "on why this happened.\nTry updating your "
+			       "ecryptfs-utils package, and/or\nsubmit a bug "
+			       "report on https://launchpad.net/ecryptfs\n",
+				rc, strerror(-rc));
 			goto out;
 		}
 		rc = ecryptfs_do_mount(argc, argv, mnt_params, sig_cache, pw);
+		if (rc == ECANCELED) {
+		    rc = 0;
+		    goto out;
+		}
 		if (rc) {
 			if (rc > 0)
 				rc = -rc;
-			printf("Error mounting eCryptfs; rc = [%d]; strerr = "
-			       "[%s]. Check your system logs; visit "
+			printf("Error mounting eCryptfs: [%d] %s\n"
+			       "Check your system logs; visit "
 			       "<http://launchpad.net/ecryptfs>\n",
 			       rc, strerror(-rc));
 			if (rc == -ENODEV)

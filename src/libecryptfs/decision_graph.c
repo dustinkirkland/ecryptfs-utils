@@ -235,7 +235,7 @@ int do_transition(struct ecryptfs_ctx *ctx, struct param_node **next,
 				}
 				return rc;
 			}
-			else return -EINVAL;
+			else return EINVAL;
 		}
 		while (nvp) {
 			int trans_func_tok_id = NULL_TOK;
@@ -255,12 +255,12 @@ int do_transition(struct ecryptfs_ctx *ctx, struct param_node **next,
 				if ((*next = tn->next_token))
 					return 0;
 				else
-					return -EINVAL;
+					return EINVAL;
 			} else if (trans_func_tok_id == NULL_TOK) {
 				if ((*next = tn->next_token))
 					return 0;
 				else
-					return -EINVAL;
+					return EINVAL;
 			}
 			nvp = nvp->next;
 		}
@@ -275,14 +275,15 @@ int do_transition(struct ecryptfs_ctx *ctx, struct param_node **next,
 				trans_func_tok_id =
 					tn->trans_func(ctx, current,
 						       mnt_params, foo);
-			if (trans_func_tok_id == MOUNT_ERROR)
+			if (trans_func_tok_id == MOUNT_ERROR || 
+			    trans_func_tok_id > 0)
 				return trans_func_tok_id;
 			if ((*next = tn->next_token))
 				return 0;
-			else return -EINVAL;
+			else return EINVAL;
 		}
 	}
-	return MOUNT_ERROR;
+	return NULL_TOK;
 }
 
 /**
@@ -701,11 +702,10 @@ int ecryptfs_eval_decision_graph(struct ecryptfs_ctx *ctx,
 
 	memset(*mnt_params, 0, sizeof(struct val_node));
 	rc = eval_param_tree(ctx, root_node, nvp_head, mnt_params);
-	if (rc == MOUNT_ERROR)
-		goto out;
-	else
-		rc = 0;
-out:
+	if (rc > 0)
+		return -rc;
+	if (rc != MOUNT_ERROR)
+		return 0;
 	return rc;
 }
 
