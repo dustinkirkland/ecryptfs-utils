@@ -1,3 +1,15 @@
+ecryptfs-utils-71
+  [ Dustin Kirkland ]
+  * src/utils/ecryptfs-setup-swap: a first cut at a script that helps setup
+    encrypted swap
+  * debian/control: suggest cryptsetup
+
+  [ Tyler Hicks ]
+  * src/utils/mount.ecryptfs_private.c: clear keyring on unmount
+
+  [ Michal Hlavinka ]
+  * improve interactive mode of mount.ecryptfs
+
 ecryptfs-utils-70
  [ Michal Hlavinka ]
  * Auto module loading improvements
