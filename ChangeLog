@@ -4,9 +4,6 @@ ecryptfs-utils-71
     encrypted swap
   * debian/control: suggest cryptsetup
 
-  [ Tyler Hicks ]
-  * src/utils/mount.ecryptfs_private.c: clear keyring on unmount
-
   [ Michal Hlavinka ]
   * improve interactive mode of mount.ecryptfs
 

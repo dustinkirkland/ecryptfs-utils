@@ -1,4 +1,4 @@
-ecryptfs-utils (71) UNRELEASED; urgency=low
+ecryptfs-utils (71-0ubuntu1) jaunty; urgency=low
 
   Upstream changes
 
@@ -7,13 +7,10 @@ ecryptfs-utils (71) UNRELEASED; urgency=low
     encrypted swap
   * debian/control: suggest cryptsetup
 
-  [ Tyler Hicks ]
-  * src/utils/mount.ecryptfs_private.c: clear keyring on unmount
-
   [ Michal Hlavinka ]
   * improve interactive mode of mount.ecryptfs
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Wed, 18 Feb 2009 15:30:08 -0600
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Wed, 18 Feb 2009 17:34:17 -0600
 
 ecryptfs-utils (70-0ubuntu1) jaunty; urgency=low
 
