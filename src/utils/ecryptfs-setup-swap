@@ -54,6 +54,77 @@ while [ ! -z "$1" ]; do
 	esac
 done
 
+# Ensure that cryptsetup is available
+[ -x /sbin/cryptsetup ] || error "Please install 'cryptsetup'"
+
+# Ensure that we're running with root privileges
+[ -w /etc/passwd ] || error "This program must be run with 'sudo', or as root"
+
+# Count swap spaces available
+# BUG: We only support setting up a single swap space at this time
+if [ $(grep -c "^/" /proc/swaps) -eq 0 ]; then
+	mem=$(grep "^MemTotal:" /proc/meminfo | awk '{print $2}')
+	swapsize=$((4*$mem))
+	info "You do not currently have any swap space defined."
+	echo
+	echo "You can create a swap file by doing:"
+	echo " $ sudo dd if=/dev/zero of=/swapfile count=$swapsize"
+	echo " $ sudo mkswap /swapfile"
+	echo " $ sudo swapon /swapfile"
+	echo
+	echo "And then re-run $0"
+	echo
+	exit 0
+elif [ $(grep -c "^/" /proc/swaps) -gt 1 ]; then
+	info "You have more than one swap space defined."
+	error "$0 only supports setting up a single swap space"
+else
+	swap=$(grep "^/" /proc/swaps | awk '{print $1}')
+fi
+
+# Make sure this is swap space
+if ! vol_id "$swap" | grep -qs "ID_FS_TYPE=swap"; then
+	error "[$swap] does not appear to be swap space"
+fi
+
+# Check if this this swap space is already setup for encryption
+if /sbin/dmsetup table "$swap" | grep -qs " crypt " 2>/dev/null; then
+	info "[$swap] already appears to be encrypted."
+	exit 0
+else
+	# keep going
+	/bin/true
+fi
+
+base=$(basename "$swap")
+if grep -qs "^$base.*swap.*cipher" /etc/crypttab 2>/dev/null; then
+	info "[$swap] already has an entry in /etc/crypttab."
+	exit 0
+fi
+if grep -qs "$swap" /etc/initramfs-tools/conf.d/cryptroot 2>/dev/null; then
+	info "[$swap] already has an entry in /etc/fstab."
+	exit 0
+fi
+
+# Ensure available dev mapper name 'cryptswap'
+if grep -qs "^cryptswap" /etc/crypttab; then
+	error "There appears to be a cryptswap entry in /etc/cryptab; aborting."
+fi
+
+# Ensure available fstab entry
+if grep -qs "^/dev/mapper/cryptswap" /etc/fstab; then
+	error "There appears to be a cryptswap entry in /etc/fstab; aborting."
+fi
+
+# Ensure that the existing swap space exists in fstab
+if grep -qs "^$swap" /etc/fstab; then
+	sed -i "s:^$swap:\#$swap:" /etc/fstab
+	info "Commented out your unencrypted swap from /etc/fstab"
+else
+	info "Your swap space isn't currently listed in /etc/fstab"
+fi
+
+##########################################################################
 # Warn the user about breaking hibernate mode
 if [ "$FORCE" != 1 ]; then
 	echo
@@ -75,49 +146,8 @@ if [ "$FORCE" != 1 ]; then
 		exit 0
 	fi
 fi
-
-# Ensure that cryptsetup is available
-[ -x /sbin/cryptsetup ] || error "Please install 'cryptsetup'"
-
-# Count swap spaces available
-if [ $(grep -c "^/" /proc/swaps) -eq 0 ]; then
-	mem=$(grep "^MemTotal:" /proc/meminfo | awk '{print $2}')
-	swapsize=$((4*$mem))
-	info "You do not currently have any swap space defined."
-	echo
-	echo "You can create a swap file by doing:"
-	echo " $ sudo dd if=/dev/zero of=/swapfile count=$swapsize"
-	echo " $ sudo mkswap /swapfile"
-	echo " $ sudo swapon /swapfile"
-	echo
-	echo "And then re-run $0"
-	echo
-	exit 0
-elif [ $(grep -c "^/" /proc/swaps) -gt 1 ]; then
-	info "You have more than one swap space defined."
-	error "$0 only supports setting up a single swap space"
-else
-	swap=$(grep "^/" /proc/swaps | awk '{print $1}')
-fi
-
-# Check if this this swap space is already setup for encryption
-base=$(basename "$swap")
-if grep -qs "^$base.*swap.*cipher" /etc/crypttab; then
-	info "It appears that [$swap] is already encrypted."
-	#exit 0
-fi
-
-# Ensure available dev mapper name 'cryptswap'
-if grep -qs "^cryptswap" /etc/crypttab; then
-	error "There appears to be a cryptswap entry in /etc/cryptab; aborting."
-fi
-
-# Ensure available fstab entry
-if grep -qs "^/dev/mapper/cryptswap" /etc/fstab; then
-	error "There appears to be a cryptswap entry in /etc/fstab; aborting."
-fi
-
 ##########################################################################
+
 
 info "Setting up swap: [$swap]"
 
