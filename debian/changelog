@@ -1,3 +1,20 @@
+ecryptfs-utils (71) UNRELEASED; urgency=low
+
+  Upstream changes
+
+  [ Dustin Kirkland ]
+  * src/utils/ecryptfs-setup-swap: a first cut at a script that helps setup
+    encrypted swap
+  * debian/control: suggest cryptsetup
+
+  [ Tyler Hicks ]
+  * src/utils/mount.ecryptfs_private.c: clear keyring on unmount
+
+  [ Michal Hlavinka ]
+  * improve interactive mode of mount.ecryptfs
+
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Wed, 18 Feb 2009 15:30:08 -0600
+
 ecryptfs-utils (70-0ubuntu1) jaunty; urgency=low
 
   * New upstream release, dropped all patches (included upstream)
