@@ -33,9 +33,11 @@
 static int tf_passwd(struct ecryptfs_ctx *ctx, struct param_node *node,
 		     struct val_node **head, void **foo)
 {
+	int rc;
 	if (!node->val)
-		return MOUNT_ERROR;
-	stack_push(head, node->val);
+		return EINVAL;
+	if ((rc = stack_push(head, node->val)))
+		return -rc;
 	node->val = NULL;
 	return DEFAULT_TOK;
 }
@@ -51,7 +53,7 @@ static int tf_pass_file(struct ecryptfs_ctx *ctx, struct param_node *node,
 
 	file_head = malloc(sizeof(struct ecryptfs_name_val_pair));
 	if (!file_head) {
-		rc = -ENOMEM;
+		rc = ENOMEM;
 		goto out;
 	}
 	memset(file_head, 0, sizeof(struct ecryptfs_name_val_pair));
@@ -84,7 +86,7 @@ static int tf_pass_file(struct ecryptfs_ctx *ctx, struct param_node *node,
 		if (strcmp(walker->name, "passphrase_passwd") == 0
 		    || strcmp(walker->name, "passwd") == 0) {
 			if (asprintf(&tmp_val, "%s", walker->value) < 0) {
-				rc = -ENOMEM;
+				rc = ENOMEM;
 				goto out;
 			}
 			stack_push(head, tmp_val);
@@ -127,24 +129,24 @@ static int tf_salt(struct ecryptfs_ctx *ctx, struct param_node *node,
 	stack_pop_val(head, (void *)&passwd);
 	auth_tok_sig = malloc(ECRYPTFS_SIG_SIZE_HEX + 1);
 	if (!auth_tok_sig) {
-		rc = -ENOMEM;
+		rc = ENOMEM;
 		goto out;
 	}
 	from_hex(salt, salt_hex, ECRYPTFS_SIG_SIZE);
 	rc = ecryptfs_add_passphrase_key_to_keyring(auth_tok_sig, passwd, salt);
 	if (rc < 0) {
 		free(auth_tok_sig);
-		rc = MOUNT_ERROR;
+		rc = -rc;
 		goto out;
 	}
 	rc = asprintf(&param, "ecryptfs_sig=%s", auth_tok_sig);
 	if (rc == -1) {
 		free(auth_tok_sig);
-		rc = -ENOMEM;
+		rc = ENOMEM;
 		goto out;
 	}
 	free(auth_tok_sig);
-	stack_push(head, param);
+	rc = stack_push(head, param);
 out:
 	free(salt_hex);
 	free(passwd);
@@ -280,7 +282,7 @@ static int ecryptfs_passphrase_init(char **alias)
 
 	if (asprintf(alias, "passphrase") == -1) {
 		syslog(LOG_ERR, "Out of memory\n");
-		rc = -ENOMEM;
+		rc = ENOMEM;
 		goto out;
 	}
 out:

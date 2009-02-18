@@ -337,6 +337,10 @@ int generate_nv_list(struct ecryptfs_name_val_pair *head, char *buf)
 {
 	struct ecryptfs_name_val_pair *current = head;
 	char tok_str[MAX_TOK_LEN];
+
+	if (!buf)
+		return 0;
+
 	int buf_len = strlen(buf);
 	int i, j = 0;
 	int rc = 0;

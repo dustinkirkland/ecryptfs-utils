@@ -870,7 +870,7 @@ int ecryptfs_process_decision_graph(struct ecryptfs_ctx *ctx,
 		}
 	}
 	ctx->nvp_head = &rc_file_nvp_head;
-	ecryptfs_eval_decision_graph(ctx, mnt_params, &root_param_node,
+	rc = ecryptfs_eval_decision_graph(ctx, mnt_params, &root_param_node,
 				     &rc_file_nvp_head);
 out_free_allowed_duplicates:
 	ad_cursor = allowed_duplicates.next;
