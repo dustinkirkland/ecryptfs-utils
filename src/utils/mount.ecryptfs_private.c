@@ -487,7 +487,7 @@ int main(int argc, char *argv[]) {
 	if (fnek == 1) {
 		/* Filename encryption is on, so specific the fnek sig */
 		if ((asprintf(&opt,
-"ecryptfs_sig=%s,ecryptfs_fnek_sig=%s,ecryptfs_cipher=%s,ecryptfs_key_bytes=%d,ecryptfs_unlink_sigs",
+"ecryptfs_sig=%s,ecryptfs_fnek_sig=%s,ecryptfs_cipher=%s,ecryptfs_key_bytes=%d",
 		 sig, sig_fnek, KEY_CIPHER, KEY_BYTES) < 0) ||
 		 opt == NULL) {
 			perror("asprintf (opt)");
@@ -496,7 +496,7 @@ int main(int argc, char *argv[]) {
 	} else {
 		/* Filename encryption is off; legacy support */
 		if ((asprintf(&opt,
-		 "ecryptfs_sig=%s,ecryptfs_cipher=%s,ecryptfs_key_bytes=%d,ecryptfs_unlink_sigs",
+		 "ecryptfs_sig=%s,ecryptfs_cipher=%s,ecryptfs_key_bytes=%d",
 		 sig, KEY_CIPHER, KEY_BYTES) < 0) ||
 		 opt == NULL) {
 			perror("asprintf (opt)");
@@ -567,7 +567,7 @@ int main(int argc, char *argv[]) {
 		 * Do not use the umount.ecryptfs helper (-i).
  		 */
 		setresuid(0,0,0);
-		execl("/bin/umount", "umount", "-l", mnt, NULL);
+		execl("/bin/umount", "umount", "-i", "-l", mnt, NULL);
 		perror("execl unmount failed");
 		goto fail;
 	}
