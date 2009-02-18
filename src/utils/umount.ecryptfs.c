@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
 #include <unistd.h>
 #include "ecryptfs.h"
 
@@ -32,6 +33,9 @@
  * it would set value to a string containing the sig, up to the first
  * comma or NULL character in the mount options.  Name must end with an = sign.
  * value must be freed by the caller.
+ *
+ * Return value is non-zero upon error. If name is not found in mnt_opts, 0 
+ * is returned and (*value) is NULL.
  */
 static int get_mount_opt_value(char *mnt_opts, char *name, char **value)
 {
@@ -47,7 +51,7 @@ static int get_mount_opt_value(char *mnt_opts, char *name, char **value)
 
 	name_start = strstr(mnt_opts, name);
 	if (!name_start) {
-		rc = EINVAL;
+		(*value) = NULL;
 		goto out;
 	}
 
@@ -68,12 +72,10 @@ out:
 	return rc;
 }
 
-static int unlink_keys_from_keyring(const char *mnt_point)
+static int get_sigs(const char *mnt_point, char **fekek_sig, char **fnek_sig)
 {
 	struct mntent *mntent;
 	FILE *file;
-	char *fekek_sig = NULL, *fnek_sig = NULL;
-	int fekek_fail = 0, fnek_fail = 0;
 	int rc;
 
 	file = setmntent("/etc/mtab", "r");
@@ -93,33 +95,28 @@ static int unlink_keys_from_keyring(const char *mnt_point)
 		goto end_out;
 	}
 	if (!hasmntopt(mntent, "ecryptfs_unlink_sigs")) {
+		/* User didn't ask us to unlink keys, nothing to do */
 		rc = 0;
 		goto end_out;
 	}
-	rc = get_mount_opt_value(mntent->mnt_opts, "ecryptfs_sig=", &fekek_sig);
-	if (!rc) {
-		fekek_fail = ecryptfs_remove_auth_tok_from_keyring(fekek_sig);
-		if (fekek_fail)
-			fprintf(stderr, "Failed to remove fekek with sig [%s] "
-				"from keyring: %s\n", fekek_sig, strerror(rc));
-	} else {
-		fekek_fail = rc;
+	rc = get_mount_opt_value(mntent->mnt_opts, "ecryptfs_sig=", fekek_sig);
+	if (rc) {
+		fprintf(stderr, "Failed to find fekek sig in mount options "
+			"[%s]: %s\n", mntent->mnt_opts, strerror(rc));
+		*fekek_sig = NULL;
 	}
-	if (!get_mount_opt_value(mntent->mnt_opts,
-				 "ecryptfs_fnek_sig=", &fnek_sig)
-	    && strcmp(fekek_sig, fnek_sig)) {
-		fnek_fail = ecryptfs_remove_auth_tok_from_keyring(fnek_sig);
-		if (fekek_fail) {
-			fprintf(stderr, "Failed to remove fnek with sig [%s] "
-				"from keyring: %s\n", fekek_sig, strerror(rc));
-		}
+	rc = get_mount_opt_value(mntent->mnt_opts, "ecryptfs_fnek_sig=",
+				 fnek_sig);
+	if (rc) {
+		fprintf(stderr, "Failed to find fnek sig in mount options "
+			"[%s]: %s\n", mntent->mnt_opts, strerror(rc));
+		*fnek_sig = NULL;
 	}
-	free(fekek_sig);
-	free(fnek_sig);
+	rc = 0;
 end_out:
 	endmntent(file);
 out:
-	return (fekek_fail ? fekek_fail : (fnek_fail ? fnek_fail : rc));
+	return rc;
 }
 
 static int construct_umount_args(int argc, char **argv, char ***new_argv)
@@ -127,6 +124,10 @@ static int construct_umount_args(int argc, char **argv, char ***new_argv)
 	int new_argc = argc + 1;
 	int i, rc;
 
+	/*
+	 * new_argc is argc + 1 because we're inserting the -i arg 
+	 * malloc(new_argc + 1) to end new_argv in a NULL pointer
+	 */
 	*new_argv = malloc(sizeof(char *) * (new_argc + 1));
 	if (!new_argv) {
 		rc = errno;
@@ -134,9 +135,43 @@ static int construct_umount_args(int argc, char **argv, char ***new_argv)
 	}
 	(*new_argv)[0] = "umount";
 	(*new_argv)[1] = "-i";
-	for (i = 2; i < new_argc; i++)
-		(*new_argv)[i] = argv[i - 1];
-	(*new_argv)[i] = NULL;
+	if (argc > 1)
+		for (i = 2; i < new_argc; i++)
+			(*new_argv)[i] = argv[i - 1];
+	(*new_argv)[new_argc] = NULL;
+	rc = 0;
+out:
+	return rc;
+}
+
+static int do_umount(char *umount, char **argv)
+{
+	pid_t pid;
+	int mount_rc, rc;
+
+	pid = fork();
+	if (pid < 0) {
+		rc = errno;
+		fprintf(stderr, "Failed to fork process to execute umount: "
+			"%m\n");
+		goto out;
+	} else if (!pid)
+		if (execv(umount, argv) < 0) {
+			fprintf(stderr, "Failed to execute umount: %m\n");
+			exit(errno);
+		}
+	rc = waitpid(pid, &mount_rc, 0);
+	if (rc < 0) {
+		rc = errno;
+		fprintf(stderr, "Failed to wait for umount to finish "
+			"executing: %m\n");
+		goto out;
+	}
+	if (mount_rc) {
+		/* We'll let /sbin/umount tell the user why it failed */
+		rc = mount_rc;
+		goto out;
+	}
 	rc = 0;
 out:
 	return rc;
@@ -146,28 +181,56 @@ out:
 int main(int argc, char **argv)
 {
 	char **new_argv;
+	char *fekek_sig = NULL;
+	char *fnek_sig = NULL;
 	int rc;
 
-	if (unlink_keys_from_keyring(argv[1]))
-		fprintf(stderr, "Could not unlink the key(s) from your keying. "
-			"Please use `keyctl unlink` if you wish to remove the "
-			"key(s). Proceeding with umount.\n");
+	if (argc > 1) {
+		rc = get_sigs(argv[1], &fekek_sig, &fnek_sig);
+		if (rc)
+			fprintf(stderr, "Failed to retrieve key sigs for mount "
+				"[%s]: %s\nProceeding with umount, use `keyctl "
+				"unlink <key> @u` to remove keys manually\n",
+				argv[1], strerror(rc));
+	}
 	rc = construct_umount_args(argc, argv, &new_argv);
 	if (rc) {
 		fprintf(stderr, "Failed to construct umount arguments: %s\n",
 			strerror(rc));
 		goto out;
 	}
-	rc = execv(UMOUNT_PATH, new_argv);
+	rc = do_umount(UMOUNT_PATH, new_argv);
 	if (rc < 0) {
 		rc = errno;
-		fprintf(stderr, "Failed to execute %s: %m\n", UMOUNT_PATH);
 		goto free_out;
 	}
+	if (fekek_sig) {
+		rc = ecryptfs_remove_auth_tok_from_keyring(fekek_sig);
+		if (rc)
+			fprintf(stderr, "The umount was successful, but failed "
+				"to unlink the fekek [%s] from your keying: "
+				"%s\nPlease use `keyctl unlink <key> @u` if "
+				"you wish to remove it manually.\n", fekek_sig,
+				strerror(rc));
+	}
+	if (fnek_sig) {
+		if (fekek_sig && !strcmp(fekek_sig, fnek_sig))
+			goto out_success;
+		rc = ecryptfs_remove_auth_tok_from_keyring(fnek_sig);
+		if (rc)
+			fprintf(stderr, "The umount was successful, but failed "
+				"to unlink the fnek [%s] from your keying: %s\n"
+				"Please use `keyctl unlink <key> @u` if you "
+				"wish to remove it manually.\n", fnek_sig,
+				strerror(rc));
+	}
+out_success:
 	rc = 0;
 free_out:
 	free(new_argv);
 out:
+	free(fekek_sig);
+	free(fnek_sig);
 	return rc;
 }
 
