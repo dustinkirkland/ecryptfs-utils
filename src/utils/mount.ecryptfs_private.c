@@ -31,8 +31,6 @@
 #include <sys/param.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <sys/wait.h>
-#include <errno.h>
 #include <keyutils.h>
 #include <mntent.h>
 #include <pwd.h>
@@ -375,44 +373,6 @@ int zero(FILE *fh) {
 	return bump_counter(fh, -MAXINT+1);
 }
 
-static int do_private_umount(char *mnt)
-{
-	pid_t pid;
-	int mount_rc, rc;
-
-	pid = fork();
-	if (pid < 0) {
-		rc = errno;
-		fprintf(stderr, "Failed to fork process to execute umount: "
-			"%m\n");
-		goto out;
-	} else if (!pid)
-		/* The key is not needed for unmounting, so we set res=0.
-		 * Perform umount by calling umount utility.  This execl will
- 		 * update mtab for us, and replace the current process.
-		 * Do not use the umount.ecryptfs helper (-i).
- 		 */
-		setresuid(0,0,0);
-		if (execl("/bin/umount", "umount", "-i", "-l", mnt, NULL) < 0) {
-			fprintf(stderr, "Failed to execute umount: %m\n");
-			exit(errno);
-		}
-	rc = waitpid(pid, &mount_rc, 0);
-	if (rc < 0) {
-		rc = errno;
-		fprintf(stderr, "Failed to wait for umount to finish "
-			"executing: %m\n");
-		goto out;
-	}
-	if (mount_rc) {
-		/* We'll let /sbin/umount tell the user why it failed */
-		rc = mount_rc;
-		goto out;
-	}
-	rc = 0;
-out:
-	return rc;
-}
 
 /* This program is a setuid-executable allowing a non-privileged user to mount
  * and unmount an ecryptfs private directory.  This program is necessary to
@@ -527,7 +487,7 @@ int main(int argc, char *argv[]) {
 	if (fnek == 1) {
 		/* Filename encryption is on, so specific the fnek sig */
 		if ((asprintf(&opt,
-"ecryptfs_sig=%s,ecryptfs_fnek_sig=%s,ecryptfs_cipher=%s,ecryptfs_key_bytes=%d,ecryptfs_unlink_sigs",
+"ecryptfs_sig=%s,ecryptfs_fnek_sig=%s,ecryptfs_cipher=%s,ecryptfs_key_bytes=%d",
 		 sig, sig_fnek, KEY_CIPHER, KEY_BYTES) < 0) ||
 		 opt == NULL) {
 			perror("asprintf (opt)");
@@ -536,7 +496,7 @@ int main(int argc, char *argv[]) {
 	} else {
 		/* Filename encryption is off; legacy support */
 		if ((asprintf(&opt,
-		 "ecryptfs_sig=%s,ecryptfs_cipher=%s,ecryptfs_key_bytes=%d,ecryptfs_unlink_sigs",
+		 "ecryptfs_sig=%s,ecryptfs_cipher=%s,ecryptfs_key_bytes=%d",
 		 sig, KEY_CIPHER, KEY_BYTES) < 0) ||
 		 opt == NULL) {
 			perror("asprintf (opt)");
@@ -601,18 +561,15 @@ int main(int argc, char *argv[]) {
 		if (is_mounted(dev, mnt, sig, mounting) == 0) {
 			goto fail;
 		}
-		if (do_private_umount(mnt))
-			goto fail;
-		if (ecryptfs_remove_auth_tok_from_keyring(sig))
-                        fprintf(stderr, "The umount was successful, but failed "
-                                "to unlink the fekek [%s] from your keying.\n"
-                                "Please use `keyctl unlink <key> @u` if you "
-                                "wish to remove it manually.\n", sig);
-		if (fnek && ecryptfs_remove_auth_tok_from_keyring(sig_fnek))
-                        fprintf(stderr, "The umount was successful, but failed "
-                                "to unlink the fnek [%s] from your keying.\n"
-                                "Please use `keyctl unlink <key> @u` if you "
-                                "wish to remove it manually.\n", sig_fnek);
+		/* The key is not needed for unmounting, so we set res=0.
+		 * Perform umount by calling umount utility.  This execl will
+ 		 * update mtab for us, and replace the current process.
+		 * Do not use the umount.ecryptfs helper (-i).
+ 		 */
+		setresuid(0,0,0);
+		execl("/bin/umount", "umount", "-i", "-l", mnt, NULL);
+		perror("execl unmount failed");
+		goto fail;
 	}
 success:
 	unlock_counter(fh_counter);
