@@ -1,0 +1,139 @@
+#!/bin/sh -e
+#    ecryptfs-setup-swap
+#    Copyright (C) 2008 Canonical Ltd.
+#
+#    Authors: Dustin Kirkland <kirkland@canonical.com>
+#
+#    This program is free software; you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; version 2 of the License.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# The cryptswap setup used here follows a guide published at:
+#  * http://ubuntumagnet.com/2007/11/creating-encrypted-swap-file-ubuntu-using-cryptsetup
+
+error() {
+	echo "ERROR: $1" 1>&2
+	exit 1
+}
+
+info() {
+	echo "INFO: $1"
+}
+
+warning() {
+	echo "WARNING: "
+}
+
+usage() {
+	echo
+	echo "Usage:"
+	echo "  $0 [-f|--force]"
+	echo
+	exit 1
+}
+
+# Handle command line options
+FORCE=0
+while [ ! -z "$1" ]; do
+	case "$1" in
+		-f|--force)
+			FORCE=1
+			shift 1
+		;;
+		*)
+			usage
+		;;
+	esac
+done
+
+# Warn the user about breaking hibernate mode
+if [ "$FORCE" != 1 ]; then
+	echo
+	warning
+	echo "    An encrypted swap is required to help ensure that encrypted files"
+	echo "    are not leaked to disk in an unencrypted format."
+	echo
+	echo "    HOWEVER, THE SWAP ENCRYPTION CONFIGURATION PRODUCED BY THIS PROGRAM"
+	echo "    WILL BREAK HIBERNATE/RESUME ON THIS SYSTEM!"
+	echo
+	echo "    NOTE: Your suspend/resume capabilities will not be affected."
+	echo
+	read -p "Do you want to proceed with encrypting your swap [y/N]: " -r CONFIRM
+	echo
+	if [ "$CONFIRM" != "y" -a "$CONFIRM" != "Y" ]; then
+		echo
+		info "Aborting."
+		echo
+		exit 0
+	fi
+fi
+
+# Ensure that cryptsetup is available
+[ -x /sbin/cryptsetup ] || error "Please install 'cryptsetup'"
+
+# Count swap spaces available
+if [ $(grep -c "^/" /proc/swaps) -eq 0 ]; then
+	mem=$(grep "^MemTotal:" /proc/meminfo | awk '{print $2}')
+	swapsize=$((4*$mem))
+	info "You do not currently have any swap space defined."
+	echo
+	echo "You can create a swap file by doing:"
+	echo " $ sudo dd if=/dev/zero of=/swapfile count=$swapsize"
+	echo " $ sudo mkswap /swapfile"
+	echo " $ sudo swapon /swapfile"
+	echo
+	echo "And then re-run $0"
+	echo
+	exit 0
+elif [ $(grep -c "^/" /proc/swaps) -gt 1 ]; then
+	info "You have more than one swap space defined."
+	error "$0 only supports setting up a single swap space"
+else
+	swap=$(grep "^/" /proc/swaps | awk '{print $1}')
+fi
+
+# Check if this this swap space is already setup for encryption
+base=$(basename "$swap")
+if grep -qs "^$base.*swap.*cipher" /etc/crypttab; then
+	info "It appears that [$swap] is already encrypted."
+	#exit 0
+fi
+
+# Ensure available dev mapper name 'cryptswap'
+if grep -qs "^cryptswap" /etc/crypttab; then
+	error "There appears to be a cryptswap entry in /etc/cryptab; aborting."
+fi
+
+# Ensure available fstab entry
+if grep -qs "^/dev/mapper/cryptswap" /etc/fstab; then
+	error "There appears to be a cryptswap entry in /etc/fstab; aborting."
+fi
+
+##########################################################################
+
+info "Setting up swap: [$swap]"
+
+# Add crypttab entry
+echo "cryptswap $swap /dev/urandom swap,cipher=aes-cbc-essiv:sha256" >> /etc/crypttab
+
+# Add fstab entry
+echo "/dev/mapper/cryptswap none swap sw 0 0" >> /etc/fstab
+
+# Turn swap off
+swapoff -a
+
+# Restart cryptdisks
+/etc/init.d/cryptdisks restart
+
+# Turn the swap on
+swapon -a
+
+info "Successfully setup encrypted swap!"
