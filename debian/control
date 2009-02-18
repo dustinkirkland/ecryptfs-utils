@@ -13,7 +13,7 @@ Package: ecryptfs-utils
 Section: misc
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, libpam-runtime (>= 1.0.1-2ubuntu1), keyutils, libnss3-1d
-Suggests: opencryptoki
+Suggests: opencryptoki, cryptsetup
 Description: ecryptfs cryptographic filesystem (utilities)
  eCryptfs is a POSIX-compliant enterprise-class stacked cryptographic filesystem
  for Linux.
