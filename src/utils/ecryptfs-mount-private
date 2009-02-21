@@ -58,4 +58,11 @@ else
 	echo "ERROR: Encrypted $PRIVATE_DIR is not setup properly"
 	exit 1
 fi
+if grep " $PWD " /proc/mounts; then
+	echo
+	echo "INFO: Your private directory has been mounted."
+	echo "INFO: However, to see this change in the current shell, run:"
+	echo " $ cd $PWD"
+	echo
+fi
 exit 0
