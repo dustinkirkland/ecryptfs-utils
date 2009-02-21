@@ -15,3 +15,11 @@ if echo "$out" | grep -q -v "Sessions still open"; then
 		keyctl unlink "$key_id" @u
 	done
 fi
+if grep -qs " $PWD " /proc/mounts; then
+	echo
+	echo "INFO: Your private directory has been unmounted."
+	echo "INFO: To see this change in the current shell:"
+	echo "  cd $PWD"
+	echo
+fi
+

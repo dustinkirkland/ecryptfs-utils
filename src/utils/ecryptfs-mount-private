@@ -61,7 +61,7 @@ fi
 if grep -qs " $PWD " /proc/mounts; then
 	echo
 	echo "INFO: Your private directory has been mounted."
-	echo "INFO: However, to see this change in the current shell, run:"
+	echo "INFO: To see this change in the current shell:"
 	echo "  cd $PWD"
 	echo
 fi
