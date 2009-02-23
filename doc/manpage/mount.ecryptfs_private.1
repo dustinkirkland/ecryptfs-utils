@@ -5,6 +5,8 @@ mount.ecryptfs_private \- eCryptfs private mount helper.
 .SH SYNOPSIS
 \fBmount.ecryptfs_private\fP
 
+\fBNOTE:\fP This program will \fBnot\fP dynamically load the relevant keys.  For this reason, it is recommended that users use \fBecryptfs-mount-private\fP(1) instead!
+
 .SH DESCRIPTION
 \fBmount.ecryptfs_private\fP is a mount helper utility for non-root users to cryptographically mount a private directory, ~/Private.
 

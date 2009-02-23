@@ -5,6 +5,8 @@ umount.ecryptfs_private \- eCryptfs private unmount helper.
 .SH SYNOPSIS
 \fBumount.ecryptfs_private\fP [\-f]
 
+\fBNOTE:\fP This program will \fBnot\fP clear the relevant keys from the user's keyring.  For this reason, it is recommended that users use \fBecryptfs-umount-private\fP(1) instead!
+
 .SH OPTIONS
 Options available for the \fBumount.ecryptfs_private\fP command:
 .TP
