@@ -10,10 +10,16 @@ eCryptfs is a POSIX-compliant enterprise-class stacked cryptographic filesystem 
 
 .SH OPTIONS
 
-STANDARD OPTIONS
+KERNEL OPTIONS
+
+	Parameters that apply to the eCryptfs kernel module.
+
 .TP
-.B key=(keytype):[KEY MODULE OPTIONS]
-Specify the type of key to be used when mounting eCryptfs.
+.B ecryptfs_sig=(fekek_sig)
+Specify the signature of the mount wide authentication token. The authentication token must be in the kernel keyring before the mount is performed. ecryptfs-manager or the eCryptfs mount helper can be used to construct the authentication token and add it to the keyring prior to mounting.
+.TP
+.B ecryptfs_fnek_sig=(fnek_sig)
+Specify the signature of the mount wide authentication token used for filename crypto. The authentication must be in the kernel keyring before mounting.
 .TP
 .B ecryptfs_cipher=(cipher)
 Specify the symmetric cipher to be used on a per file basis
@@ -32,6 +38,18 @@ This option, when set, will have eCryptfs return the encrypted versions of the l
 .TP
 .B ecryptfs_xattr
 Store the metadata in the extended attribute of the lower files rather than the header region of the lower files.
+.TP
+
+MOUNT HELPER OPTIONS
+
+Parameters that apply to the eCryptfs mount helper.
+
+.TP
+.B key=(keytype):[KEY MODULE OPTIONS]
+Specify the type of key to be used when mounting eCryptfs.
+.TP
+.B ecryptfs_enable_filename_crypto=(y/N)
+Specify whether filename encryption should be enabled. If not, the mount helper will not prompt the user for the filename encryption key signature.
 .TP
 
 KEY MODULE OPTIONS
