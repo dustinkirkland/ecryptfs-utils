@@ -344,6 +344,7 @@ static struct cipher_name_module_map {
 	{"cast6", "cast6.ko", 16, 16, 32, 5, 1},
 	{"des3_ede", "des.ko", 8, 24, 24, 3, 1},
 	{"des3_ede", "des_generic.ko", 8, 24, 24, 3, 1},
+	{"des3_ede128", "des_s390.ko", 8, 16, 16, 14, 0},
 	{"anubis", "anubis.ko", 16, 16, 40, 10, 0},
 	{"cipher_null", "cipher_null.ko", 1, 0, 0, 99, 0},
 	{NULL, NULL, 0, 0, 0, 0}
@@ -389,7 +390,7 @@ int ecryptfs_get_kernel_ciphers(struct cipher_descriptor *cd_head)
 		if (!strncmp(buf, "name", 4)) {
 			struct cipher_descriptor *cd_tmp;
 			int found_duplicate = 0;
-			int reject;
+			int reject, unknown;
 			int i;
 
 			strtok(buf, ": ");
@@ -404,17 +405,18 @@ int ecryptfs_get_kernel_ciphers(struct cipher_descriptor *cd_head)
 				continue;
 			i = 0;
 			reject = 0;
+			unknown = 1;
 			while (cipher_name_module_map[i].name) {
-				if (cipher_name_module_map[i].enabled == 0
-				    && strncmp(tmp,
-					       cipher_name_module_map[i].name,
-					       strlen(cipher_name_module_map[i].name)) == 0) {
-					reject = 1;
+				if (!strcmp(tmp,
+					     cipher_name_module_map[i].name)) {
+					if (!cipher_name_module_map[i].enabled)
+						reject = 1;
+					unknown = 0;
 					break;
 				}
 				i++;
 			}
-			if (reject)
+			if (reject || unknown)
 				continue;
 			cd_tmp = cd_head->next;
 			while (cd_tmp) {
