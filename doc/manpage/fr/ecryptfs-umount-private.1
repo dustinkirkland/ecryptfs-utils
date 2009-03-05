@@ -1,0 +1,35 @@
+.TH ecryptfs-umount-private 1 2008-07-21 ecryptfs-utils "eCryptfs"
+.SH NOM
+ecryptfs-umount-private \- ensemble de scripts eCryptfs pour démontage.
+
+.SH SYNOPSIS
+\fBecryptfs-umount-private\fP
+
+.SH DESCRIPTION
+\fBecryptfs-umount-private\fP est un ensemble de scripts pour l'utilitaire \fBumount.ecryptfs_private\fP. Il ne démonte que si ~/.ecryptfs/auto-umount existe et si il n'y a que 1 ou 0 instance de l'utilisateur dans le système, comme spécifié par l'utilitaire \fBwho\fP(1). Il s'assure aussi que ~/.Private a les permissions 500après le démontage.
+
+.SH FICHIERS
+\fI~/.ecryptfs/auto-umount\fP - \fBecryptfs-umount-private\fP ne démonte que si ce fichier existe
+
+\fI~/.Private\fP - répertoire sous-jacent contenant les données chiffrées
+
+\fI~/Private\fP - point de montage contenant les données chiffrées (lorsque le montage a été effectué)
+
+\fI~/.ecryptfs/Private.sig\fP - fichier contenant la signature de la clef du point de montage
+
+.SH VOIR AUSSI
+.PD 0
+.TP
+\fBecryptfs-mount-private\fP(1), \fBumount.ecryptfs_private\fP(1)
+
+.TP
+\fI/usr/share/doc/ecryptfs-utils/ecryptfs-faq.html\fP
+
+.TP
+\fIhttp://ecryptfs.sourceforge.net/\fP
+.PD
+
+.SH AUTEUR
+Cette page de manuel a été écrite par Dustin Kirkland <kirkland@canonical.com> pour les systèmes Ubuntu (mais peut-être utilisés our d'autres systèmes).  Traduction par James Dupin <james@dupin.info>. Permission est donnée de copier, distribuer et/ou modifier ce document dans les termes de la licence publique générale GNU (GNU General Public License), version 2 ou toute autre version plus récente publiée par la Free Software Foundation.
+
+Dans les systèmes Debian, le texte complet de la licence publique générale GNU (GNU General Public License) se trouve dans /usr/share/common-licenses/GPL.
