@@ -5,6 +5,9 @@
 # Original by Michael Halcrow, IBM
 # Extracted to a stand-alone script by Dustin Kirkland <kirkland@canonical.com>
 
+if grep -qs "$HOME/.Private $PWD ecryptfs " /proc/mounts 2>/dev/null; then
+	pwd_mounted=1
+fi
 out=`/sbin/umount.ecryptfs_private 2>&1`
 if [ -n "$out" ]; then
 	echo "$out"
@@ -15,10 +18,10 @@ if echo "$out" | grep -q -v "Sessions still open"; then
 		keyctl unlink "$key_id" @u
 	done
 fi
-if grep -qs " $PWD " /proc/mounts; then
+if [ "$pwd_mounted" = "1" ]; then
 	echo
 	echo "INFO: Your private directory has been unmounted."
-	echo "INFO: To see this change in the current shell:"
+	echo "INFO: To see this change in your current shell:"
 	echo "  cd $PWD"
 	echo
 fi

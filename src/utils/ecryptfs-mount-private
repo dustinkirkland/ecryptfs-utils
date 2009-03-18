@@ -58,10 +58,10 @@ else
 	echo "ERROR: Encrypted $PRIVATE_DIR is not setup properly"
 	exit 1
 fi
-if grep -qs " $PWD " /proc/mounts; then
+if grep -qs "$HOME/.Private $PWD ecryptfs " /proc/mounts 2>/dev/null; then
 	echo
 	echo "INFO: Your private directory has been mounted."
-	echo "INFO: To see this change in the current shell:"
+	echo "INFO: To see this change in your current shell:"
 	echo "  cd $PWD"
 	echo
 fi
