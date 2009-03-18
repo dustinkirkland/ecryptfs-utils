@@ -74,7 +74,7 @@ sig_param_node_callback(struct ecryptfs_ctx *ctx, struct param_node *node,
 		syslog(LOG_ERR, "Out of memory\n");
 		goto out;
 	}
-	stack_push(head, param);
+	rc = stack_push(head, param);
 out:
 	return rc;
 }
@@ -195,7 +195,7 @@ static int filename_crypto_fnek_sig_callback(struct ecryptfs_ctx *ctx,
 		syslog(LOG_ERR, "Out of memory\n");
 		goto out;
 	}
-	stack_push(head, param);
+	rc = stack_push(head, param);
 out:
 	return rc;
 }
@@ -249,6 +249,7 @@ static int get_enable_filename_crypto(struct ecryptfs_ctx *ctx,
 					       &((char *)val_node->val)[13]);
 					goto out_free;
 				}
+				rc = 0;
 				break;
 			}
 			val_node = val_node->next;
@@ -416,8 +417,7 @@ static int tf_ecryptfs_key_bytes(struct ecryptfs_ctx *ctx,
 		rc = -ENOMEM;
 		goto out;
 	}
-	rc = 0;
-	stack_push(head, opt);
+	rc = stack_push(head, opt);
 out:
 	return rc;
 }
@@ -485,7 +485,7 @@ static int tf_ecryptfs_cipher(struct ecryptfs_ctx *ctx, struct param_node *node,
 	if (ecryptfs_verbosity)
 		syslog(LOG_INFO, "%s: Pushing onto stack; opt = [%s]\n",
 		       __FUNCTION__, opt);
-	stack_push(head, opt);
+	rc = stack_push(head, opt);
 out:
 	return rc;
 }
