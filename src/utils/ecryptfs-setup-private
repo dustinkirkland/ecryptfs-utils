@@ -36,6 +36,11 @@ usage() {
 	echo "                  used to wrap MOUNTPASS"
 	echo " --nopwcheck      Do not check the validity of the specified"
 	echo "                  login password (useful for LDAP user accounts)"
+	echo " --noautomount    Setup this user such that the encrypted private"
+	echo "                  directory is not automatically mounted on login"
+	echo " --noautoumount   Setup this user such that the encrypted private"
+	echo "                  directory is not automatically unmounted at"
+	echo "                  logout"
 	echo " -m, --mountpass  Passphrase for mounting the ecryptfs directory,"
 	echo "                  defaults to randomly generated $KEYBYTES bytes"
 	echo " -b, --bootstrap  Bootstrap a new user's entire home directory"
@@ -128,6 +133,14 @@ while [ ! -z "$1" ]; do
 		;;
 		--nopwcheck)
 			NOPWCHECK=1
+			shift 1
+		;;
+		--noautomount)
+			NOAUTOMOUNT=1
+			shift 1
+		;;
+		--noautoumount)
+			NOAUTOUMOUNT=1
 			shift 1
 		;;
 		--undo)
@@ -326,8 +339,16 @@ ln -sf /usr/share/ecryptfs-utils/ecryptfs-mount-private.desktop "$MOUNTPOINT"/Ac
 chmod 500 "$MOUNTPOINT"
 
 # Setup ~/.ecryptfs directory
-touch $HOME/.ecryptfs/auto-mount || error "Could not setup ecryptfs auto-mount"
-touch $HOME/.ecryptfs/auto-umount || error "Could not setup ecryptfs auto-umount"
+if [ "$NOAUTOMOUNT" = "1" ]; then
+	echo "INFO: $HOME/$PRIVATE_DIR will not be mounted on login"
+else
+	touch $HOME/.ecryptfs/auto-mount || error "Could not setup ecryptfs auto-mount"
+fi
+if [ "$NOAUTOUMOUNT" = "1" ]; then
+	echo "INFO: $HOME/$PRIVATE_DIR will not be unmounted on logout"
+else
+	touch $HOME/.ecryptfs/auto-umount || error "Could not setup ecryptfs auto-umount"
+fi
 
 if [ "$WRAPPING_PASS" = "LOGIN" ]; then
 	rm -f $HOME/.ecryptfs/wrapping-independent || error "Could not remove ecryptfs wrapping-independent"
