@@ -20,7 +20,7 @@ GREP_OPTIONS=
 usage() {
 	echo
 	echo "Usage:"
-	echo "  $0 [-f|--force] [-w|--wrapping] [-n|--no-fnek]"
+	echo "  $0 [-f|--force] [-w|--wrapping] [--nopwcheck] [-n|--no-fnek]"
 	echo "  [-u|--username USER] [-l|--loginpass LOGINPASS]"
 	echo "  [-m|--mountpass MOUNTPASS]"
 	echo
@@ -34,6 +34,8 @@ usage() {
 	echo "                  defaults to yourself"
 	echo " -l, --loginpass  Login/Wrapping passphrase for USER,"
 	echo "                  used to wrap MOUNTPASS"
+	echo " --nopwcheck      Do not check the validity of the specified"
+	echo "                  login password (useful for LDAP user accounts)"
 	echo " -m, --mountpass  Passphrase for mounting the ecryptfs directory,"
 	echo "                  defaults to randomly generated $KEYBYTES bytes"
 	echo " -b, --bootstrap  Bootstrap a new user's entire home directory"
@@ -122,6 +124,10 @@ while [ ! -z "$1" ]; do
 		;;
 		-f|--force)
 			FORCE=1
+			shift 1
+		;;
+		--nopwcheck)
+			NOPWCHECK=1
 			shift 1
 		;;
 		--undo)
@@ -236,11 +242,16 @@ if [ -z "$LOGINPASS" ] && [ "$BOOTSTRAP" != "1" ]; then
 			echo "ERROR: You must provide a login passphrase"
 			tries=$(($tries + 1))
 		else
-			if printf "%s\0" "$LOGINPASS" | /sbin/unix_chkpwd "$USER" nullok; then
+			if [ "$NOPWCHECK" = "1" ]; then
+				echo "INFO: Skipping password verification"
 				break
 			else
-				echo "ERROR: Your login passphrase is incorrect"
-				tries=$(($tries + 1))
+				if printf "%s\0" "$LOGINPASS" | /sbin/unix_chkpwd "$USER" nullok; then
+					break
+				else
+					echo "ERROR: Your login passphrase is incorrect"
+					tries=$(($tries + 1))
+				fi
 			fi
 		fi
 	done
