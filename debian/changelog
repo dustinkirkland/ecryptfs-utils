@@ -1,11 +1,28 @@
-ecryptfs-utils (72) UNRELEASED; urgency=low
+ecryptfs-utils (72-0ubuntu1) jaunty; urgency=low
 
-  * debian/ecryptfs-utils.prerm: perform some cursory checks, to ensure that
-    there are no obvious, current users of ecryptfs before allowing package
-    removal, LP: #331085
-  * doc/manpage/fr/*: French translations of the manpages
+  [ Dustin Kirkland ]
+  * src/utils/ecryptfs-[u]mount-private: print message about cd $PWD,
+    LP: #332331
+  * doc/manpage/*: manpage updates
+  * debian/ecryptfs-utils.prerm: prevent removal of ecryptfs-utils
+    package, if in use, LP: #331085
+  * src/utils/ecryptfs-setup-private:
+    - allow for LDAP-based logins, LP: #317307
+    - add --noautomount, --noautoumount options, LP: #301759
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 05 Mar 2009 15:22:25 -0600
+  [ Tyler Hicks ]
+  * src/libecryptfs/cipher_list.c: ignore unknown ciphers, LP: #335632
+  * doc/manpage/ecryptfs.7: add key sig mount options info, LP: #329491
+  * src/utils/mount.ecryptfs.c: scrub unknown option
+
+  [ James Dupin ]
+  * doc/manpage/fr/*: initial cut at french manpages
+
+  [ Michal Hlavinka ]
+  * src/libecryptfs/module_mgr.c: fix mount parameter handling on
+    interactive mounting, LP: #331948
+
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Wed, 18 Mar 2009 18:53:11 -0500
 
 ecryptfs-utils (71-0ubuntu1) jaunty; urgency=low
 
