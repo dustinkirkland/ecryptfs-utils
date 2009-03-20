@@ -4,4 +4,4 @@ GenericName=Access Your Private Data
 Exec=/usr/bin/ecryptfs-mount-private
 Terminal=true
 Type=Application
-Categories=System;
+Categories=System;Security;
