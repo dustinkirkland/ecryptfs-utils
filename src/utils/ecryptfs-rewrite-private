@@ -59,7 +59,7 @@ done
 [ -r "$HOME"/.ecryptfs/$PRIVATE.mnt ] && PRIVATE_MNT=`cat "$HOME"/.ecryptfs/$PRIVATE.mnt`
 [ -d "$PRIVATE_MNT" ] || error "Directory does not exist [$PRIVATE_MNT]"
 [ -O "$PRIVATE_MNT" ] || error "You do not own that directory [$PRIVATE_MNT]"
-grep -qs "$HOME/.$PRIVATE $PRIVATE_MNT ecryptfs " 2>/dev/null || error "Encrypted directory not mounted [$PRIVATE_MNT]"
+grep -qs "$HOME/.$PRIVATE $PRIVATE_MNT ecryptfs " /proc/mounts 2>/dev/null || error "Encrypted directory not mounted [$PRIVATE_MNT]"
 
 if [ "$NOW" = "1" ]; then
 	echo -n "Rewriting all data in [$PRIVATE_MNT]...please be patient..."
