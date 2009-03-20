@@ -35,7 +35,7 @@ for i in "$@"; do
 		}
 		mv -f -T "$i" "$temp1" || {
 			error "Could not rename [$i] to [$temp1]"
-			rm -f "$temp1"
+			rmdir "$temp1"
 			continue
 		}
 		mv -f "$temp1" "$i"	|| {
