@@ -137,7 +137,8 @@ if [ "$FORCE" != 1 ]; then
 	echo
 	echo "    NOTE: Your suspend/resume capabilities will not be affected."
 	echo
-	read -p "Do you want to proceed with encrypting your swap [y/N]: " -r CONFIRM
+	echo -n "Do you want to proceed with encrypting your swap [y/N]: "
+	CONFIRM=`head -n1`
 	echo
 	if [ "$CONFIRM" != "y" -a "$CONFIRM" != "Y" ]; then
 		echo

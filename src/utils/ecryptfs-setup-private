@@ -168,7 +168,9 @@ done
 # Prompt for the USER name, if not on the command line and not in the env
 if [ -z "$USER" ]; then
 	while [ true ]; do
-		read -p "Enter the username: " -r USER
+		echo -n "Enter the username: "
+		USER=`head -n1`
+		echo
 		if [ -z "$USER" ]; then
 			echo "ERROR: You must provide a username"
 			continue
