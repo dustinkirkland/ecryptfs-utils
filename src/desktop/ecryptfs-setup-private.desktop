@@ -4,4 +4,4 @@ GenericName=Setup Your Encrypted Private Directory
 Exec=/usr/bin/ecryptfs-setup-private
 Terminal=true
 Type=Application
-Categories=System;Preferences;
+Categories=Settings;Security;

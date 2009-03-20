@@ -97,7 +97,8 @@ random_passphrase () {
 }
 
 filename_encryption_available() {
-	version=$(cat /sys/fs/ecryptfs/version)
+	version=$(cat /sys/fs/ecryptfs/version 2>/dev/null)
+	[ -z "$version" ] && error "Can't get ecryptfs version, ecryptfs kernel module not loaded?"
 	[ $(($version & 0x100)) -eq 0 ] && return 1
 	return 0
 }
