@@ -1,0 +1,75 @@
+#!/bin/sh -e
+#
+#    ecryptfs-rewrite-private
+#    Copyright (C) 2008 Canonical Ltd.
+#
+#    Authors: Dustin Kirkland <kirkland@canonical.com>
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, version 2 of the License.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# Defaults
+PRIVATE="Private"
+PRIVATE_MNT="$HOME/$PRIVATE"
+
+error() {
+	echo "ERROR: $1" 1>&2
+	exit 1
+}
+
+usage() {
+	echo
+	echo "Usage:"
+	echo "  $0 [--now]"
+	echo
+	echo "  With no arguments, this program will set a flag that will"
+	echo "  force all encrypted $PRIVATE files to be re-written on"
+	echo "  the next unmount."
+	echo
+	echo "  If the --now parameter is specified, the rewrite will"
+	echo "  begin immediately."
+	echo
+	exit 0
+}
+
+while [ ! -z "$1" ]; do
+	case "$1" in
+		--now)
+			NOW=1
+		;;
+		*)
+			usage
+		;;
+	esac
+done
+
+
+# Sanity checks
+[ -f "$HOME"/.ecryptfs/$PRIVATE.sig ] || error "No encrypted $PRIVATE setup found"
+[ -r "$HOME"/.ecryptfs/$PRIVATE.mnt ] && PRIVATE_MNT=`cat "$HOME"/.ecryptfs/$PRIVATE.mnt`
+[ -d "$PRIVATE_MNT" ] || error "Directory does not exist [$PRIVATE_MNT]"
+[ -O "$PRIVATE_MNT" ] || error "You do not own that directory [$PRIVATE_MNT]"
+grep -qs "$HOME/.$PRIVATE $PRIVATE_MNT ecryptfs " 2>/dev/null || error "Encrypted directory not mounted [$PRIVATE_MNT]"
+
+if [ "$NOW" = "1" ]; then
+	echo -n "Rewriting all data in [$PRIVATE_MNT]...please be patient..."
+	find "$PRIVATE_MNT" -xdev -type f -print0 | xargs -r -0 /usr/bin/ecryptfs-rewrite-file
+	echo "Done."
+	rm -f "$HOME"/.ecryptfs/"$PRIVATE".rewrite
+else
+	touch "$HOME"/.ecryptfs/"$PRIVATE".rewrite
+	echo
+	echo "INFO: Please be patient on your next logout or login,"
+	echo "      as all data in [$PRIVATE_MNT] will be re-encrypted"
+	echo "      on disk, THIS MAY TAKE SEVERAL MINUTES."
+	echo
+fi
