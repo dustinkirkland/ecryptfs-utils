@@ -3,8 +3,11 @@ ecryptfs-utils (73) unreleased; urgency=low
   * src/utils/ecryptfs-rewrite-file: new script, to rewrite a file,
     forcing it to be re-encrypted when written to disk
   * doc/manpage/ecryptfs-rewrite-file.1: documentation added
+  * src/utils/ecryptfs-mount-private, src/utils/ecryptfs-setup-private,
+    src/utils/ecryptfs-setup-swap: use head/line for prompting and reading
+    input
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Fri, 20 Mar 2009 14:19:35 -0500
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Fri, 20 Mar 2009 16:45:10 -0500
 
 ecryptfs-utils (72-0ubuntu1) jaunty; urgency=low
 
