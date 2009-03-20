@@ -45,6 +45,7 @@ while [ ! -z "$1" ]; do
 	case "$1" in
 		--now)
 			NOW=1
+			shift
 		;;
 		*)
 			usage
