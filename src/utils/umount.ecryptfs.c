@@ -26,6 +26,14 @@
 #include <unistd.h>
 #include "ecryptfs.h"
 
+static void usage()
+{
+	fprintf(stderr, "\teCryptfs umount helper\n\tusage: "
+		"umount [ecryptfs mount point]\n"
+		);
+	exit(-EINVAL);
+}
+
  /**
  * Parses a string of mount options, searching for an option name, and returns
  * a pointer to the option value.  For example, if name was "ecryptfs_sig=",
@@ -147,6 +155,9 @@ int main(int argc, char **argv)
 {
 	char **new_argv;
 	int rc;
+
+	if (argc<2)
+		usage();
 
 	if (unlink_keys_from_keyring(argv[1]))
 		fprintf(stderr, "Could not unlink the key(s) from your keying. "
