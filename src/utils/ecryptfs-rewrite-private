@@ -17,10 +17,6 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# Defaults
-PRIVATE="Private"
-PRIVATE_MNT="$HOME/$PRIVATE"
-
 error() {
 	echo "ERROR: $1" 1>&2
 	exit 1
@@ -32,7 +28,7 @@ usage() {
 	echo "  $0 [--now]"
 	echo
 	echo "  With no arguments, this program will set a flag that will"
-	echo "  force all encrypted $PRIVATE files to be re-written on"
+	echo "  force all encrypted private files to be re-written on"
 	echo "  the next unmount."
 	echo
 	echo "  If the --now parameter is specified, the rewrite will"
@@ -47,23 +43,32 @@ while [ ! -z "$1" ]; do
 			NOW=1
 			shift
 		;;
+		--home)
+			shift
+			HOME="$1"
+			shift
+		;;
 		*)
 			usage
 		;;
 	esac
 done
 
+# Defaults
+PRIVATE="Private"
+PRIVATE_MNT="$HOME/$PRIVATE"
+
 
 # Sanity checks
-[ -f "$HOME"/.ecryptfs/$PRIVATE.sig ] || error "No encrypted $PRIVATE setup found"
+[ -f "$HOME"/.ecryptfs/$PRIVATE.sig ] || error "No encrypted $PRIVATE setup found [$HOME/.ecryptfs/$PRIVATE.sig]"
 [ -r "$HOME"/.ecryptfs/$PRIVATE.mnt ] && PRIVATE_MNT=`cat "$HOME"/.ecryptfs/$PRIVATE.mnt`
 [ -d "$PRIVATE_MNT" ] || error "Directory does not exist [$PRIVATE_MNT]"
-[ -O "$PRIVATE_MNT" ] || error "You do not own that directory [$PRIVATE_MNT]"
+[ -O "$PRIVATE_MNT" -o -w "/etc/passwd" ] || error "You do not own that directory [$PRIVATE_MNT]"
 grep -qs "$HOME/.$PRIVATE $PRIVATE_MNT ecryptfs " /proc/mounts 2>/dev/null || error "Encrypted directory not mounted [$PRIVATE_MNT]"
 
 if [ "$NOW" = "1" ]; then
 	echo -n "Rewriting all data in [$PRIVATE_MNT]...please be patient..."
-	find "$PRIVATE_MNT" -xdev -type f -print0 | xargs -r -0 /usr/bin/ecryptfs-rewrite-file
+	find "$PRIVATE_MNT" -xdev -print0 | xargs -r -0 /usr/bin/ecryptfs-rewrite-file
 	echo "Done."
 	rm -f "$HOME"/.ecryptfs/"$PRIVATE".rewrite
 else
