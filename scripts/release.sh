@@ -12,6 +12,9 @@ for i in `ls ecryptfs-utils-*.tar.gz`; do
 	mv $i ../ecryptfs-utils_$ver.orig.tar.gz
 	rm -f ecryptfs-utils-*.tar.bz2
 done
+
+[ "$1" = "--nosign" ] && exit 0
+
 gpg --armor --sign --detach-sig ../ecryptfs-utils_*.orig.tar.gz
 echo
 echo "TO MAKE THE RELEASE OFFICIAL, UPLOAD:"
