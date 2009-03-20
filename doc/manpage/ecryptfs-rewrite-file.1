@@ -8,16 +8,13 @@ ecryptfs-rewrite-file \- force a file to be rewritten (reencrypted) in the lower
 .SH DESCRIPTION
 This script takes one or more files/directories/symlinks as arguments, moves each of them to a temporary file, and the moves them back to the original name.  This causes the file to be rewritten (and reencrypted) in the lower filesystem.
 
-This script may be combined with \fBfind\fP(1) and \fBxargs\fP(1) to rewrite an entire eCryptfs mountpoint:
+This script may be combined with \fBfind\fP(1) and \fBxargs\fP(1) to rewrite an entire eCryptfs mountpoint, unmount, and sync:
 
   find . -xdev -print0 | xargs -r -0 /usr/bin/ecryptfs-rewrite-file
-
-It is advised that this script is executed in runlevel 1 or 3, to avoid simultanteous writes and race conditions with targeted files.
-
-Also, to ensure these changes are written to disk, it is also advised to unmount and sync:
-
   ecryptfs-umount-private
   sync
+
+It is advised that this script is executed in runlevel 1 or 3, to avoid simultanteous writes and race conditions with targeted files.
 
 .SH SEE ALSO
 .PD 0
