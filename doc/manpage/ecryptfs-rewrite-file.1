@@ -1,0 +1,29 @@
+.TH ecryptfs-rewrite-file 1 2009-03-20 ecryptfs-utils "eCryptfs"
+.SH NAME
+ecryptfs-rewrite-file \- force a file to be rewritten (reencrypted) in the lower filesystem
+
+.SH SYNOPSIS
+\fBecryptfs-rewrite-file [file1] [file2] [file3] ...\fP
+
+.SH DESCRIPTION
+This script takes one or more files/directories/symlinks as arguments, moves each of them to a temporary file, and the moves them back to the original name.  This cause the file to be rewritten (and reencrypted) in the lower filesystem.
+
+This script may be combined with \fBfind\fP(1) and \fBxargs\fP(1) to rewrite an entire eCryptfs mountpoint:
+
+  find . -xdev -print0 | xargs -r -0 /usr/bin/ecryptfs-rewrite-file
+
+It is advised that this script is executed in runlevel 1 or 3, to avoid simultanteous writes and race conditions with targeted files.
+
+.SH SEE ALSO
+.PD 0
+.TP
+\fBfind\fP(1), \fBxargs\fP(1)
+
+.TP
+\fIhttp://launchpad.net/ecryptfs/\fP
+.PD
+
+.SH AUTHOR
+This manpage was written by Dustin Kirkland <kirkland@canonical.com> for Ubuntu systems (but may be used by others).  Permission is granted to copy, distribute and/or modify this document under the terms of the GNU General Public License, Version 2 or any later version published by the Free Software Foundation.
+
+On Debian systems, the complete text of the GNU General Public License can be found in /usr/share/common-licenses/GPL.
