@@ -18,15 +18,44 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 error() {
+	echo
 	echo "ERROR: $1" 1>&2
-	exit 1
 }
+j=0
 for i in "$@"; do
 	[ "$i" = "." ] && continue
+	j=`expr $j + 1`
+	echo -n "INFO: Rewriting [$j/$#] [$i] ... "
 	opt=
-	[ -d "$i" -a ! -h "$i" ] && opt="-d"
-	temp1=`mktemp $opt "$i".XXXXXXXXXX` || error "Could not create tempfile"
-	mv -f -T "$i" "$temp1"	|| error "Could not rename [$i] to [$temp1]"
-	mv -f "$temp1" "$i"	|| error "Could not rename [$temp1] to [$i]"
+	if [ -d "$i" -a ! -h "$i" ]; then
+		# A directory, re-encrypt the filename
+		temp1=`mktemp -d "$i".XXXXXXXXXX` || {
+			error "Could not create tempdir"
+			continue
+		}
+		mv -f -T "$i" "$temp1" || {
+			error "Could not rename [$i] to [$temp1]"
+			rm -f "$temp1"
+			continue
+		}
+		mv -f "$temp1" "$i"	|| {
+			error "Could not rename [$temp1] to [$i]"
+		}
+	else
+		# A file or symlink, re-encrypt the contents
+		temp1=`mktemp "$i".XXXXXXXXXX` || {
+			error "Could not create tempfile"
+			continue
+		}
+		cp -a "$i" "$temp1" || {
+			error "Could not copy [$i] to [$temp1]"
+			rm -f "$temp1"
+			continue
+		}
+		mv -f "$temp1" "$i" || {
+			error "Could not rename [$temp1] to [$i]"
+		}
+	fi
+	echo "[OK]"
 done
 exit 0
