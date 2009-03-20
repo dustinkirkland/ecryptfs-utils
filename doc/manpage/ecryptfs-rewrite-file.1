@@ -14,10 +14,15 @@ This script may be combined with \fBfind\fP(1) and \fBxargs\fP(1) to rewrite an 
 
 It is advised that this script is executed in runlevel 1 or 3, to avoid simultanteous writes and race conditions with targeted files.
 
+Also, to ensure these changes are written to disk, it is also advised to unmount and sync:
+
+  ecryptfs-umount-private
+  sync
+
 .SH SEE ALSO
 .PD 0
 .TP
-\fBfind\fP(1), \fBxargs\fP(1)
+\fBfind\fP(1), \fBxargs\fP(1), \fBecryptfs-umount-private\fP(1), \fBsync\fP(1)
 
 .TP
 \fIhttp://launchpad.net/ecryptfs/\fP
