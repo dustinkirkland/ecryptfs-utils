@@ -1,8 +1,9 @@
 ecryptfs-utils (74) unreleased; urgency=low
 
-  * 
+  * src/utils/ecryptfs-setup-private: fix bug in grep when running with LANG
+    in other locales, LP: #347969
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Fri, 20 Mar 2009 17:26:29 -0500
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Tue, 24 Mar 2009 14:37:26 -0500
 
 ecryptfs-utils (73-0ubuntu1) jaunty; urgency=low
 

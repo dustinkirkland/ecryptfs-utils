@@ -221,11 +221,11 @@ grep -qs "$CRYPTDIR " /proc/mounts && error "[$CRYPTDIR] is already mounted"
 # Check that the mount point and encrypted directory are empty (skip symlinks).
 # Perhaps one day we could provide a migration mode (using rsync or something),
 # but this would be VERY hard to do safely.
-count=`ls -Al "$MOUNTPOINT" 2>/dev/null | grep -v "^total" | grep -v "^l" -c`
+count=`ls -Al "$MOUNTPOINT" 2>/dev/null | egrep -c "^[drwx-]{10}"`
 if [ "$count" != "0" ]; then
 	error "$MOUNTPOINT must be empty before proceeding"
 fi
-count=`ls -Al "$CRYPTDIR" 2>/dev/null | grep -v "^total" -c`
+count=`ls -Al "$CRYPTDIR" 2>/dev/null | egrep -c "^[dlrwx-]{10}"`
 if [ "$count" != "0" ]; then
 	error "$CRYPTDIR must be empty before proceeding"
 fi
