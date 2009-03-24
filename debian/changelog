@@ -3,8 +3,9 @@ ecryptfs-utils (74) unreleased; urgency=low
   * src/utils/ecryptfs-setup-private: fix bug in grep when running with LANG
     in other locales, LP: #347969
   * doc/manpage/ecryptfs.7: add notes about verbose option
+  * src/desktop: add the desktop files to the dist tarball
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Tue, 24 Mar 2009 14:57:20 -0500
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Tue, 24 Mar 2009 15:37:27 -0500
 
 ecryptfs-utils (73-0ubuntu1) jaunty; urgency=low
 

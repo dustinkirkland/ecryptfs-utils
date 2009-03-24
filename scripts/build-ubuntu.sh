@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -e
 ./scripts/release.sh --nosign
 cd ..
 rm -rf ubuntu

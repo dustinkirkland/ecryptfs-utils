@@ -407,6 +407,7 @@ AC_CONFIG_FILES([
 	src/utils/Makefile
 	src/key_mod/Makefile
 	src/daemon/Makefile
+	src/desktop/Makefile
 	src/include/Makefile
 	doc/manpage/Makefile
 	src/pam_ecryptfs/Makefile
