@@ -1,4 +1,4 @@
-.TH ecryptfs 7 2008-07-21 ecryptfs-utils "eCryptfs"
+.TH ecryptfs 7 2009-03-24 ecryptfs-utils "eCryptfs"
 .SH NAME
 eCryptfs \- an enterprise-class cryptographic filesystem for linux
 
@@ -39,6 +39,9 @@ This option, when set, will have eCryptfs return the encrypted versions of the l
 .B ecryptfs_xattr
 Store the metadata in the extended attribute of the lower files rather than the header region of the lower files.
 .TP
+.B verbose
+Log ecryptfs information to /var/log/messages.  Do not run eCryptfs in verbose-mode unless you are doing so for the sole purpose of development, since secret values will be written out to the system log in that case.
+.TP
 
 MOUNT HELPER OPTIONS
 
@@ -71,8 +74,8 @@ The salt should be specified as a 16 digit hex value.
 .TP
 .B openssl_keyfile=(filename)
 The filename should be the filename of a file containing an RSA SSL key.
-.TP                                                                            
-.B openssl_passwd_file=(filename)                                              
+.TP
+.B openssl_passwd_file=(filename)
 The password should be specified in a file with passwd=(openssl-password). It is highly reccomended that the file be stored on a secure medium such as a personal usb key.
 .TP
 .B openssl_passwd_fd=(file descriptor)
@@ -111,7 +114,7 @@ Where passwd_file.txt contains the contents
 .PD
 
 .SH NOTES
-Do not run eCryptfs in higher verbosity levels unless you are doing so for the sole purpose of development, since secret values will be written out to the system log in that case. Make certain that your eCryptfs mount covers all locations where your applications may write sensitive data. In addition, use dm-crypt to encrypt your swap space with a random key on boot.
+Do not run eCryptfs in verbose-mode unless you are doing so for the sole purpose of development, since secret values will be written out to the system log in that case. Make certain that your eCryptfs mount covers all locations where your applications may write sensitive data. In addition, use dm-crypt to encrypt your swap space with a random key on boot, or see \fBecryptfs-setup-swap\fP(1).
 
 .SH BUGS
 Please post bug reports to the eCryptfs bug tracker on Launchpad.net: https://bugs.launchpad.net/ecryptfs/+filebug.
