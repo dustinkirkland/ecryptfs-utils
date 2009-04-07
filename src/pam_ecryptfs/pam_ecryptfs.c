@@ -211,10 +211,11 @@ static struct passwd *fetch_pwd(pam_handle_t *pamh)
 
 static int private_dir(pam_handle_t *pamh, int mount)
 {
-	int rc;
+	int rc, fd;
 	struct passwd *pwd = NULL;
 	char *sigfile = NULL;
 	char *autofile = NULL;
+	char *recorded = NULL;
 	char *a;
 	char *automount = "auto-mount";
 	char *autoumount = "auto-umount";
@@ -258,6 +259,20 @@ static int private_dir(pam_handle_t *pamh, int mount)
 	} 
 	if (pid == 0) {
 		if (mount == 1) {
+		        if ((asprintf(&recorded,
+			    "%s/.ecryptfs/.wrapped-passphrase.recorded",
+			    pwd->pw_dir) < 0) || recorded == NULL) {
+				syslog(LOG_ERR,
+				   "Error allocating memory for recorded name");
+				return 1;
+			}
+			if (stat(recorded, &s) != 0 && stat("/usr/share/ecryptfs-utils/ecryptfs-remind-passphrase", &s) == 0) {
+				/* User has not recorded their passphrase */
+				unlink("/var/lib/update-notifier/user.d/ecryptfs-remind-passphrase");
+				symlink("/usr/share/ecryptfs-utils/ecryptfs-remind-passphrase", "/var/lib/update-notifier/user.d/ecryptfs-remind-passphrase");
+				fd = open("/var/lib/update-notifier/dpkg-run-stamp", O_WRONLY|O_CREAT|O_NONBLOCK, 0666);
+				close(fd);
+			}
 			if (stat(autofile, &s) != 0) {
 				/* User does not want to auto-mount */
 				syslog(LOG_INFO,
