@@ -266,10 +266,10 @@ static int private_dir(pam_handle_t *pamh, int mount)
 				   "Error allocating memory for recorded name");
 				return 1;
 			}
-			if (stat(recorded, &s) != 0 && stat("/usr/share/ecryptfs-utils/ecryptfs-remind-passphrase", &s) == 0) {
+			if (stat(recorded, &s) != 0 && stat("/usr/share/ecryptfs-utils/ecryptfs-record-passphrase", &s) == 0) {
 				/* User has not recorded their passphrase */
-				unlink("/var/lib/update-notifier/user.d/ecryptfs-remind-passphrase");
-				symlink("/usr/share/ecryptfs-utils/ecryptfs-remind-passphrase", "/var/lib/update-notifier/user.d/ecryptfs-remind-passphrase");
+				unlink("/var/lib/update-notifier/user.d/ecryptfs-record-passphrase");
+				symlink("/usr/share/ecryptfs-utils/ecryptfs-record-passphrase", "/var/lib/update-notifier/user.d/ecryptfs-record-passphrase");
 				fd = open("/var/lib/update-notifier/dpkg-run-stamp", O_WRONLY|O_CREAT|O_NONBLOCK, 0666);
 				close(fd);
 			}

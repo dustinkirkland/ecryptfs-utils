@@ -8,7 +8,7 @@ ecryptfs-utils (74) unreleased; urgency=low
 
   [ Martin Pitt and Dustin Kirkland ]
   Reworked the fixes for LP: #352307, remind user to record their passphrase
-  * src/desktop/ecryptfs-remind-passphrase: run if
+  * src/desktop/ecryptfs-record-passphrase: run if
     ~/.ecryptfs/.wrapped-passphrase.recorded does NOT exist; touch that
     file upon successful run of unwrap passphrase
   * debian/patches/00list,
