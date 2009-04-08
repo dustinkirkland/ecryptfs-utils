@@ -5,6 +5,8 @@ ecryptfs-utils (74) unreleased; urgency=low
     in other locales, LP: #347969
   * doc/manpage/ecryptfs.7: add notes about verbose option
   * src/desktop: add the desktop files to the dist tarball
+  * src/utils/ecryptfs-dot-private: sourceable file for accessing your
+    encrypted data;  useful for conducting backups
 
   [ Martin Pitt and Dustin Kirkland ]
   Reworked the fixes for LP: #352307, remind user to record their passphrase
@@ -15,7 +17,7 @@ ecryptfs-utils (74) unreleased; urgency=low
     debian/patches/update-notifier-remind-passphrase.dpatch: dropped, since
     this was moved into PAM
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Tue, 07 Apr 2009 14:29:19 -0700
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Wed, 08 Apr 2009 15:34:37 -0700
 
 ecryptfs-utils (73-0ubuntu1) jaunty; urgency=low
 
