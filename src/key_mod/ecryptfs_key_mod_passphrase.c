@@ -195,7 +195,8 @@ struct param_node passphrase_param_nodes[] = {
 	 .val = NULL,
 	 .display_opts = NULL,
 	 .default_val = NULL,
-	 .flags = ECRYPTFS_PARAM_FLAG_MASK_OUTPUT,
+	 .flags = (ECRYPTFS_PARAM_FLAG_MASK_OUTPUT
+		   | ECRYPTFS_NONEMPTY_VALUE_REQUIRED),
 	 .num_transitions = 2,
 	 .tl = {{.val = "passphrase_salt",
 		 .pretty_val = "salt",
@@ -214,7 +215,8 @@ struct param_node passphrase_param_nodes[] = {
 	 .val = NULL,
 	 .display_opts = NULL,
 	 .default_val = NULL,
-	 .flags = ECRYPTFS_PARAM_FLAG_MASK_OUTPUT,
+	 .flags = ECRYPTFS_PARAM_FLAG_ECHO_INPUT
+		  | ECRYPTFS_NONEMPTY_VALUE_REQUIRED,
 	 .num_transitions = 2,
 	 .tl = {{.val = "passphrase_salt",
 		 .pretty_val = "salt",
@@ -233,7 +235,8 @@ struct param_node passphrase_param_nodes[] = {
 	 .val = NULL,
 	 .display_opts = NULL,
 	 .default_val = NULL,
-	 .flags = ECRYPTFS_PARAM_FLAG_MASK_OUTPUT,
+	 .flags = ECRYPTFS_PARAM_FLAG_ECHO_INPUT
+		  | ECRYPTFS_NONEMPTY_VALUE_REQUIRED,
 	 .num_transitions = 2,
 	 .tl = {{.val = "salt",
 		 .pretty_val = "salt",

@@ -826,7 +826,8 @@ static struct param_node ssl_param_nodes[] = {
 	 .val = NULL,
 	 .display_opts = NULL,
 	 .default_val = NULL,
-	 .flags = STDIN_REQUIRED | ECRYPTFS_PARAM_FLAG_ECHO_INPUT,
+	 .flags = STDIN_REQUIRED | ECRYPTFS_PARAM_FLAG_ECHO_INPUT
+		  | ECRYPTFS_NONEMPTY_VALUE_REQUIRED,
 	 .num_transitions = 1,
 	 .tl = {{.val = NULL,
 		 .pretty_val = NULL,
@@ -840,7 +841,8 @@ static struct param_node ssl_param_nodes[] = {
 	 .val = NULL,
 	 .display_opts = NULL,
 	 .default_val = NULL,
-	 .flags = STDIN_REQUIRED | ECRYPTFS_PARAM_FLAG_ECHO_INPUT,
+	 .flags = STDIN_REQUIRED | ECRYPTFS_PARAM_FLAG_ECHO_INPUT
+		  | ECRYPTFS_NONEMPTY_VALUE_REQUIRED,
 	 .num_transitions = 1,
 	 .tl = {{.val = NULL,
 		 .pretty_val = NULL,
