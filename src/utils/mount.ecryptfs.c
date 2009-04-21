@@ -301,6 +301,7 @@ static int process_sig(char *auth_tok_sig, struct passwd *pw)
 	char yesno[4];
 	int i;
 	int rc;
+	int tries;
 
 	home = pw->pw_dir;
 	rc = asprintf(&dot_ecryptfs_dir, "%s/.ecryptfs", home);
@@ -328,41 +329,65 @@ static int process_sig(char *auth_tok_sig, struct passwd *pw)
 		       "it looks like you have never mounted with this key \n"
 		       "before. This could mean that you have typed your \n"
 		       "passphrase wrong.\n\n", sig_cache_filename);
-		printf("Would you like to proceed with the mount (yes/no)? ");
-		i = 0;
+		tries = 0;
 		do {
-			yesno[i++] = mygetchar();
-		} while (yesno[i-1] != '\n' && i < 3);
-		yesno[i] = '\0';
-		if (yesno[i-1] != '\n')
-			while (mygetchar() != '\n');
-		if (memcmp(yesno, "yes", 3) == 0) {
-			printf("Would you like to append sig [%s] to\n"
-			       "[%s] \n"
-			       "in order to avoid this warning in the future "
-			       "(yes/no)? ", auth_tok_sig, sig_cache_filename);
+			rc = 0;
+			printf("Would you like to proceed "
+			       "with the mount (yes/no)? ");
 			i = 0;
 			do {
 				yesno[i++] = mygetchar();
-			} while (yesno[i-1] != '\n' && i < 3);
-			yesno[i] = '\0';
-			if (yesno[i-1] != '\n')
+			} while (yesno[i-1] != '\n' && i < 4);
+			if (yesno[i-1] != '\n') {
 				while (mygetchar() != '\n');
-			if (memcmp(yesno, "yes", 3) == 0) {
+				yesno[0] = '\0';
+			}
+			yesno[i-1] = '\0';
+		} while ((rc = strcmp(yesno, "yes")) && strcmp(yesno, "no")
+			 && (++tries < 5));
+		if (rc == 0) {
+			tries = 0;
+			do {
+				printf("Would you like to append sig [%s] to\n"
+				       "[%s] \nin order to avoid this warning "
+				       "in the future (yes/no)? ", auth_tok_sig,
+				       sig_cache_filename);
+				i = 0;
+				do {
+					yesno[i++] = mygetchar();
+				} while (yesno[i-1] != '\n' && i < 4);
+				if (yesno[i-1] != '\n') {
+					while (mygetchar() != '\n');
+					yesno[0] = '\0';
+				}
+				yesno[i-1] = '\0';
+			} while ((rc = strcmp(yesno, "yes")) 
+				 && strcmp(yesno, "no") && (++tries < 5));
+
+			if (rc == 0) {
 				if ((rc = ecryptfs_append_sig(
-					     auth_tok_sig,
-					     sig_cache_filename))) {
+					    auth_tok_sig,
+					    sig_cache_filename))) {
 					printf("Error appending to [%s]; rc = "
-					       "[%d]. Aborting mount.\n",
-					       sig_cache_filename, rc);
+					"[%d]. Aborting mount.\n",
+					sig_cache_filename, rc);
 					goto out;
 				}
 				printf("Successfully appended new sig to user "
-				       "sig cache file\n");
-			} else
-				printf("Not adding sig to user sig cache "
-				       "file; continuing with mount.\n");
+					"sig cache file\n");
+			} else {
+				if (strcmp(yesno,"no"))
+					rc = -EINVAL;
+				else {
+					printf("Not adding sig to user sig "
+					       "cache file; continuing with "
+					       "mount.\n");
+					rc = 0;
+				}
+			}
 		} else {
+			if (strcmp(yesno,"no"))
+				rc = -EINVAL;
 			printf("Aborting mount.\n");
 			rc = ECANCELED;
 			goto out;
@@ -600,6 +625,8 @@ int main(int argc, char **argv)
 			&ctx, &mnt_params, version, opts_str,
 			ECRYPTFS_ASK_FOR_ALL_MOUNT_OPTIONS);
 		if (rc) {
+			if (rc > 0) 
+				rc = -EINVAL;
 			printf("Error attempting to evaluate mount options: "
 			       "[%d] %s\nCheck your system logs for details "
 			       "on why this happened.\nTry updating your "

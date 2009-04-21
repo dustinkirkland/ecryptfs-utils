@@ -255,12 +255,12 @@ int do_transition(struct ecryptfs_ctx *ctx, struct param_node **next,
 				if ((*next = tn->next_token))
 					return 0;
 				else
-					return EINVAL;
+					return -EINVAL;
 			} else if (trans_func_tok_id == NULL_TOK) {
 				if ((*next = tn->next_token))
 					return 0;
 				else
-					return EINVAL;
+					return -EINVAL;
 			}
 			nvp = nvp->next;
 		}
@@ -275,12 +275,18 @@ int do_transition(struct ecryptfs_ctx *ctx, struct param_node **next,
 				trans_func_tok_id =
 					tn->trans_func(ctx, current,
 						       mnt_params, foo);
+			if (trans_func_tok_id == WRONG_VALUE && 
+			    (ctx->verbosity || 
+			     (current->flags & STDIN_REQUIRED))) {
+			    *next = current;
+			    return 0;
+			}
 			if (trans_func_tok_id == MOUNT_ERROR || 
-			    trans_func_tok_id > 0)
+			    trans_func_tok_id < 0)
 				return trans_func_tok_id;
 			if ((*next = tn->next_token))
 				return 0;
-			else return EINVAL;
+			else return -EINVAL;
 		}
 	}
 	return NULL_TOK;
@@ -367,6 +373,7 @@ static int alloc_and_get_val(struct ecryptfs_ctx *ctx, struct param_node *node,
 	int value_retrieved;
 	int i;
 	int rc;
+	int tries = 0;
 
 	if (ecryptfs_verbosity)
 		syslog(LOG_INFO, "%s: Called on node->mnt_opt_names[0] = [%s]",
@@ -599,6 +606,7 @@ get_value:
 				syslog(LOG_INFO, "%s: DISPLAY_TRANSITION_NODE_"
 				       "VALS not set\n", __FUNCTION__);
 obtain_value:
+			if (++tries > 3) return EINVAL;
 			if (node->suggested_val)
 				rc = asprintf(&prompt, "%s [%s]", node->prompt,
 					 node->suggested_val);
@@ -619,6 +627,12 @@ obtain_value:
 				(&(node->val), prompt,
 				 (node->flags
 				  & ECRYPTFS_PARAM_FLAG_ECHO_INPUT));
+			if (node->val[0] == '\0' && 
+			    (node->flags & ECRYPTFS_NONEMPTY_VALUE_REQUIRED)) {
+				fprintf(stderr,"Wrong input, non-empty value "
+					"required!\n");
+				goto obtain_value;
+			}
 			free(prompt);
 			if (node->flags & VERIFY_VALUE) {
 				rc = asprintf(&verify_prompt, "Verify %s",
@@ -702,9 +716,7 @@ int ecryptfs_eval_decision_graph(struct ecryptfs_ctx *ctx,
 
 	memset(*mnt_params, 0, sizeof(struct val_node));
 	rc = eval_param_tree(ctx, root_node, nvp_head, mnt_params);
-	if (rc > 0)
-		return -rc;
-	if (rc != MOUNT_ERROR)
+	if ((rc > 0) && (rc != MOUNT_ERROR))
 		return 0;
 	return rc;
 }
@@ -949,6 +961,7 @@ ecryptfs_linear_subgraph_val_tf(struct ecryptfs_ctx *ctx,
 		rc = -ENOMEM;
 		goto out;
 	}
+	rc = 0;
 	subgraph_ctx = (struct ecryptfs_subgraph_ctx *)(*foo);
 	walker = &subgraph_ctx->head_val_node;
 	while (walker->next)
@@ -1023,8 +1036,7 @@ ecryptfs_exit_linear_subgraph_tf(struct ecryptfs_ctx *ctx,
 		rc = -ENOMEM;
 		goto out_free_list_and_subgraph_ctx;
 	}
-	rc = 0;
-	stack_push(mnt_params, sig_mnt_opt);
+	rc = stack_push(mnt_params, sig_mnt_opt);
 out_free_list_and_subgraph_ctx:
 	curr = subgraph_ctx->head_val_node.next;
 	while (curr) {

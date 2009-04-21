@@ -35,9 +35,9 @@ static int tf_passwd(struct ecryptfs_ctx *ctx, struct param_node *node,
 {
 	int rc;
 	if (!node->val)
-		return EINVAL;
+		return -EINVAL;
 	if ((rc = stack_push(head, node->val)))
-		return -rc;
+		return rc;
 	node->val = NULL;
 	return DEFAULT_TOK;
 }
@@ -53,16 +53,16 @@ static int tf_pass_file(struct ecryptfs_ctx *ctx, struct param_node *node,
 
 	file_head = malloc(sizeof(struct ecryptfs_name_val_pair));
 	if (!file_head) {
-		rc = ENOMEM;
+		rc = -ENOMEM;
 		goto out;
 	}
 	memset(file_head, 0, sizeof(struct ecryptfs_name_val_pair));
 	if (strcmp(node->mnt_opt_names[0], "passphrase_passwd_file") == 0) {
 		fd = open(node->val, O_RDONLY);
 		if (fd == -1) {
+			rc = -errno;
 			syslog(LOG_ERR, "%s: Error whilst attempting to open "
 			       "[%s]; errno = [%m]\n", __FUNCTION__, node->val);
-			rc = MOUNT_ERROR;
 			goto out;
 		}
 	} else if (strcmp(node->mnt_opt_names[0], "passphrase_passwd_fd") == 0) {
@@ -74,19 +74,18 @@ static int tf_pass_file(struct ecryptfs_ctx *ctx, struct param_node *node,
 		goto out;
 	}
 	rc = parse_options_file(fd, file_head);
+	close(fd);
 	if (rc) {
 		syslog(LOG_ERR, "%s: Error parsing file for passwd; "
 		       "rc = [%d]\n", __FUNCTION__, rc);
-		rc = MOUNT_ERROR;
 		goto out;
 	}
-	close(fd);
 	walker = file_head->next;
 	while (walker) {
 		if (strcmp(walker->name, "passphrase_passwd") == 0
 		    || strcmp(walker->name, "passwd") == 0) {
 			if (asprintf(&tmp_val, "%s", walker->value) < 0) {
-				rc = ENOMEM;
+				rc = -ENOMEM;
 				goto out;
 			}
 			stack_push(head, tmp_val);
@@ -122,27 +121,26 @@ static int tf_salt(struct ecryptfs_ctx *ctx, struct param_node *node,
 	if (!node->val)
 		rc = asprintf(&node->val, "%s", node->default_val);
 	if (rc == -1)
-		return MOUNT_ERROR;
+		return -ENOMEM;
 	stack_push(head, node->val);
 	node->val = NULL;
 	stack_pop_val(head, (void *)&salt_hex);
 	stack_pop_val(head, (void *)&passwd);
 	auth_tok_sig = malloc(ECRYPTFS_SIG_SIZE_HEX + 1);
 	if (!auth_tok_sig) {
-		rc = ENOMEM;
+		rc = -ENOMEM;
 		goto out;
 	}
 	from_hex(salt, salt_hex, ECRYPTFS_SIG_SIZE);
 	rc = ecryptfs_add_passphrase_key_to_keyring(auth_tok_sig, passwd, salt);
 	if (rc < 0) {
 		free(auth_tok_sig);
-		rc = -rc;
 		goto out;
 	}
 	rc = asprintf(&param, "ecryptfs_sig=%s", auth_tok_sig);
 	if (rc == -1) {
 		free(auth_tok_sig);
-		rc = ENOMEM;
+		rc = -ENOMEM;
 		goto out;
 	}
 	free(auth_tok_sig);
@@ -195,7 +193,8 @@ struct param_node passphrase_param_nodes[] = {
 	 .val = NULL,
 	 .display_opts = NULL,
 	 .default_val = NULL,
-	 .flags = ECRYPTFS_PARAM_FLAG_MASK_OUTPUT,
+	 .flags = (ECRYPTFS_PARAM_FLAG_MASK_OUTPUT
+		   | ECRYPTFS_NONEMPTY_VALUE_REQUIRED),
 	 .num_transitions = 2,
 	 .tl = {{.val = "passphrase_salt",
 		 .pretty_val = "salt",
@@ -214,7 +213,8 @@ struct param_node passphrase_param_nodes[] = {
 	 .val = NULL,
 	 .display_opts = NULL,
 	 .default_val = NULL,
-	 .flags = ECRYPTFS_PARAM_FLAG_MASK_OUTPUT,
+	 .flags = ECRYPTFS_PARAM_FLAG_ECHO_INPUT
+		  | ECRYPTFS_NONEMPTY_VALUE_REQUIRED,
 	 .num_transitions = 2,
 	 .tl = {{.val = "passphrase_salt",
 		 .pretty_val = "salt",
@@ -233,7 +233,8 @@ struct param_node passphrase_param_nodes[] = {
 	 .val = NULL,
 	 .display_opts = NULL,
 	 .default_val = NULL,
-	 .flags = ECRYPTFS_PARAM_FLAG_MASK_OUTPUT,
+	 .flags = ECRYPTFS_PARAM_FLAG_ECHO_INPUT
+		  | ECRYPTFS_NONEMPTY_VALUE_REQUIRED,
 	 .num_transitions = 2,
 	 .tl = {{.val = "salt",
 		 .pretty_val = "salt",
@@ -282,7 +283,7 @@ static int ecryptfs_passphrase_init(char **alias)
 
 	if (asprintf(alias, "passphrase") == -1) {
 		syslog(LOG_ERR, "Out of memory\n");
-		rc = ENOMEM;
+		rc = -ENOMEM;
 		goto out;
 	}
 out:

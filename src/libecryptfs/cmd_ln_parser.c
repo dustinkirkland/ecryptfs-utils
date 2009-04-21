@@ -382,11 +382,15 @@ int parse_options_file(int fd, struct ecryptfs_name_val_pair *head)
 		       __FUNCTION__, rc, fd);
 		goto out;
 	}
+	if (S_ISDIR(filestat.st_mode)) {
+		rc = -EISDIR;
+		goto out;
+	}
 	pagesize = getpagesize();
 	file_size = filestat.st_size;
 	if (file_size > MAX_FILE_SIZE) {
 		syslog(LOG_ERR, "File size too large\n");
-		rc = -1;
+		rc = -EFBIG;
 		goto out;
 	}
 	if (file_size % pagesize) {
@@ -395,7 +399,7 @@ int parse_options_file(int fd, struct ecryptfs_name_val_pair *head)
 	}
 	data = mmap((caddr_t)0, file_size, PROT_READ, MAP_PRIVATE, fd, 0);
 	if (data == MAP_FAILED)	{
-		rc = errno;
+		rc = -errno;
 		syslog(LOG_ERR, "%s: mmap failed on fd [%d]; rc = [%d]\n",
 		       __FUNCTION__, fd, rc);
 		goto out;

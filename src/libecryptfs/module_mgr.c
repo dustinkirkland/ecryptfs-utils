@@ -97,57 +97,61 @@ static struct param_node root_param_node = {
 		.trans_func = sig_param_node_callback}}
 };
 
+/* returns: 1 for str=="yes" or "y", 0 for "no" or "n", -1 elsewhere */
+static int is_yes(const char *str)
+{
+	if (str) {
+		if (!strcmp(str,"y") || !strcmp(str,"yes"))
+			return 1;
+		if (!strcmp(str,"no") || !strcmp(str,"n"))
+			return 0;
+	}
+
+	return -1;
+}
+
+
+/* returns: 0 for success
+ *	    WRONG_VALUE if node->val is none of  'yes','y','no','n'
+ *	    <0 for error
+ */
+static int stack_push_if_yes(struct param_node *node, struct val_node **head,
+			     char *opt_name)
+{
+	int rc;
+
+	if (((rc=is_yes(node->val)) == 1) || (node->flags & PARAMETER_SET)) {
+		rc = stack_push(head, opt_name);
+	} else if (rc == -1)
+		rc = WRONG_VALUE;
+	free(node->val);
+	node->val = NULL;
+	return rc;
+}
+
 static int get_hmac(struct ecryptfs_ctx *ctx, struct param_node *node,
 		    struct val_node **head, void **foo)
 {
-	if (node->val && (*(node->val) == 'y')) {
-		stack_push(head, "ecryptfs_hmac");
-	} else if (node->flags & PARAMETER_SET) {
-		stack_push(head, "ecryptfs_hmac");
-		return 0;
-	}
-	free(node->val);
-	return 0;
+	return stack_push_if_yes(node, head, "ecryptfs_hmac");
 }
 
 static int get_passthrough(struct ecryptfs_ctx *ctx, struct param_node *node,
 			   struct val_node **head, void **foo)
 {
-	if (node->val && (*(node->val) == 'y')) {
-		stack_push(head, "ecryptfs_passthrough");
-	} else if (node->flags & PARAMETER_SET) {
-		stack_push(head, "ecryptfs_passthrough");
-		return 0;
-	}
-	free(node->val);
-	return 0;
+	return stack_push_if_yes(node, head, "ecryptfs_passthrough");
 }
 
 static int get_xattr(struct ecryptfs_ctx *ctx, struct param_node *node,
 			   struct val_node **head, void **foo)
 {
-	if (node->val && (*(node->val) == 'y')) {
-		stack_push(head, "ecryptfs_xattr_metadata");
-	} else if (node->flags & PARAMETER_SET) {
-		stack_push(head, "ecryptfs_xattr_metadata");
-		return 0;
-	}
-	free(node->val);
-	return 0;
+	return stack_push_if_yes(node, head, "ecryptfs_xattr_metadata");
 }
 
 static int get_encrypted_passthrough(struct ecryptfs_ctx *ctx,
 				     struct param_node *node,
 				     struct val_node **head, void **foo)
 {
-	if (node->val && (*(node->val) == 'y')) {
-		stack_push(head, "ecryptfs_encrypted_view");
-	} else if (node->flags & PARAMETER_SET) {
-		stack_push(head, "ecryptfs_encrypted_view");
-		return 0;
-	}
-	free(node->val);
-	return 0;
+	return stack_push_if_yes(node, head, "ecryptfs_encrypted_view");
 }
 
 static struct param_node end_param_node = {
@@ -221,9 +225,9 @@ static int get_enable_filename_crypto(struct ecryptfs_ctx *ctx,
 					struct param_node *node,
 					struct val_node **head, void **foo)
 {
-	int rc = 0;
+	int yn, rc = 0;
 
-	if ((node->val && (*(node->val) == 'y'))
+	if (((yn=is_yes(node->val)) > 0)
 	    || (node->flags & PARAMETER_SET)) {
 		int i;
 		struct val_node *val_node;
@@ -254,10 +258,16 @@ static int get_enable_filename_crypto(struct ecryptfs_ctx *ctx,
 			}
 			val_node = val_node->next;
 		}
-	}
+	} else if (node->val) {
+		if (yn < 0)
+			rc = WRONG_VALUE;
+	} else
+		/* default: no */;
 out_free:
-	if (node->val)
+	if (node->val) {
 		free(node->val);
+		node->val = NULL;
+	}
 	return rc;
 }
 

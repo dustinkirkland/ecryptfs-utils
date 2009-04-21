@@ -75,9 +75,10 @@ struct transition_node {
 };
 
 struct param_node {
-#define MOUNT_ERROR -3
-#define NULL_TOK -1
-#define DEFAULT_TOK -2
+#define NULL_TOK 1
+#define DEFAULT_TOK 2
+#define MOUNT_ERROR 3
+#define WRONG_VALUE 4
         int num_mnt_opt_names;
 #define MAX_NUM_MNT_OPT_NAMES 8
         char *mnt_opt_names[MAX_NUM_MNT_OPT_NAMES];
@@ -102,6 +103,7 @@ struct param_node {
 #define ECRYPTFS_DISPLAY_PRETTY_VALS       0x00000400
 #define ECRYPTFS_NO_AUTO_TRANSITION        0x00000800
 #define ECRYPTFS_IMPLICIT_OVERRIDE_DEFAULT 0x00001000
+#define ECRYPTFS_NONEMPTY_VALUE_REQUIRED   0x00002000
         uint32_t flags;
         int num_transitions;
 #define MAX_NUM_TRANSITIONS 64
