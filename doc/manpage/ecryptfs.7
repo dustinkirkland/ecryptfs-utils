@@ -54,6 +54,9 @@ Specify the type of key to be used when mounting eCryptfs.
 .B ecryptfs_enable_filename_crypto=(y/N)
 Specify whether filename encryption should be enabled. If not, the mount helper will not prompt the user for the filename encryption key signature.
 .TP
+.B verbosity=0/1
+Specify if the mount helper can ask you for missing values (default) or If should not ask and fail (for verbosity=0).
+.TP
 
 KEY MODULE OPTIONS
 
