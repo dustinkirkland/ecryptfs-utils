@@ -1,5 +1,20 @@
 ecryptfs-utils (74) unreleased; urgency=low
 
+  [ Michal Hlavinka ]
+  * Changes for RH/Fedora release
+    - change error codes to be more descriptive
+    - decision_graph.h, *: change definition of node return codes to positive
+      values
+    - mount.ecryptfs.c: insist for yes/no answer for unkown sigs
+    - don't print error for removing key from keyring if it succeeded
+    - module_mgr.c: insist on yes/no answer
+    - use ECRYPTFS_NONEMPTY_VALUE_REQUIRED where reasonable
+    - pam_ecryptfs.c: don't try to unwrap key for users not using pam mounting
+    - add verbosity to man page
+    - decision_graph.* : add ECRYPTFS_NONEMPTY_VALUE_REQUIRED flag for nodes
+    - decision_graph.* : add WRONG_VALUE return code to nodes for asking
+      question again
+
   [ Dustin Kirkland ]
   * src/utils/ecryptfs-setup-private: fix bug in grep when running with LANG
     in other locales, LP: #347969
@@ -17,7 +32,7 @@ ecryptfs-utils (74) unreleased; urgency=low
     debian/patches/update-notifier-remind-passphrase.dpatch: dropped, since
     this was moved into PAM
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Wed, 08 Apr 2009 15:34:37 -0700
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Tue, 21 Apr 2009 18:21:30 -0500
 
 ecryptfs-utils (73-0ubuntu1) jaunty; urgency=low
 

@@ -1,3 +1,36 @@
+ecryptfs-utils-74
+  [ Michal Hlavinka ]
+  * Changes for RH/Fedora release
+    - change error codes to be more descriptive
+    - decision_graph.h, *: change definition of node return codes to positive
+      values
+    - mount.ecryptfs.c: insist for yes/no answer for unkown sigs
+    - don't print error for removing key from keyring if it succeeded
+    - module_mgr.c: insist on yes/no answer
+    - use ECRYPTFS_NONEMPTY_VALUE_REQUIRED where reasonable
+    - pam_ecryptfs.c: don't try to unwrap key for users not using pam mounting
+    - add verbosity to man page
+    - decision_graph.* : add ECRYPTFS_NONEMPTY_VALUE_REQUIRED flag for nodes
+    - decision_graph.* : add WRONG_VALUE return code to nodes for asking
+      question again
+
+  [ Dustin Kirkland ]
+  * src/utils/ecryptfs-setup-private: fix bug in grep when running with LANG
+    in other locales, LP: #347969
+  * doc/manpage/ecryptfs.7: add notes about verbose option
+  * src/desktop: add the desktop files to the dist tarball
+  * src/utils/ecryptfs-dot-private: sourceable file for accessing your
+    encrypted data;  useful for conducting backups
+
+  [ Martin Pitt and Dustin Kirkland ]
+  Reworked the fixes for LP: #352307, remind user to record their passphrase
+  * src/desktop/ecryptfs-record-passphrase: run if
+    ~/.ecryptfs/.wrapped-passphrase.recorded does NOT exist; touch that
+    file upon successful run of unwrap passphrase
+  * debian/patches/00list,
+    debian/patches/update-notifier-remind-passphrase.dpatch: dropped, since
+    this was moved into PAM
+
 ecryptfs-utils-73
   [ Dustin Kirkland ]
   Userspace fixes for LP: #345544, CVE-2009-0787
