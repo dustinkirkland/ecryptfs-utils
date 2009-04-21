@@ -373,6 +373,7 @@ static int alloc_and_get_val(struct ecryptfs_ctx *ctx, struct param_node *node,
 	int value_retrieved;
 	int i;
 	int rc;
+	int tries = 0;
 
 	if (ecryptfs_verbosity)
 		syslog(LOG_INFO, "%s: Called on node->mnt_opt_names[0] = [%s]",
@@ -605,6 +606,7 @@ get_value:
 				syslog(LOG_INFO, "%s: DISPLAY_TRANSITION_NODE_"
 				       "VALS not set\n", __FUNCTION__);
 obtain_value:
+			if (++tries > 3) return EINVAL;
 			if (node->suggested_val)
 				rc = asprintf(&prompt, "%s [%s]", node->prompt,
 					 node->suggested_val);
@@ -625,6 +627,12 @@ obtain_value:
 				(&(node->val), prompt,
 				 (node->flags
 				  & ECRYPTFS_PARAM_FLAG_ECHO_INPUT));
+			if (node->val[0] == '\0' && 
+			    (node->flags & ECRYPTFS_NONEMPTY_VALUE_REQUIRED)) {
+				fprintf(stderr,"Wrong input, non-empty value "
+					"required!\n");
+				goto obtain_value;
+			}
 			free(prompt);
 			if (node->flags & VERIFY_VALUE) {
 				rc = asprintf(&verify_prompt, "Verify %s",
