@@ -78,6 +78,7 @@ struct param_node {
 #define MOUNT_ERROR -3
 #define NULL_TOK -1
 #define DEFAULT_TOK -2
+#define WRONG_VALUE -4
         int num_mnt_opt_names;
 #define MAX_NUM_MNT_OPT_NAMES 8
         char *mnt_opt_names[MAX_NUM_MNT_OPT_NAMES];

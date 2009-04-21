@@ -275,6 +275,12 @@ int do_transition(struct ecryptfs_ctx *ctx, struct param_node **next,
 				trans_func_tok_id =
 					tn->trans_func(ctx, current,
 						       mnt_params, foo);
+			if (trans_func_tok_id == WRONG_VALUE && 
+			    (ctx->verbosity || 
+			     (current->flags & STDIN_REQUIRED))) {
+			    *next = current;
+			    return 0;
+			}
 			if (trans_func_tok_id == MOUNT_ERROR || 
 			    trans_func_tok_id > 0)
 				return trans_func_tok_id;
