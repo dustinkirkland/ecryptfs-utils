@@ -961,6 +961,7 @@ ecryptfs_linear_subgraph_val_tf(struct ecryptfs_ctx *ctx,
 		rc = -ENOMEM;
 		goto out;
 	}
+	rc = 0;
 	subgraph_ctx = (struct ecryptfs_subgraph_ctx *)(*foo);
 	walker = &subgraph_ctx->head_val_node;
 	while (walker->next)

@@ -294,7 +294,7 @@ static int ecryptfs_openssl_read_key(RSA **rsa, unsigned char *blob)
 		syslog(LOG_ERR,
 		       "%s: Unable to read private key from file [%s]\n",
 		       __FUNCTION__, openssl_data->path);
-		rc = -EIO;
+		rc = -ENOKEY;
 		goto out;
 	}
 	rc = 0;
@@ -487,10 +487,11 @@ static int tf_ssl_keyfile(struct ecryptfs_ctx *ctx, struct param_node *node,
 	subgraph_ctx = (struct ecryptfs_subgraph_ctx *)(*foo);
 	if ((rc = asprintf(&subgraph_ctx->openssl_data.path, "%s", node->val))
 	    == -1) {
-		rc = MOUNT_ERROR;
+		rc = -ENOMEM;
 		goto out;
 	}
 	rc = DEFAULT_TOK;
+	free(node->val);
 	node->val = NULL;
 out:
 	return rc;
@@ -518,7 +519,7 @@ ecryptfs_openssl_process_key(struct ecryptfs_subgraph_ctx *subgraph_ctx,
 	}
 	if ((subgraph_ctx->key_mod->blob = malloc(blob_size)) == NULL) {
 		syslog(LOG_ERR, "Out of memory\n");
-		rc = MOUNT_ERROR;
+		rc = -ENOMEM;
 		goto out;
 	}
 	if ((rc = ecryptfs_openssl_serialize((unsigned char *) 
@@ -538,15 +539,13 @@ ecryptfs_openssl_process_key(struct ecryptfs_subgraph_ctx *subgraph_ctx,
 		syslog(LOG_ERR, "Error attempting to add key to keyring for "
 		       "key module [%s]; rc = [%d]\n",
 		       subgraph_ctx->key_mod->alias, rc);
-		rc = MOUNT_ERROR;
 		goto out;
 	}
 	if ((rc = asprintf(&sig_mnt_opt, "ecryptfs_sig=%s", sig)) == -1) {
-		rc = MOUNT_ERROR;
+		rc = -ENOMEM;
 		goto out;
 	}
-	rc = 0;
-	stack_push(mnt_params, sig_mnt_opt);
+	rc = stack_push(mnt_params, sig_mnt_opt);
 out:
 	return rc;
 }
@@ -609,20 +608,20 @@ static int tf_ssl_passwd_file(struct ecryptfs_ctx *ctx, struct param_node *node,
 		rc = MOUNT_ERROR;
 		goto out;
 	}
-	if ((rc = parse_options_file(fd, &file_head))) {
+	rc = parse_options_file(fd, &file_head);
+	close(fd);
+	if (rc) {
 		syslog(LOG_ERR, "%s: Error attempting to parse options out "
 		       "of file\n", __FUNCTION__);
-		rc = MOUNT_ERROR;
 		goto out;
 	}
-	close(fd);
 	walker = file_head.next;
 	while (walker) {
 		if (strcmp(walker->name, "openssl_passwd") == 0) {
 			if ((rc = 
 			     asprintf(&subgraph_ctx->openssl_data.passphrase,
 				      "%s", walker->value)) == -1) {
-				rc = MOUNT_ERROR;
+				rc = -ENOMEM;
 				goto out;
 			}
 			break;
@@ -635,7 +634,6 @@ static int tf_ssl_passwd_file(struct ecryptfs_ctx *ctx, struct param_node *node,
 		rc = MOUNT_ERROR;
 		goto out;
 	}
-// #warning MEMORY LEAK: something is wrong with freeing file_head
 	walker = NULL;
 	if ((rc = ecryptfs_openssl_process_key(subgraph_ctx, mnt_params))) {
 		syslog(LOG_ERR, "Error processing OpenSSL key; rc = [%d]", rc);
@@ -658,7 +656,7 @@ out:
 static int tf_ssl_passwd_fd(struct ecryptfs_ctx *ctx, struct param_node *node,
 			    struct val_node **mnt_params, void **foo)
 {
-	return 0;
+	return ENOSYS;
 }
 
 static int tf_ecryptfs_openssl_gen_key_param_node_keyfile(

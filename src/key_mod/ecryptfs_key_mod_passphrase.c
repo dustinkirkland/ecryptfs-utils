@@ -60,9 +60,9 @@ static int tf_pass_file(struct ecryptfs_ctx *ctx, struct param_node *node,
 	if (strcmp(node->mnt_opt_names[0], "passphrase_passwd_file") == 0) {
 		fd = open(node->val, O_RDONLY);
 		if (fd == -1) {
+			rc = -errno;
 			syslog(LOG_ERR, "%s: Error whilst attempting to open "
 			       "[%s]; errno = [%m]\n", __FUNCTION__, node->val);
-			rc = MOUNT_ERROR;
 			goto out;
 		}
 	} else if (strcmp(node->mnt_opt_names[0], "passphrase_passwd_fd") == 0) {
@@ -74,13 +74,12 @@ static int tf_pass_file(struct ecryptfs_ctx *ctx, struct param_node *node,
 		goto out;
 	}
 	rc = parse_options_file(fd, file_head);
+	close(fd);
 	if (rc) {
 		syslog(LOG_ERR, "%s: Error parsing file for passwd; "
 		       "rc = [%d]\n", __FUNCTION__, rc);
-		rc = MOUNT_ERROR;
 		goto out;
 	}
-	close(fd);
 	walker = file_head->next;
 	while (walker) {
 		if (strcmp(walker->name, "passphrase_passwd") == 0
