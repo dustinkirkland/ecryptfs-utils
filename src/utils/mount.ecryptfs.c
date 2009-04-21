@@ -625,6 +625,8 @@ int main(int argc, char **argv)
 			&ctx, &mnt_params, version, opts_str,
 			ECRYPTFS_ASK_FOR_ALL_MOUNT_OPTIONS);
 		if (rc) {
+			if (rc > 0) 
+				rc = -EINVAL;
 			printf("Error attempting to evaluate mount options: "
 			       "[%d] %s\nCheck your system logs for details "
 			       "on why this happened.\nTry updating your "
