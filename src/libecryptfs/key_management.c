@@ -231,7 +231,7 @@ int ecryptfs_add_passphrase_key_to_keyring(char *auth_tok_sig, char *passphrase,
 		goto out;
 	}
 	rc = ecryptfs_add_auth_tok_to_keyring(auth_tok, auth_tok_sig);
-	if (rc) {
+	if (rc < 0) {
 		syslog(LOG_ERR, "%s: Error adding auth tok with sig [%s] to "
 		       "the keyring; rc = [%d]\n", __FUNCTION__, auth_tok_sig,
 		       rc);
