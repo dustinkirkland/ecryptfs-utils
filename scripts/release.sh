@@ -26,9 +26,9 @@ done
 curver=`head -n1 debian/changelog | sed "s/^.*(//" | sed "s/).*$//"`
 bzr tag --delete $curver || true
 bzr tag $curver
-ver=`expr $curver + 1`
-dch -v "$ver" "UNRELEASED"
-sed -i "s/$ver) jaunty;/$ver) unreleased;/" debian/changelog
+#ver=`expr $curver + 1`
+#dch -v "$ver" "UNRELEASED"
+#sed -i "s/$ver) jaunty;/$ver) unreleased;/" debian/changelog
 
 
 gpg --armor --sign --detach-sig ../ecryptfs-utils_*.orig.tar.gz
