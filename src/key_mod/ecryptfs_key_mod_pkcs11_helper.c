@@ -872,7 +872,7 @@ static int ecryptfs_pkcs11h_process_key(struct pkcs11h_subgraph_key_ctx *subgrap
 		goto out;
 	}
 	if ((rc = asprintf(&sig_mnt_opt, "ecryptfs_sig=%s", sig)) == -1) {
-		rc = MOUNT_ERROR;
+		rc = -ENOMEM;
 		goto out;
 	}
 	rc = 0;
@@ -975,7 +975,7 @@ static int tf_pkcs11h_provider_name(struct ecryptfs_ctx *ctx, struct param_node 
 	subgraph_provider_ctx = (struct pkcs11h_subgraph_provider_ctx *)(*foo);
 	if ((rc = asprintf(&subgraph_provider_ctx->name, "%s", node->val))
 	    == -1) {
-		rc = MOUNT_ERROR;
+		rc = -ENOMEM;
 		goto out;
 	}
 	rc = DEFAULT_TOK;
@@ -993,7 +993,7 @@ static int tf_pkcs11h_provider_library(struct ecryptfs_ctx *ctx, struct param_no
 	subgraph_provider_ctx = (struct pkcs11h_subgraph_provider_ctx *)(*foo);
 	if ((rc = asprintf(&subgraph_provider_ctx->library, "%s", node->val))
 	    == -1) {
-		rc = MOUNT_ERROR;
+		rc = -ENOMEM;
 		goto out;
 	}
 	rc = DEFAULT_TOK;
@@ -1085,7 +1085,7 @@ static int tf_pkcs11h_key_id(struct ecryptfs_ctx *ctx, struct param_node *node,
 	subgraph_key_ctx = (struct pkcs11h_subgraph_key_ctx *)(*foo);
 	if ((rc = asprintf(&subgraph_key_ctx->pkcs11h_data.serialized_id, "%s", node->val))
 	    == -1) {
-		rc = MOUNT_ERROR;
+		rc = -ENOMEM;
 		goto out;
 	}
 	rc = DEFAULT_TOK;
@@ -1103,7 +1103,7 @@ static int tf_pkcs11h_key_passwd(struct ecryptfs_ctx *ctx, struct param_node *no
 	subgraph_key_ctx = (struct pkcs11h_subgraph_key_ctx *)(*foo);
 	if ((rc = asprintf(&subgraph_key_ctx->pkcs11h_data.passphrase, "%s",
 			   node->val)) == -1) {
-		rc = MOUNT_ERROR;
+		rc = -ENOMEM;
 		goto out;
 	}
 	node->val = NULL;
