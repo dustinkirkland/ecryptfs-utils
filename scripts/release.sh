@@ -3,6 +3,14 @@
 # Create and sign a release tarball for upload to
 # https://launchpad.net/ecryptfs/trunk
 
+error() {
+	echo "ERROR: $@"
+	exit 1
+}
+
+head -n1 debian/changelog | grep "unreleased" || error "This version must be 'unreleased'"
+
+
 rm -f ./ecryptfs-utils*.tar.*
 ./scripts/bootstrap.sh
 ./configure --prefix=/usr
@@ -14,6 +22,14 @@ for i in `ls ecryptfs-utils-*.tar.gz`; do
 done
 
 [ "$1" = "--nosign" ] && exit 0
+
+curver=`head -n1 debian/changelog | sed "s/^.*(//" | sed "s/).*$//"`
+bzr tag --delete $curver || true
+bzr tag $curver
+ver=`expr $curver + 1`
+dch -v "$ver" "UNRELEASED"
+sed -i "s/$ver) jaunty;/$ver) unreleased;/" debian/changelog
+
 
 gpg --armor --sign --detach-sig ../ecryptfs-utils_*.orig.tar.gz
 echo
