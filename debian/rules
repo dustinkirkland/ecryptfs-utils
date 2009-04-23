@@ -56,8 +56,8 @@ install: build
 	$(MAKE) DESTDIR=$(CURDIR)/debian/tmp install
 	install -m 644 -D $(CURDIR)/debian/ecryptfs-utils.pam-auth-update $(CURDIR)/debian/tmp/usr/share/pam-configs/ecryptfs-utils
 
-	mv debian/tmp/usr/share/ecryptfs-* debian/ecryptfs-utils/usr/share/ecryptfs-utils
-	mv debian/tmp/usr/share/doc/ecryptfs-utils/ecryptfs-mount-private.txt debian/ecryptfs-utils/usr/share/ecryptfs-utils/ecryptfs-mount-private.txt
+	#mv debian/tmp/usr/share/ecryptfs-* debian/ecryptfs-utils/usr/share/ecryptfs-utils
+	#mv debian/tmp/usr/share/doc/ecryptfs-utils/ecryptfs-mount-private.txt debian/ecryptfs-utils/usr/share/ecryptfs-utils/ecryptfs-mount-private.txt
 
 	chmod 4755 debian/tmp/sbin/mount.ecryptfs_private
 

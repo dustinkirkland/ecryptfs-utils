@@ -1,4 +1,13 @@
-ecryptfs-utils (74) unreleased; urgency=low
+ecryptfs-utils (75) unreleased; urgency=low
+
+  [ Dustin Kirkland & anrxc ]
+  * doc/Makefile.am, src/desktop/Makefile.am: fix automake installation from
+    /usr/share to /usr/share/ecryptfs-utils
+  * debian/rules: drop hackery that moves stuff /usr/share/ecryptfs-utils
+
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 23 Apr 2009 15:06:26 -0500
+
+ecryptfs-utils (74) released; urgency=low
 
   [ Michal Hlavinka ]
   * Changes for RH/Fedora release
