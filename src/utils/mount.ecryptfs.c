@@ -212,6 +212,7 @@ char *parameters_to_scrub[] = {
 	"sig",
 	"no_sig_cache",
 	"verbose",
+	"verbosity",
 	"ecryptfs_enable_filename_crypto",
 	NULL
 };
