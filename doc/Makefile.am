@@ -18,4 +18,4 @@ else
 dist_noinst_DATA += ecryptfs-pkcs11-helper-doc.txt
 endif
 
-dist_pkgdata_DATA += ecryptfs-mount-private.txt
+dist_pkgdata_DATA = ecryptfs-mount-private.txt
