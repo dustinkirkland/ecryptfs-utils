@@ -268,6 +268,7 @@ static int tf_gpg_keysig(struct ecryptfs_ctx *ctx, struct param_node *node,
 			subkey = subkey->next;
 		}
 	}
+	rc = 0;
 out:
 	return rc;
 }

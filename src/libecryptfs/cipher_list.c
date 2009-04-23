@@ -178,6 +178,7 @@ int ecryptfs_get_loaded_ciphers(struct ecryptfs_cipher_elem *cipher_list_head)
 			rc = -ENOMEM;
 			goto out;
 	}
+	rc = 0;
 	if (!(crypto_file = fopen(crypto_full_path, "r"))) {
 		syslog(LOG_WARNING, "%s: Failed to open [%s] for reading; This "
 		       "is not a problem if the Kernel Crypto API is built as "

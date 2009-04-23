@@ -566,7 +566,7 @@ static int tf_ssl_passwd(struct ecryptfs_ctx *ctx, struct param_node *node,
 	subgraph_ctx = (struct ecryptfs_subgraph_ctx *)(*foo);
 	if ((rc = asprintf(&subgraph_ctx->openssl_data.passphrase, "%s",
 			   node->val)) == -1) {
-		rc = MOUNT_ERROR;
+		rc = -ENOMEM;
 		goto out;
 	}
 	free(node->val);
@@ -669,9 +669,10 @@ static int tf_ecryptfs_openssl_gen_key_param_node_keyfile(
 	subgraph_ctx = (struct ecryptfs_subgraph_ctx *)(*foo);
 	if ((rc = asprintf(&subgraph_ctx->openssl_data.path, "%s",
 			   node->val)) == -1) {
-		rc = MOUNT_ERROR;
+		rc = -ENOMEM;
 		goto out;
 	}
+	rc = DEFAULT_TOK;
 out:
 	return rc;
 }
@@ -686,7 +687,7 @@ static int tf_ecryptfs_openssl_gen_key_param_node_passphrase(
 	subgraph_ctx = (struct ecryptfs_subgraph_ctx *)(*foo);
 	if ((rc = asprintf(&subgraph_ctx->openssl_data.passphrase, "%s",
 			   node->val)) == -1) {
-		rc = MOUNT_ERROR;
+		rc = -ENOMEM;
 		goto out;
 	}
 	if ((rc = ecryptfs_openssl_generate_key(&subgraph_ctx->openssl_data))) {

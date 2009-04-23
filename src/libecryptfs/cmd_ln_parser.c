@@ -125,6 +125,7 @@ int ecryptfs_nvp_list_union(struct ecryptfs_name_val_pair *dst,
 					rc = -ENOMEM;
 					goto out;
 				}
+				rc = 0;
 			}
 next_dst_cursor:
 			prev_dst_cursor = dst_cursor;
