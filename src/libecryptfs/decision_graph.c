@@ -372,7 +372,7 @@ static int alloc_and_get_val(struct ecryptfs_ctx *ctx, struct param_node *node,
 	int val;
 	int value_retrieved;
 	int i;
-	int rc;
+	int rc = 0;
 	int tries = 0;
 
 	if (ecryptfs_verbosity)

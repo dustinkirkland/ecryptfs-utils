@@ -6,7 +6,11 @@ ecryptfs-utils (75) unreleased; urgency=low
   * debian/rules: drop hackery that moves stuff /usr/share/ecryptfs-utils
   * src/utils/mount.ecryptfs_private.c: update inline documentation
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 30 Apr 2009 15:29:43 -0500
+  [ Michal Hlavinka ]
+  * decision_graph.c: fix uninitialized return code
+  * mount.ecryptfs.c: don't pass verbosity option to kernel
+
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 30 Apr 2009 15:31:43 -0500
 
 ecryptfs-utils (74) released; urgency=low
 
