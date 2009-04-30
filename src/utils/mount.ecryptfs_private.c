@@ -541,9 +541,7 @@ int main(int argc, char *argv[]) {
 			}
 		} else {
 			perror("mount");
-			/* Drop privileges and decrement the counter, since
- 			 * since the mount did not succeed
- 			 */
+			/* Drop privileges since the mount did not succeed */
 			if (setreuid(uid, uid) < 0) {
 				perror("setreuid");
 			}

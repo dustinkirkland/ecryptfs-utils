@@ -4,8 +4,9 @@ ecryptfs-utils (75) unreleased; urgency=low
   * doc/Makefile.am, src/desktop/Makefile.am: fix automake installation from
     /usr/share to /usr/share/ecryptfs-utils
   * debian/rules: drop hackery that moves stuff /usr/share/ecryptfs-utils
+  * src/utils/mount.ecryptfs_private.c: update inline documentation
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 23 Apr 2009 15:06:26 -0500
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 30 Apr 2009 15:29:43 -0500
 
 ecryptfs-utils (74) released; urgency=low
 
