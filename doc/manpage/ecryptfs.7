@@ -34,7 +34,7 @@ Allows for non-eCryptfs files to be read and written from within an eCryptfs mou
 Do not check the mount key signature against the values in the user's ~/.ecryptfs/sig-cache.txt file. This is useful for such things as non-interactive setup scripts, so that the mount helper does not stop and prompt the user in the event that the key sig is not in the cache.
 .TP
 .B ecryptfs_encrypted_view
-This option, when set, will have eCryptfs return the encrypted versions of the lower files, rather than decrypt encrypted files and return the decrypted data from the lower files. This options is useful for such things as backup utilities.
+This option provides a unified encrypted file format of the eCryptfs files in the lower mount point.  Currently, it is only useful if the lower mount point contains files with the metadata stored in the extended attribute.  Upon a file read in the upper mount point, the encrypted version of the file will be presented with the metadata in the file header instead of the xattr.  Files cannot be opened for writing when this option is enabled. 
 .TP
 .B ecryptfs_xattr
 Store the metadata in the extended attribute of the lower files rather than the header region of the lower files.
