@@ -5,12 +5,20 @@ ecryptfs-utils (75) unreleased; urgency=low
     /usr/share to /usr/share/ecryptfs-utils
   * debian/rules: drop hackery that moves stuff /usr/share/ecryptfs-utils
   * src/utils/mount.ecryptfs_private.c: update inline documentation
+  * debian/changelog, src/libecryptfs/cmd_ln_parser.c,
+    src/libecryptfs/key_management.c, src/pam_ecryptfs/pam_ecryptfs.c,
+    src/utils/ecryptfs_add_passphrase.c,
+    src/utils/ecryptfs_insert_wrapped_passphrase_into_keyring.c,
+    src/utils/ecryptfs_rewrap_passphrase.c,
+    src/utils/ecryptfs_unwrap_passphrase.c,
+    src/utils/ecryptfs_wrap_passphrase.c: silence some useless logging,
+    LP: #313330
 
   [ Michal Hlavinka ]
   * decision_graph.c: fix uninitialized return code
   * mount.ecryptfs.c: don't pass verbosity option to kernel
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 30 Apr 2009 15:31:43 -0500
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 30 Apr 2009 16:57:09 -0500
 
 ecryptfs-utils (74) released; urgency=low
 

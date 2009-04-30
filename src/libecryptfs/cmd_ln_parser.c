@@ -200,7 +200,7 @@ ecryptfs_parse_rc_file_fullpath(struct ecryptfs_name_val_pair *nvp_list_head,
 
 	fd = open(fullpath, O_RDONLY);
 	if (fd == -1) {
-		rc = -EIO;
+		rc = -errno;
 		goto out;
 	}
 	rc = parse_options_file(fd, nvp_list_head);

@@ -166,8 +166,6 @@ int ecryptfs_add_auth_tok_to_keyring(struct ecryptfs_auth_tok *auth_tok,
 	rc = (int)keyctl_search(KEY_SPEC_USER_KEYRING, "user", auth_tok_sig, 0);
 	if (rc != -1) { /* we already have this key in keyring; we're done */
 		rc = 1;
-		syslog(LOG_WARNING, "Passphrase key already in keyring;"
-		       " rc = [%d]\n", rc);
 		goto out;
 	} else if ((rc == -1) && (errno != ENOKEY)) {
 		int errnum = errno;
@@ -765,7 +763,7 @@ int ecryptfs_read_salt_hex_from_rc(char *salt_hex)
 	memset(&nvp_list_head, 0, sizeof(struct ecryptfs_name_val_pair));
 	rc = ecryptfs_parse_rc_file(&nvp_list_head);
 	if (rc) {
-		if (rc != -EIO) {
+		if (rc != -ENOENT) {
 			syslog(LOG_WARNING,
 				"Error attempting to parse .ecryptfsrc file; "
 				"rc = [%d]", rc);

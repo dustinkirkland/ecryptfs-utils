@@ -68,7 +68,6 @@ int main(int argc, char *argv[])
 	file = argv[1];
 	rc = ecryptfs_read_salt_hex_from_rc(salt_hex);
 	if (rc) {
-		fprintf(stderr, "%s\n", ECRYPTFS_WARN_DEFAULT_SALT);
 		from_hex(salt, ECRYPTFS_DEFAULT_SALT_HEX, ECRYPTFS_SALT_SIZE);
 	} else
 		from_hex(salt, salt_hex, ECRYPTFS_SALT_SIZE);
