@@ -581,6 +581,7 @@ int ecryptfs_unwrap_passphrase(char *decrypted_passphrase, char *filename,
 int ecryptfs_insert_wrapped_passphrase_into_keyring(
 	char *auth_tok_sig, char *filename, char *wrapping_passphrase,
 	char *salt);
+char *ecryptfs_get_wrapped_passphrase_filename();
 struct ecryptfs_key_mod_ops *passphrase_get_key_mod_ops(void);
 int ecryptfs_validate_keyring(void);
 #define ECRYPTFS_SHM_KEY 0x3c81b7f5

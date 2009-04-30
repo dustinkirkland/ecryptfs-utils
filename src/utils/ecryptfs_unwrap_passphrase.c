@@ -42,18 +42,30 @@ int main(int argc, char *argv[])
 	char *wrapping_passphrase;
 	char salt[ECRYPTFS_SALT_SIZE];
 	char salt_hex[ECRYPTFS_SALT_SIZE_HEX];
+	struct passwd *pwd;
 	int rc = 0;
 
-	if (argc == 2) {
+	if (argc == 1) {
+		/* interactive, and try default wrapped-passphrase file */
+		file = ecryptfs_get_wrapped_passphrase_filename();
+		if (file == NULL) {
+			usage();
+			goto out;
+		}
+		wrapping_passphrase = ecryptfs_get_passphrase("Passphrase");
+	} else if (argc == 2) {
 		/* interactive mode */
+		file = argv[1];
 		wrapping_passphrase = ecryptfs_get_passphrase("Passphrase");
 	} else if (argc == 3 &&
 		   strlen(argv[2]) == 1 && strncmp(argv[2], "-", 1) == 0) {
 		/* stdin mode */
+		file = argv[1];
 		wrapping_passphrase = ecryptfs_get_passphrase(NULL);
 	} else if (argc == 3 &&
 		   (strlen(argv[2]) != 1 || strncmp(argv[2], "-", 1) == 0)) {
 		/* argument mode */
+		file = argv[1];
 		wrapping_passphrase = argv[2];
 	} else {
 		usage();
@@ -65,7 +77,6 @@ int main(int argc, char *argv[])
 		goto out;
 	}
 
-	file = argv[1];
 	rc = ecryptfs_read_salt_hex_from_rc(salt_hex);
 	if (rc) {
 		from_hex(salt, ECRYPTFS_DEFAULT_SALT_HEX, ECRYPTFS_SALT_SIZE);

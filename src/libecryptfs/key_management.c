@@ -38,6 +38,7 @@
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <pwd.h>
 #include "config.h"
 #include "../include/ecryptfs.h"
 
@@ -924,4 +925,24 @@ char *ecryptfs_get_passphrase(char *prompt) {
 		return NULL;
 	}
 	return passphrase;
+}
+
+char *ecryptfs_get_wrapped_passphrase_filename() {
+	struct passwd *pwd = NULL;
+	struct stat s;
+	char *filename = NULL;
+	if ((pwd = getpwuid(getuid())) == NULL) {
+		perror("getpwuid");
+		return NULL;
+	}
+	if ((asprintf(&filename,
+	    "%s/.ecryptfs/wrapped-passphrase", pwd->pw_dir) < 0)) {
+		perror("asprintf");
+		return NULL;
+	}
+	if (stat(filename, &s) != 0) {
+		perror("stat");
+		return NULL;
+	}
+	return filename;
 }
