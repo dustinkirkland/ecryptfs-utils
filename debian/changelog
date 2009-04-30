@@ -18,6 +18,8 @@ ecryptfs-utils (75) unreleased; urgency=low
     utils/ecryptfs_unwrap_passphrase.c: if the file to unwrap is
     unspecified, try to use the default ~/.ecryptfs/wrapped-passphrase
     before bailing out, LP: #359997
+  * src/utils/ecryptfs-setup-private: unix_chkpwd is not always present
+    (eg, gentoo), LP: #332341
 
   [ Michal Hlavinka ]
   * decision_graph.c: fix uninitialized return code
@@ -27,7 +29,7 @@ ecryptfs-utils (75) unreleased; urgency=low
   * src/key_mod/ecryptfs_key_mod_gpg.c,
     src/key_mod/ecryptfs_key_mod_pkcs11_helper.c: fix implicit declations
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 30 Apr 2009 18:07:25 -0500
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 30 Apr 2009 18:24:03 -0500
 
 ecryptfs-utils (74) released; urgency=low
 

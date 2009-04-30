@@ -240,7 +240,9 @@ if [ -z "$LOGINPASS" ] && [ "$BOOTSTRAP" != "1" ]; then
 		LOGINPASS=`head -n1`
 		stty $stty_orig
 		echo
-		if [ $WRAPPING_PASS != "LOGIN" ]; then
+		if [ $WRAPPING_PASS != "LOGIN" -o ! -x /sbin/unix_chkpwd ]; then
+			# If we can't check the accuracy of the user's entered
+			# passphrase, force them to type it twice (matching)
 			stty -echo
 			echo -n "$MESSAGE (again): "
 			LOGINPASS2=`head -n1`
