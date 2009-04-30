@@ -317,6 +317,7 @@ ecryptfs_tspi_encrypt(char *to, size_t *to_size, char *from, size_t from_size,
 	struct tspi_data tspi_data;
 	struct ecryptfs_tspi_connect_ticket *ticket;
 	int rc = 0;
+	BYTE wellknown[] = TSS_WELL_KNOWN_SECRET;
 
 	pthread_mutex_lock(&encrypt_lock);
 	(*to_size) = 0;
@@ -345,8 +346,9 @@ ecryptfs_tspi_encrypt(char *to, size_t *to_size, char *from, size_t from_size,
 		rc = -EIO;
 		goto out;
 	}
-	if ((result = Tspi_Policy_SetSecret(h_srk_policy, TSS_SECRET_MODE_PLAIN,
-					    0, NULL))
+	if ((result = Tspi_Policy_SetSecret(h_srk_policy,
+					    TSS_SECRET_MODE_SHA1,
+					    sizeof(wellknown), wellknown))
 	    != TSS_SUCCESS) {
 		syslog(LOG_ERR, "Tspi_Policy_SetSecret failed: [%s]\n",
 		       Trspi_Error_String(result));
@@ -415,6 +417,7 @@ ecryptfs_tspi_decrypt(char *to, size_t *to_size, char *from, size_t from_size,
 	struct ecryptfs_tspi_connect_ticket *ticket;
 	TSS_RESULT result;
 	int rc = 0;
+	BYTE wellknown[] = TSS_WELL_KNOWN_SECRET;
 
 	pthread_mutex_lock(&decrypt_lock);
 	ecryptfs_tspi_deserialize(&tspi_data, blob);
@@ -442,7 +445,8 @@ ecryptfs_tspi_decrypt(char *to, size_t *to_size, char *from, size_t from_size,
 		goto out;
 	}
 	if ((result = Tspi_Policy_SetSecret(h_srk_policy,
-					    TSS_SECRET_MODE_PLAIN, 0, NULL))
+					    TSS_SECRET_MODE_SHA1,
+					    sizeof(wellknown), wellknown))
 	    != TSS_SUCCESS) {
 		syslog(LOG_ERR, "Tspi_Policy_SetSecret failed: [%s]\n",
 		       Trspi_Error_String(result));

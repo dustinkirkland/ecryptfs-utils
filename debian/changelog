@@ -29,7 +29,13 @@ ecryptfs-utils (75) unreleased; urgency=low
   * src/key_mod/ecryptfs_key_mod_gpg.c,
     src/key_mod/ecryptfs_key_mod_pkcs11_helper.c: fix implicit declations
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 30 Apr 2009 18:24:03 -0500
+  [ Frédéric Guihéry ]
+  * key_mod/ecryptfs_key_mod_tspi.c, utils/ecryptfs_generate_tpm_key.c:
+    the SRK password should be set to 20 bytes of NULL (wellknown
+    password), in order for different tools to request key protection
+    with the Storage Root Key
+
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 30 Apr 2009 15:40:56 -0500
 
 ecryptfs-utils (74) released; urgency=low
 

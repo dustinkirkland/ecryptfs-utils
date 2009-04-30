@@ -89,6 +89,7 @@ int main(int argc, char **argv)
 	BYTE *pNumPcrs, *rgbPcrValue, *uuidString, *pcrsSelectedValues[24];
 	int i, c, *pcrsSelected = NULL, numPcrsSelected = 0;
 	TSS_UUID *uuid;
+	BYTE wellknown[] = TSS_WELL_KNOWN_SECRET;
 
 	while (1) {
 		c = getopt(argc, argv, "p:");
@@ -193,7 +194,9 @@ int main(int argc, char **argv)
                 Tspi_Context_Close(hContext);
                 return result;
         }
-	result = Tspi_Policy_SetSecret(hPolicy, TSS_SECRET_MODE_PLAIN, 0, NULL);
+
+	result = Tspi_Policy_SetSecret(hPolicy, TSS_SECRET_MODE_SHA1,
+				       sizeof(wellknown), wellknown);
         if (result != TSS_SUCCESS) {
                 PRINT_TSS_ERR("Tspi_GetPolicyObject", result);
                 Tspi_Context_Close(hContext);
