@@ -18,6 +18,7 @@
  * 02111-1307, USA.
  */
 
+#include "config.h"
 #include <fcntl.h>
 #include <pwd.h>
 #include <stdio.h>
@@ -29,7 +30,6 @@
 #include <gpgme.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include "config.h"
 #include "../include/ecryptfs.h"
 #include "../include/decision_graph.h"
 

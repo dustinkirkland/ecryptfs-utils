@@ -20,6 +20,7 @@
  * 02111-1307, USA.
  */
 
+#include "config.h"
 #include <fcntl.h>
 #include <pwd.h>
 #include <stdio.h>
@@ -28,11 +29,12 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <openssl/err.h>
+#include <openssl/pem.h>
 #include <openssl/x509.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <pkcs11-helper-1.0/pkcs11h-certificate.h>
-#include "config.h"
 #include "../include/ecryptfs.h"
 #include "../include/decision_graph.h"
 
