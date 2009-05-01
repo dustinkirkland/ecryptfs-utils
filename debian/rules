@@ -2,7 +2,6 @@
 
 include /usr/share/dpatch/dpatch.make
 
-DEB_BUILD_ARCH		?= $(shell dpkg-architecture -qDEB_BUILD_ARCH)
 DEB_HOST_GNU_TYPE	?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
 DEB_BUILD_GNU_TYPE	?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
 
@@ -13,6 +12,8 @@ ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
 else
 	CFLAGS += -O2
 endif
+
+DEB_BUILD_ARCH		?= $(shell dpkg-architecture -qDEB_BUILD_ARCH)
 
 ifneq ($(DEB_BUILD_ARCH),s390)
 	TPMFLAGS = --enable-opencryptoki
@@ -31,11 +32,11 @@ clean: unpatch
 config.status: configure patch
 	dh_testdir
 
-ifneq "$(wildcard /usr/share/misc/config.sub)" ""
-	cp -f /usr/share/misc/config.sub config.sub
-endif
 ifneq "$(wildcard /usr/share/misc/config.guess)" ""
 	cp -f /usr/share/misc/config.guess config.guess
+endif
+ifneq "$(wildcard /usr/share/misc/config.sub)" ""
+	cp -f /usr/share/misc/config.sub config.sub
 endif
 	CFLAGS="$(CFLAGS)" ./configure --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) --prefix=/usr --libdir=\$${prefix}/lib --mandir=\$${prefix}/share/man --enable-static --enable-gpg --disable-gui --enable-pam --disable-openssl --disable-pkcs11-helper --disable-tspi $(TPMFLAGS)
 
@@ -55,9 +56,6 @@ install: build
 
 	$(MAKE) DESTDIR=$(CURDIR)/debian/tmp install
 	install -m 644 -D $(CURDIR)/debian/ecryptfs-utils.pam-auth-update $(CURDIR)/debian/tmp/usr/share/pam-configs/ecryptfs-utils
-
-	#mv debian/tmp/usr/share/ecryptfs-* debian/ecryptfs-utils/usr/share/ecryptfs-utils
-	#mv debian/tmp/usr/share/doc/ecryptfs-utils/ecryptfs-mount-private.txt debian/ecryptfs-utils/usr/share/ecryptfs-utils/ecryptfs-mount-private.txt
 
 	chmod 4755 debian/tmp/sbin/mount.ecryptfs_private
 

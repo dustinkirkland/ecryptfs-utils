@@ -1,8 +1,6 @@
 ecryptfs-utils (75) unreleased; urgency=low
 
-  [ Dustin Kirkland & anrxc ]
-  * doc/Makefile.am, src/desktop/Makefile.am: fix automake installation from
-    /usr/share to /usr/share/ecryptfs-utils
+  [ Dustin Kirkland ]
   * debian/rules: drop hackery that moves stuff /usr/share/ecryptfs-utils
   * src/utils/mount.ecryptfs_private.c: update inline documentation
   * debian/changelog, src/libecryptfs/cmd_ln_parser.c,
@@ -21,9 +19,21 @@ ecryptfs-utils (75) unreleased; urgency=low
   * src/utils/ecryptfs-setup-private: unix_chkpwd is not always present
     (eg, gentoo), LP: #332341
 
+  [ Tyler Hicks ]
+  * doc/manpage/ecryptfs.7: ecryptfs_encrypted_view option desription
+    was wrong LP: #328761
+
   [ Michal Hlavinka ]
   * decision_graph.c: fix uninitialized return code
   * mount.ecryptfs.c: don't pass verbosity option to kernel
+
+  [ anrxc & Dustin Kirkland ]
+  * doc/Makefile.am, src/desktop/Makefile.am: fix automake installation from
+    /usr/share to /usr/share/ecryptfs-utils
+
+  [ Daniel Baumann & Dustin Kirkland ]
+  * debian/rules, debian/control: sync differences between Debian & Ubuntu's
+    packaging
 
   [ Arfrever Frehtes Taifersar Arahesis ]
   * src/key_mod/ecryptfs_key_mod_gpg.c,
@@ -35,11 +45,7 @@ ecryptfs-utils (75) unreleased; urgency=low
     password), in order for different tools to request key protection
     with the Storage Root Key
 
-  [ Tyler Hicks ]
-  * doc/manpage/ecryptfs.7: ecryptfs_encrypted_view option desription
-    was wrong LP: #328761
-
- -- Dustin Kirkland <kirkland@ubuntu.com>  Fri, 01 May 2009 10:03:41 -0500
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Fri, 01 May 2009 15:07:38 -0500
 
 ecryptfs-utils (74) released; urgency=low
 
