@@ -7,5 +7,5 @@ mv ecryptfs-utils*.orig.tar.gz* ubuntu
 cd ubuntu
 tar zxvf *.orig.tar.gz
 cd ecryptfs-utils*/
-cp -a ../../ecryptfs/debian .
+cp -a ../../upstream/debian .
 debuild -uc -us
