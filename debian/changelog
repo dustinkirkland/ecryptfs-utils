@@ -35,7 +35,11 @@ ecryptfs-utils (75) unreleased; urgency=low
     password), in order for different tools to request key protection
     with the Storage Root Key
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 30 Apr 2009 15:40:56 -0500
+  [ Tyler Hicks ]
+  * doc/manpage/ecryptfs.7: ecryptfs_encrypted_view option desription
+    was wrong LP: #328761
+
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Fri, 01 May 2009 10:03:41 -0500
 
 ecryptfs-utils (74) released; urgency=low
 
