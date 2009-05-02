@@ -18,6 +18,7 @@
  * 02111-1307, USA.
  */
 
+#include "config.h"
 #include <errno.h>
 #ifdef ENABLE_NSS
 #include <nss.h>
@@ -39,7 +40,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <pwd.h>
-#include "config.h"
 #include "../include/ecryptfs.h"
 
 #ifndef ENOKEY

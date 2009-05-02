@@ -1,8 +1,12 @@
 ecryptfs-utils (76) unreleased; urgency=low
 
-  * 
+  [ Arfrever Frehtes Taifersar Arahesis ]
+  * key_mod/ecryptfs_key_mod_gpg.c,
+    key_mod/ecryptfs_key_mod_pkcs11_helper.c,
+    libecryptfs/key_management.c, utils/ecryptfs_unwrap_passphrase.c:
+    Fix warnings, initialize a few variables, drop unused ones
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Sat, 02 May 2009 12:39:28 -0500
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Sat, 02 May 2009 14:38:58 -0500
 
 ecryptfs-utils (75) released; urgency=low
 

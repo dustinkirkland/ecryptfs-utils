@@ -592,7 +592,6 @@ static int pkcs11h_get_id_list (char **list) {
 		char dn[1024] = {0};
 		char serial[1024] = {0};
 		char *ser = NULL;
-		char *ssh_key = NULL;
 		size_t ser_len = 0;
 		int n;
 
@@ -1538,7 +1537,6 @@ static int ecryptfs_pkcs11h_parse_file(struct param_node *param_nodes)
 	struct ecryptfs_ctx *ctx = &_ctx;
 	struct ecryptfs_name_val_pair nvp_head;
 	struct val_node *dummy_mnt_params;
-	uid_t id;
 	struct passwd *pw;
 	char *rcfile_fullpath = NULL;
 	int fd;
@@ -1649,6 +1647,7 @@ static int ecryptfs_pkcs11h_finalize(void)
 	if (pkcs11h_key_param_nodes[PKCS11H_KEY_TOK_ID].suggested_val)
 		free(pkcs11h_key_param_nodes[PKCS11H_KEY_TOK_ID].suggested_val);
 	pkcs11h_terminate ();
+	return 0;
 }
 
 static struct ecryptfs_key_mod_ops ecryptfs_pkcs11h_ops = {

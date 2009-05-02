@@ -131,7 +131,7 @@ out:
 
 int ecryptfs_gpg_encrypt(char *to, int size, char *from, unsigned char *blob)
 {
-	int rc;
+	int rc = 0;
 
 /*	gpg_op_encrypt(...); */
 out:
@@ -251,7 +251,7 @@ static int tf_gpg_keysig(struct ecryptfs_ctx *ctx, struct param_node *node,
 			 struct val_node **head, void **foo)
 {
 	struct key_mod_gpg *key_mod_gpg = (struct key_mod_gpg *)(*foo);
-	int i;
+	int i = 0;
 	gpgme_error_t err;
 	int rc = 0;
 	gpgme_key_t key;
@@ -283,10 +283,7 @@ out:
 
 static int generate_name_val_list(struct ecryptfs_name_val_pair *head)
 {
-	struct stat buf;
-	int i = 0;
 	uid_t id = getuid();
-	struct passwd *pw = getpwuid(id);
 	int rc = 0;
 
 	head->next = NULL;
@@ -304,6 +301,7 @@ static int tf_gpg_exit(struct ecryptfs_ctx *ctx, struct param_node *node,
 		destroy_key_mod_gpg(key_mod_gpg);
 		free(key_mod_gpg);
 	}
+	return 0;
 }
 
 
@@ -312,7 +310,6 @@ static int tf_gpg_enter(struct ecryptfs_ctx *ctx, struct param_node *node,
 {
 	struct key_mod_gpg *key_mod_gpg;
 	gpgme_error_t err;
-	gpgme_keylist_result_t keylist_res;
 	int rc = 0;
 
 	(*foo) = NULL;
@@ -329,7 +326,7 @@ static int tf_gpg_enter(struct ecryptfs_ctx *ctx, struct param_node *node,
 	if ((err = gpgme_op_keylist_start(key_mod_gpg->ctx, "", 0))) {
 		printf("Error attempting to start keylist\n");
 		rc = -EINVAL;
-		gpgme_release(ctx);
+		gpgme_release(key_mod_gpg->ctx);
 		free(key_mod_gpg);
 		goto out;
 	}

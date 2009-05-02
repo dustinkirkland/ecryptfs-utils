@@ -42,7 +42,6 @@ int main(int argc, char *argv[])
 	char *wrapping_passphrase;
 	char salt[ECRYPTFS_SALT_SIZE];
 	char salt_hex[ECRYPTFS_SALT_SIZE_HEX];
-	struct passwd *pwd;
 	int rc = 0;
 
 	if (argc == 1) {
