@@ -1,4 +1,10 @@
-ecryptfs-utils (75) unreleased; urgency=low
+ecryptfs-utils (76) unreleased; urgency=low
+
+  * 
+
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Sat, 02 May 2009 12:39:28 -0500
+
+ecryptfs-utils (75) released; urgency=low
 
   [ Dustin Kirkland ]
   * debian/rules: drop hackery that moves stuff /usr/share/ecryptfs-utils
