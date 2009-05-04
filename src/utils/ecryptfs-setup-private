@@ -188,6 +188,11 @@ else
 	id "$USER" >/dev/null || error "User [$USER] does not exist"
 fi
 
+# Check if user is member of ecryptfs group
+if ! groups "$USER" | sed  -e 's| |\n|g' | grep -n 'ecryptfs$'; then
+       error "User needs to be a member of ecryptfs group"
+fi
+
 # Obtain the user's home directory
 HOME=`getent passwd "$USER" | awk -F: '{print $6}'`
 if [ ! -d "$HOME" ]; then
