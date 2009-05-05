@@ -629,7 +629,7 @@ static int tf_ssl_passwd_file(struct ecryptfs_ctx *ctx, struct param_node *node,
 		walker = walker->next;
 	}
 	if (!walker) {
-		syslog(LOG_ERR, "%s: No passwd option found in file\n",
+		syslog(LOG_ERR, "%s: No openssl_passwd option found in file\n",
 		       __FUNCTION__);
 		rc = MOUNT_ERROR;
 		goto out;
