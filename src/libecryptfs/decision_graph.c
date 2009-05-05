@@ -209,7 +209,14 @@ int do_transition(struct ecryptfs_ctx *ctx, struct param_node **next,
 		  struct ecryptfs_name_val_pair *nvp_head,
 		  struct val_node **mnt_params, void **foo)
 {
+	static int repeated = 0;
+	static struct param_node *lastnode = NULL;
 	int i, rc;
+
+	if (current != lastnode)
+		repeated = 0;
+
+	lastnode = current;
 
 	for (i = 0; i < current->num_transitions; i++) {
 		struct transition_node *tn = &current->tl[i];
@@ -275,11 +282,17 @@ int do_transition(struct ecryptfs_ctx *ctx, struct param_node **next,
 				trans_func_tok_id =
 					tn->trans_func(ctx, current,
 						       mnt_params, foo);
-			if (trans_func_tok_id == WRONG_VALUE && 
-			    (ctx->verbosity || 
-			     (current->flags & STDIN_REQUIRED))) {
-			    *next = current;
-			    return 0;
+			if (trans_func_tok_id == WRONG_VALUE) { 
+				if (ctx->verbosity || 
+				    (current->flags & STDIN_REQUIRED)) {
+						if (++repeated >= 5)
+							return -EINVAL;
+						else {
+							*next = current;
+							return 0;
+						}
+				} else 
+					return -EINVAL;
 			}
 			if (trans_func_tok_id == MOUNT_ERROR || 
 			    trans_func_tok_id < 0)
