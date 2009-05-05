@@ -640,26 +640,32 @@ obtain_value:
 				(&(node->val), prompt,
 				 (node->flags
 				  & ECRYPTFS_PARAM_FLAG_ECHO_INPUT));
+			free(prompt);
 			if (node->val[0] == '\0' && 
 			    (node->flags & ECRYPTFS_NONEMPTY_VALUE_REQUIRED)) {
 				fprintf(stderr,"Wrong input, non-empty value "
 					"required!\n");
 				goto obtain_value;
 			}
-			free(prompt);
 			if (node->flags & VERIFY_VALUE) {
 				rc = asprintf(&verify_prompt, "Verify %s",
 					      node->prompt);
 				if (rc == -1)
-					return MOUNT_ERROR;
+					return -ENOMEM;
 				rc = (ctx->get_string)
 					(&verify, verify_prompt,
 					 (node->flags
 					  & ECRYPTFS_PARAM_FLAG_ECHO_INPUT));
+				free(verify_prompt);
 				if (rc)
 					return MOUNT_ERROR;
-				if (strcmp(verify, node->val))
+				rc = strcmp(verify, node->val); 
+				free(verify);
+				if (rc) {
+					free(node->val);
+					node->val = NULL;
 					goto obtain_value;
+				}
 			}
 			if (node->val[0] == '\0') {
 				free(node->val);
