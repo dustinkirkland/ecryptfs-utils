@@ -779,7 +779,7 @@ int ecryptfs_read_salt_hex_from_rc(char *salt_hex)
 			if (!nvp->value)
 				goto next_iteration;
 			valsize = strlen(nvp->value);
-			if (valsize != ECRYPTFS_SALT_SIZE_HEX);
+			if (valsize != ECRYPTFS_SALT_SIZE_HEX)
 				goto next_iteration;
 			memcpy(salt_hex, nvp->value, ECRYPTFS_SALT_SIZE_HEX);
 			goto out_free;

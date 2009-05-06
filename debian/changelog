@@ -6,7 +6,11 @@ ecryptfs-utils (76) unreleased; urgency=low
     libecryptfs/key_management.c, utils/ecryptfs_unwrap_passphrase.c:
     Fix warnings, initialize a few variables, drop unused ones
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Sat, 02 May 2009 14:38:58 -0500
+  [ David Hicks ]
+  * src/lib/key_management.c: fix stray semicolon that prevents .ecryptfsrc
+    files from working properly, LP: #372709
+
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Wed, 06 May 2009 10:40:17 -0500
 
 ecryptfs-utils (75) released; urgency=low
 
