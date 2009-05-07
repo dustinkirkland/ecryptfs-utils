@@ -107,6 +107,8 @@ static int unlink_keys_from_keyring(const char *mnt_point)
 	rc = get_mount_opt_value(mntent->mnt_opts, "ecryptfs_sig=", &fekek_sig);
 	if (!rc) {
 		fekek_fail = ecryptfs_remove_auth_tok_from_keyring(fekek_sig);
+		if (fekek_fail == ENOKEY)
+			fekek_fail = 0;
 		if (fekek_fail)
 			fprintf(stderr, "Failed to remove fekek with sig [%s] "
 				"from keyring: %s\n", fekek_sig,
@@ -118,6 +120,8 @@ static int unlink_keys_from_keyring(const char *mnt_point)
 				 "ecryptfs_fnek_sig=", &fnek_sig)
 	    && strcmp(fekek_sig, fnek_sig)) {
 		fnek_fail = ecryptfs_remove_auth_tok_from_keyring(fnek_sig);
+		if (fnek_fail == ENOKEY)
+			fnek_fail = 0;
 		if (fnek_fail) {
 			fprintf(stderr, "Failed to remove fnek with sig [%s] "
 				"from keyring: %s\n", fnek_sig, 
