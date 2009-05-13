@@ -27,8 +27,7 @@
 void usage(void)
 {
 	printf("Usage:\n"
-	       "\n"
-	       "ecryptfs-add-passphrase [--fnek]"
+	       "ecryptfs-add-passphrase [--fnek]\n"
 	       "or\n"
 	       "printf \"%%s\" \"passphrase\" | ecryptfs-add-passphrase"
 	       " [--fnek] -\n"
@@ -70,6 +69,7 @@ int main(int argc, char *argv[])
 	if (passphrase == NULL ||
 	    strlen(passphrase) > ECRYPTFS_MAX_PASSWORD_LENGTH) {
 		usage();
+		rc = 1;
 		goto out;
 	}
 	if (fnek == 1) {
@@ -87,12 +87,14 @@ int main(int argc, char *argv[])
 	} else
 		from_hex(salt, salt_hex, ECRYPTFS_SALT_SIZE);
 	if ((rc = ecryptfs_add_passphrase_key_to_keyring(auth_tok_sig_hex,
-							 passphrase, salt))) {
+							 passphrase,
+							 salt)) < 0) {
 		fprintf(stderr, "%s [%d]\n", ECRYPTFS_ERROR_INSERT_KEY, rc);
 		fprintf(stderr, "%s\n", ECRYPTFS_INFO_CHECK_LOG);
 		rc = 1;
 		goto out;
-	}
+	} else
+		rc = 0;
 	auth_tok_sig_hex[ECRYPTFS_SIG_SIZE_HEX] = '\0';
 	printf("Inserted auth tok with sig [%s] into the user session "
 	       "keyring\n", auth_tok_sig_hex);
@@ -105,12 +107,14 @@ int main(int argc, char *argv[])
 	 * been requested that we add the fnek to the keyring too
 	 */
 	if ((rc = ecryptfs_add_passphrase_key_to_keyring(auth_tok_sig_hex,
-				 passphrase, ECRYPTFS_DEFAULT_SALT_FNEK_HEX))) {
+				 passphrase,
+				 ECRYPTFS_DEFAULT_SALT_FNEK_HEX)) < 0) {
 		fprintf(stderr, "%s [%d]\n", ECRYPTFS_ERROR_INSERT_KEY, rc);
 		fprintf(stderr, "%s\n", ECRYPTFS_INFO_CHECK_LOG);
 		rc = 1;
 		goto out;
-	}
+	} else
+		rc = 0;
 	auth_tok_sig_hex[ECRYPTFS_SIG_SIZE_HEX] = '\0';
 	printf("Inserted auth tok with sig [%s] into the user session "
 	       "keyring\n", auth_tok_sig_hex);
