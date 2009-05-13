@@ -550,6 +550,30 @@ out:
 	return rc;
 }
 
+static int limit_key_size(struct val_node **params, 
+			  struct ecryptfs_subgraph_ctx *subgraph_ctx)
+{
+	char *buf;
+	int rc;
+	RSA *rsa = NULL;
+
+	if ((rc=ecryptfs_openssl_read_key(&rsa, 
+				(unsigned char *)subgraph_ctx->key_mod->blob)))
+		return rc;
+	/* 41 is for padding and 3 are for additional data send from 
+	 * kernel (1 for cipher type and 2 for checksum */
+	if ((rc = asprintf(&buf, "max_key_bytes=%d", 
+			   RSA_size(rsa)-41-3)) == -1) {
+		rc = -ENOMEM;
+		goto out;
+	}
+
+	rc = stack_push(params, buf);
+out:	
+	RSA_free(rsa);
+	return rc;
+}
+
 /**
  *
  * 
@@ -575,6 +599,7 @@ static int tf_ssl_passwd(struct ecryptfs_ctx *ctx, struct param_node *node,
 		syslog(LOG_ERR, "Error processing OpenSSL key; rc = [%d]", rc);
 		goto out;
 	}
+	limit_key_size(mnt_params, subgraph_ctx);
 	ecryptfs_openssl_destroy_subgraph_ctx(subgraph_ctx);
 	free(subgraph_ctx);
 	(*foo) = NULL;
@@ -639,6 +664,7 @@ static int tf_ssl_passwd_file(struct ecryptfs_ctx *ctx, struct param_node *node,
 		syslog(LOG_ERR, "Error processing OpenSSL key; rc = [%d]", rc);
 		goto out;
 	}
+	limit_key_size(mnt_params, subgraph_ctx);
 	ecryptfs_openssl_destroy_subgraph_ctx(subgraph_ctx);
 	free(subgraph_ctx);
 	(*foo) = NULL;
