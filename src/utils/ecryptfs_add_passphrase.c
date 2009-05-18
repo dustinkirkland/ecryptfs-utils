@@ -76,6 +76,7 @@ int main(int argc, char *argv[])
 		rc = ecryptfs_get_version(&version);
 		if (rc!=0 || !ecryptfs_supports_filename_encryption(version)) { 
 			fprintf(stderr, "%s\n", ECRYPTFS_ERROR_FNEK_SUPPORT);
+			rc = 1;
 			goto out;
 		}
 	}
