@@ -83,7 +83,7 @@ else
 fi
 
 # Make sure this is swap space
-if ! vol_id "$swap" | grep -qs "ID_FS_TYPE=swap"; then
+if ! blkid "$swap" | grep -qs "TYPE=.*swap"; then
 	error "[$swap] does not appear to be swap space"
 fi
 

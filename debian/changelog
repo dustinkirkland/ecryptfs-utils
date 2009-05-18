@@ -1,5 +1,9 @@
 ecryptfs-utils (76) unreleased; urgency=low
 
+  [ Dustin Kirkland ]
+  * src/utils/ecryptfs-setup-swap: switch from vol_id to blkid,
+    LP: #376486
+
   [ Arfrever Frehtes Taifersar Arahesis ]
   * key_mod/ecryptfs_key_mod_gpg.c,
     key_mod/ecryptfs_key_mod_pkcs11_helper.c,
@@ -10,7 +14,7 @@ ecryptfs-utils (76) unreleased; urgency=low
   * src/lib/key_management.c: fix stray semicolon that prevents .ecryptfsrc
     files from working properly, LP: #372709
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Wed, 06 May 2009 10:40:17 -0500
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Mon, 18 May 2009 19:02:07 +0200
 
 ecryptfs-utils (75) released; urgency=low
 
