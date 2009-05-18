@@ -302,6 +302,8 @@ int do_transition(struct ecryptfs_ctx *ctx, struct param_node **next,
 			else return -EINVAL;
 		}
 	}
+	if (current->num_transitions)
+		return MOUNT_ERROR;
 	return NULL_TOK;
 }
 
