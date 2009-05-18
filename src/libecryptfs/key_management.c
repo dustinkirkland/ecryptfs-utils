@@ -917,7 +917,8 @@ char *ecryptfs_get_passphrase(char *prompt) {
 	ecryptfs_enable_echo(&current_settings);
 	p = strrchr(passphrase, '\n');
 	if (p) *p = '\0';
-	printf("\n");
+	if (prompt != NULL)
+		printf("\n");
 	if (strlen(passphrase) > ECRYPTFS_MAX_PASSWORD_LENGTH) {
 		fprintf(stderr,"Passphrase is too long. Use at most %u "
 			       "characters long passphrase.\n",
