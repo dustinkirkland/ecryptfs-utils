@@ -73,13 +73,14 @@ int main(int argc, char *argv[])
 	} else
 		from_hex(salt, salt_hex, ECRYPTFS_SALT_SIZE);
 	if ((rc = ecryptfs_insert_wrapped_passphrase_into_keyring(
-		     auth_tok_sig_hex, file, wrapping_passphrase, salt))) {
+		     auth_tok_sig_hex, file, wrapping_passphrase, salt)) < 0) {
 		fprintf(stderr, "%s [%d]\n",
 			ECRYPTFS_ERROR_UNWRAP_AND_INSERT, rc);
                 fprintf(stderr, "%s\n", ECRYPTFS_INFO_CHECK_LOG);
 		rc = 1;
 		goto out;
-	}
+	} else
+		rc = 0;
 	auth_tok_sig_hex[ECRYPTFS_SIG_SIZE_HEX] = '\0';
 	printf("Inserted auth tok with sig [%s] into the user session "
 	       "keyring\n", auth_tok_sig_hex);
