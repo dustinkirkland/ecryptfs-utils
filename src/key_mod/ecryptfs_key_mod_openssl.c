@@ -753,7 +753,7 @@ static struct param_node ecryptfs_openssl_gen_key_param_nodes[] = {
 	 .display_opts = NULL,
 	 .default_val = NULL,
 	 .suggested_val = NULL,
-	 .flags = ECRYPTFS_PARAM_FLAG_MASK_OUTPUT,
+	 .flags = ECRYPTFS_PARAM_FLAG_MASK_OUTPUT | VERIFY_VALUE,
 	 .num_transitions = 1,
 	 .tl = {{.val = NULL,
 		 .pretty_val = NULL,
