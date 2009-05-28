@@ -1,12 +1,11 @@
 #!/usr/bin/env python
 #
 #    ecryptapi.py, Copyright 2008 Mike Rooney (https://launchpad.net/~mrooney)
-#    Date: 2008-12-12
-#    Version: 0.3
+#    Date: 2009-5-28
+#    Version: 0.4
 #
-#    This is a graphical GTK utility to manage an encrypted ~/Private
-#    directory, allowing the user to mount and unmount, as well as enable
-#    auto-mounting at login.
+#    This is a python API for interacting with ecryptfs-utils and its
+#    encrypted directories.
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -28,7 +27,7 @@ AUTOUMOUNT_FILE = os.path.expanduser("~/.ecryptfs/auto-umount")
 PRIVATE_LOCATION_FILE = os.path.expanduser("~/.ecryptfs/Private.mnt")
 PRIVATE_LOCATION = os.path.exists(PRIVATE_LOCATION_FILE) and open(PRIVATE_LOCATION_FILE).read().strip()
 
-def setAutoMount(doAuto):
+def set_automount(doAuto):
     """Enable or disable automounting for this user."""
     if doAuto:
         command = "touch %s" % AUTOMOUNT_FILE
@@ -39,11 +38,11 @@ def setAutoMount(doAuto):
 
     return commands.getstatusoutput(command)
 
-def getAutoMount():
+def get_automount():
     """Return whether or not automounting is enabled for this user."""
     return os.path.exists(AUTOMOUNT_FILE)
 
-def setAutoUnmount(doAuto):
+def set_autounmount(doAuto):
     """Enable or disable automounting for this user."""
     if doAuto:
         command = "touch %s" % AUTOUMOUNT_FILE
@@ -52,11 +51,11 @@ def setAutoUnmount(doAuto):
 
     return commands.getstatusoutput(command)
 
-def getAutoUnmount():
+def get_autounmount():
     """Return whether or not automounting is enabled for this user."""
     return os.path.exists(AUTOUMOUNT_FILE)
 
-def setMounted(doMount):
+def set_mounted(doMount):
     """Set the mounted (unencrypted) state of ~/Private."""
     if doMount:
         command = "mount.ecryptfs_private"
@@ -65,7 +64,7 @@ def setMounted(doMount):
 
     return commands.getstatusoutput(command)
 
-def getMounted():
+def get_mounted():
     """Return whether or not ~/Private is mounted (unencrypted)."""
     if PRIVATE_LOCATION:
         mounts = open("/proc/mounts").read()
@@ -73,7 +72,11 @@ def getMounted():
     else:
         return False
 
-def needsSetup():
+def needs_setup():
+    """
+    Return whether or not an ecrypted directory has been set up by ecryptfs
+    for this user, either Home or Private.
+    """
     encryptedHome = False #TODO: implement
     encryptedPrivate = PRIVATE_LOCATION
     return not (encryptedHome or encryptedPrivate)
