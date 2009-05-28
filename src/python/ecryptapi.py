@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
-#    ecryptapi.py, Copyright 2008 Mike Rooney (https://launchpad.net/~mrooney)
-#    Date: 2009-5-28
+#    ecryptapi.py, Copyright 2008, 2009 Michael Rooney <mrooney@ubuntu.com>
+#    Date: 2009-05-28
 #    Version: 0.4
 #
 #    This is a python API for interacting with ecryptfs-utils and its
@@ -52,7 +52,7 @@ def set_autounmount(doAuto):
     return commands.getstatusoutput(command)
 
 def get_autounmount():
-    """Return whether or not automounting is enabled for this user."""
+    """Return whether or not autounmounting is enabled for this user."""
     return os.path.exists(AUTOUMOUNT_FILE)
 
 def set_mounted(doMount):
@@ -74,7 +74,7 @@ def get_mounted():
 
 def needs_setup():
     """
-    Return whether or not an ecrypted directory has been set up by ecryptfs
+    Return whether or not an encrypted directory has been set up by ecryptfs
     for this user, either Home or Private.
     """
     encryptedHome = False #TODO: implement
