@@ -575,10 +575,13 @@ static int alloc_and_get_val(struct ecryptfs_ctx *ctx, struct param_node *node,
 			}
 			prompt[i] = '\0';
 get_value:
-			rc = (ctx->get_string)
-				(&(node->val), prompt,
-				 (node->flags
-				  & ECRYPTFS_PARAM_FLAG_ECHO_INPUT));
+			if ((rc = (ctx->get_string)
+				      (&(node->val), prompt,
+					(node->flags
+					  & ECRYPTFS_PARAM_FLAG_ECHO_INPUT)))) {
+				free(prompt);
+				return rc;
+			}
 			val = atoi(node->val);
 			if (val > 0 && val <= node->num_transitions) {
 				free(node->val);
@@ -643,6 +646,8 @@ obtain_value:
 				 (node->flags
 				  & ECRYPTFS_PARAM_FLAG_ECHO_INPUT));
 			free(prompt);
+			if (rc)
+				goto out;
 			if (node->val[0] == '\0' && 
 			    (node->flags & ECRYPTFS_NONEMPTY_VALUE_REQUIRED)) {
 				fprintf(stderr,"Wrong input, non-empty value "
@@ -660,7 +665,7 @@ obtain_value:
 					  & ECRYPTFS_PARAM_FLAG_ECHO_INPUT));
 				free(verify_prompt);
 				if (rc)
-					return MOUNT_ERROR;
+					return -EIO;
 				rc = strcmp(verify, node->val); 
 				free(verify);
 				if (rc) {

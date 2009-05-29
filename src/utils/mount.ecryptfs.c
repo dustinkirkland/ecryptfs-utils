@@ -299,8 +299,7 @@ static int process_sig(char *auth_tok_sig, struct passwd *pw)
 	char *sig_cache_filename = NULL;
 	char *dot_ecryptfs_dir;
 	int flags;
-	char yesno[4];
-	int i;
+	char *yesno = NULL;
 	int rc;
 	int tries;
 
@@ -331,40 +330,28 @@ static int process_sig(char *auth_tok_sig, struct passwd *pw)
 		       "before. This could mean that you have typed your \n"
 		       "passphrase wrong.\n\n", sig_cache_filename);
 		tries = 0;
+		yesno = NULL;
 		do {
-			rc = 0;
-			printf("Would you like to proceed "
-			       "with the mount (yes/no)? ");
-			i = 0;
-			do {
-				yesno[i++] = mygetchar();
-			} while (yesno[i-1] != '\n' && i < 4);
-			if (yesno[i-1] != '\n') {
-				while (mygetchar() != '\n');
-				yesno[0] = '\0';
-			}
-			yesno[i-1] = '\0';
+			free(yesno);
+			if ((rc = get_string_stdin(&yesno,
+			       "Would you like to proceed with "
+			       "the mount (yes/no)? ",ECRYPTFS_ECHO_ON)))
+				goto out;
 		} while ((rc = strcmp(yesno, "yes")) && strcmp(yesno, "no")
 			 && (++tries < 5));
 		if (rc == 0) {
 			tries = 0;
 			do {
+				free(yesno);
 				printf("Would you like to append sig [%s] to\n"
 				       "[%s] \nin order to avoid this warning "
-				       "in the future (yes/no)? ", auth_tok_sig,
+				       "in the future", auth_tok_sig,
 				       sig_cache_filename);
-				i = 0;
-				do {
-					yesno[i++] = mygetchar();
-				} while (yesno[i-1] != '\n' && i < 4);
-				if (yesno[i-1] != '\n') {
-					while (mygetchar() != '\n');
-					yesno[0] = '\0';
-				}
-				yesno[i-1] = '\0';
+				if ((rc = get_string_stdin(&yesno," (yes/no)? ",
+					ECRYPTFS_ECHO_ON)))
+					goto out;
 			} while ((rc = strcmp(yesno, "yes")) 
 				 && strcmp(yesno, "no") && (++tries < 5));
-
 			if (rc == 0) {
 				if ((rc = ecryptfs_append_sig(
 					    auth_tok_sig,
@@ -395,6 +382,7 @@ static int process_sig(char *auth_tok_sig, struct passwd *pw)
 		}
 	}
 out:
+	free(yesno);
 	free(sig_cache_filename);
 	return rc;
 }
