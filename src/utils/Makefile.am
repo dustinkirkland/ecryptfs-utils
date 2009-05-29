@@ -15,8 +15,9 @@ bin_SCRIPTS = ecryptfs-setup-private \
 	      ecryptfs-setup-swap \
 	      ecryptfs-mount-private \
 	      ecryptfs-umount-private \
-	      ecryptfs-rewrite-file \
-	      ecryptfs-dot-private
+	      ecryptfs-rewrite-file
+bin2dir = $(bindir)
+bin2_DATA = ecryptfs-dot-private
 
 noinst_PROGRAMS=test
 
