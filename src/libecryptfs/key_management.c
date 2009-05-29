@@ -671,7 +671,7 @@ int ecryptfs_insert_wrapped_passphrase_into_keyring(
 	/* If the kernel supports filename encryption, add the associated
 	 * filename encryption key to the keyring as well
 	 */
-	if (ecryptfs_get_version(&version) == 0 &&
+	if (ecryptfs_get_version(&version) != 0 ||
 	    ecryptfs_supports_filename_encryption(version)) {
 		if ((rc = ecryptfs_add_passphrase_key_to_keyring(
 					auth_tok_sig,
