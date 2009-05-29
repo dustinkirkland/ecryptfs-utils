@@ -180,11 +180,11 @@ int ecryptfs_add_auth_tok_to_keyring(struct ecryptfs_auth_tok *auth_tok,
 	rc = add_key("user", auth_tok_sig, (void *)auth_tok,
 		     sizeof(struct ecryptfs_auth_tok), KEY_SPEC_USER_KEYRING);
 	if (rc == -1) {
-		int errnum = errno;
-
+		rc = -errno;
 		syslog(LOG_ERR, "Error adding key with sig [%s]; rc = [%d] "
 		       "\"%m\"\n", auth_tok_sig, rc);
-		rc = (errnum < 0) ? errnum : errnum * -1;
+		if (rc == -EDQUOT)
+			syslog(LOG_WARNING, "Error adding key to keyring - keyring is full\n");
 		goto out;
 	}
 	rc = 0;
@@ -744,10 +744,13 @@ ecryptfs_add_key_module_key_to_keyring(char *auth_tok_sig,
 	rc = add_key("user", auth_tok_sig, (void *)auth_tok,
 		     (sizeof(struct ecryptfs_auth_tok) + blob_size),
 		     KEY_SPEC_USER_KEYRING);
-	if (rc < 0)
+	if (rc < 0) {
+		rc = -errno;
 		syslog(LOG_ERR, "Error adding key with sig [%s]; rc ="
 		       " [%d]\n", auth_tok_sig, rc);
-	else rc = 0;
+		if (rc == -EDQUOT)
+			syslog(LOG_WARNING, "Error adding key to keyring - keyring is full\n");
+	} else rc = 0;
 out:
 	if (auth_tok != NULL) {
 		memset(auth_tok, 0, (sizeof(struct ecryptfs_auth_tok) + blob_size));
