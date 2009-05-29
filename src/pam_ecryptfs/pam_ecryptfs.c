@@ -110,6 +110,7 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags, int argc,
 	char *auth_tok_sig;
 	pid_t child_pid, tmp_pid;
 	long rc;
+	uint32_t version;
 
 	syslog(LOG_INFO, "%s: Called\n", __FUNCTION__);
 	rc = pam_get_user(pamh, &username, NULL);
@@ -130,6 +131,10 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags, int argc,
 	}
 	if (!ecryptfs_pam_automount_set(homedir))
 		goto out;
+	/* we need side effect of this check: 
+	   load ecryptfs module if not loaded already */
+	if (ecryptfs_get_version(&version) != 0)
+		syslog(LOG_WARNING, "Can't check if kernel supports ecryptfs\n");
 	saved_uid = geteuid();
 	seteuid(uid);
 	rc = pam_get_item(pamh, PAM_AUTHTOK, (const void **)&passphrase);
