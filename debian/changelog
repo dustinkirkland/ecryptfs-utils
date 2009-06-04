@@ -3,6 +3,9 @@ ecryptfs-utils (76) unreleased; urgency=low
   [ Dustin Kirkland ]
   * src/utils/ecryptfs-setup-swap: switch from vol_id to blkid,
     LP: #376486
+  * debian/ecryptfs-utils.postinst, src/utils/ecryptfs-setup-private:
+    don't echo mount passphrase if running in bootstrap mode; prune
+    potential leakages from install log, LP: #383650
 
   [ Dustin Kirkland and Daniel Baumann ]
   * debian/control, debian/copyright, debian/ecryptfs-utils.dirs,
@@ -22,7 +25,7 @@ ecryptfs-utils (76) unreleased; urgency=low
   * src/lib/key_management.c: fix stray semicolon that prevents .ecryptfsrc
     files from working properly, LP: #372709
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 04 Jun 2009 08:50:53 -0500
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 04 Jun 2009 11:33:27 -0500
 
 ecryptfs-utils (75) released; urgency=low
 

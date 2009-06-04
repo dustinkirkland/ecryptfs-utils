@@ -324,7 +324,7 @@ fi
 #echo "using your login passphrase."
 echo
 echo "************************************************************************"
-if [ "$RANDOM_MOUNTPASS" = "1" ]; then
+if [ "$RANDOM_MOUNTPASS" = "1" -a "$BOOTSTRAP" != "1"]; then
 	echo "YOU SHOULD RECORD THIS MOUNT PASSPHRASE AND STORE IN A SAFE LOCATION:"
 	echo "$MOUNTPASS"
 else
