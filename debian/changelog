@@ -4,6 +4,14 @@ ecryptfs-utils (76) unreleased; urgency=low
   * src/utils/ecryptfs-setup-swap: switch from vol_id to blkid,
     LP: #376486
 
+  [ Dustin Kirkland and Daniel Baumann ]
+  * debian/control, debian/copyright, debian/ecryptfs-utils.dirs,
+    debian/ecryptfs-utils.install, debian/ecryptfs-utils.postinst,
+    debian/rules, ecryptfs-utils.pam-auth-update: sync Ubuntu's
+    packaging with Debian; drop dpatch, drop libssl build dep, clean
+    up extraneous debhelper bits, match cflags; remaining diff is only
+    ecryptfs-utils.prerm
+
   [ Arfrever Frehtes Taifersar Arahesis ]
   * key_mod/ecryptfs_key_mod_gpg.c,
     key_mod/ecryptfs_key_mod_pkcs11_helper.c,
@@ -14,7 +22,7 @@ ecryptfs-utils (76) unreleased; urgency=low
   * src/lib/key_management.c: fix stray semicolon that prevents .ecryptfsrc
     files from working properly, LP: #372709
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Mon, 18 May 2009 19:02:07 +0200
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 04 Jun 2009 08:50:53 -0500
 
 ecryptfs-utils (75) released; urgency=low
 

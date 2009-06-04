@@ -3,6 +3,5 @@
 /usr/bin
 /usr/lib/ecryptfs
 /usr/share/doc
-/usr/share/pam-configs/ecryptfs-utils
 /usr/share/ecryptfs-utils
 /usr/share/man

@@ -1,9 +1,8 @@
 Source: ecryptfs-utils
 Section: misc
 Priority: optional
-Maintainer: Ubuntu Core Developers <ubuntu-devel-discuss@lists.ubuntu.com>
-XSBC-Original-Maintainer: Daniel Baumann <daniel@debian.org>
-Build-Depends: debhelper (>= 7), dpatch, autotools-dev, autoconf, automake, libtool, libgcrypt11-dev, libgpg-error-dev, libgpgme11-dev, libkeyutils-dev, libopencryptoki-dev [alpha amd64 arm armel hppa ia64 i386 m68k mips mipsel powerpc sparc], libpam0g-dev, libpkcs11-helper1-dev, libssl-dev, libtspi-dev [alpha amd64 arm armel hppa ia64 i386 m68k mips mipsel powerpc sparc], pkg-config, python-dev, swig
+Maintainer: Daniel Baumann <daniel@debian.org>
+Build-Depends: debhelper (>= 7), autotools-dev, autoconf, automake, libtool, libgcrypt11-dev, libgpg-error-dev, libgpgme11-dev, libkeyutils-dev, libopencryptoki-dev [alpha amd64 arm armel hppa ia64 i386 m68k mips mipsel powerpc sparc], libpam0g-dev, libpkcs11-helper1-dev, libtspi-dev [alpha amd64 arm armel hppa ia64 i386 m68k mips mipsel powerpc sparc], pkg-config, python-dev, swig
 Standards-Version: 3.8.1
 Homepage: https://launchpad.net/ecryptfs
 Vcs-Browser: http://git.debian.net/?p=debian/ecryptfs-utils.git
@@ -12,7 +11,7 @@ Vcs-Git: git://git.debian.net/git/debian/ecryptfs-utils.git
 Package: ecryptfs-utils
 Section: misc
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, libpam-runtime (>= 1.0.1-2ubuntu1), keyutils, libnss3-1d
+Depends: ${shlibs:Depends}, ${misc:Depends}, keyutils, libnss3-1d, libpam-runtime (>= 1.0.1-6)
 Suggests: cryptsetup, opencryptoki
 Description: ecryptfs cryptographic filesystem (utilities)
  eCryptfs is a POSIX-compliant enterprise-class stacked cryptographic filesystem
