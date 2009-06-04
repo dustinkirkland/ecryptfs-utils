@@ -3,6 +3,7 @@
 case "${1}" in
 	configure)
 		[ -e /var/log/installer/syslog ] && sed -i '/user-setup: YOU SHOULD RECORD THIS/,+2 d' /var/log/installer/syslog
+		pam-auth-update --package
 		;;
 
 	abort-upgrade|abort-remove|abort-deconfigure)
