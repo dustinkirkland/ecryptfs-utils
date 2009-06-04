@@ -1,19 +1,10 @@
-#!/bin/sh
+#!/bin/sh -e
 
 set -e
 
 case "${1}" in
 	configure)
-		# Basically, if a user chooses to encrypt their entire home
-		# directory, we're going to need someplace to put their
-		# ~/.ecryptfs directory that's available prior to mounting their
-		# home directory. Classic chicken/egg bootstrapping.
 
-		if [ ! -d /var/lib/ecryptfs ]
-		then
-			mkdir -p /var/lib/ecryptfs
-			chmod 1777 /var/lib/ecryptfs
-		fi
 		;;
 
 	abort-upgrade|abort-remove|abort-deconfigure)
