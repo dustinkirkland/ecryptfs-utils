@@ -676,18 +676,20 @@ int ecryptfs_insert_wrapped_passphrase_into_keyring(
 		if ((rc = ecryptfs_add_passphrase_key_to_keyring(
 					auth_tok_sig,
 					decrypted_passphrase,
-					ECRYPTFS_DEFAULT_SALT_FNEK_HEX))) {
+					ECRYPTFS_DEFAULT_SALT_FNEK_HEX)) < 0) {
 			syslog(LOG_ERR,
 			   "Error attempting to add filename encryption key to "
 			   "user session keyring; rc = [%d]\n", rc);
+			goto out;
 		}
 	}
 	if ((rc = ecryptfs_add_passphrase_key_to_keyring(auth_tok_sig,
 							 decrypted_passphrase,
-							 salt))) {
+							 salt)) < 0) {
 		syslog(LOG_ERR, "Error attempting to add passphrase key to "
 		       "user session keyring; rc = [%d]\n", rc);
-	}
+	} else
+		rc = 0;
 out:
 	return rc;
 }
