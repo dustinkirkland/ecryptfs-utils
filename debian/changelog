@@ -80,7 +80,7 @@ ecryptfs-utils (76) unreleased; urgency=low
   [ Michael Rooney ]
   * src/python/ecryptfsapi.py: added python api
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Fri, 17 Jul 2009 03:17:24 -0500
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Fri, 17 Jul 2009 03:35:41 -0500
 
 ecryptfs-utils (75) released; urgency=low
 

@@ -2622,7 +2622,7 @@ SWIGINTERN PyObject *_wrap_ecryptfs_passphrase_blob(PyObject *SWIGUNUSEDPARM(sel
   arg2 = (char *)(buf2);
   result = ecryptfs_passphrase_blob(arg1,arg2);
   {
-    resultobj = PyString_FromStringAndSize((&result)->data,(&result)->size);
+    resultobj = PyString_FromStringAndSize((char *)((&result)->data),(&result)->size);
   }
   if (alloc1 == SWIG_NEWOBJ) free((char*)buf1);
   if (alloc2 == SWIG_NEWOBJ) free((char*)buf2);
@@ -2651,7 +2651,7 @@ SWIGINTERN PyObject *_wrap_ecryptfs_passphrase_sig_from_blob(PyObject *SWIGUNUSE
   arg1 = (char *)(buf1);
   result = ecryptfs_passphrase_sig_from_blob(arg1);
   {
-    resultobj = PyString_FromStringAndSize((&result)->data,(&result)->size);
+    resultobj = PyString_FromStringAndSize((char *)((&result)->data),(&result)->size);
   }
   if (alloc1 == SWIG_NEWOBJ) free((char*)buf1);
   return resultobj;
