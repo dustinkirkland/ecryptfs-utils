@@ -25,6 +25,8 @@ ecryptfs-utils (76) unreleased; urgency=low
   * ecryptfs-mount-private.1, ecryptfs-setup-private.1: align the
     documentation and implementation of the wrapping-independent feature,
     LP: #383746
+  * src/utils/ecryptfs-umount-private: use keyctl list @u, since keyctl show
+    stopped working, LP: #400484
 
   [ Michal Hlavinka (edits by Dustin Kirkland) ]
   * doc/manpage/ecryptfs-mount-private.1,
@@ -80,7 +82,7 @@ ecryptfs-utils (76) unreleased; urgency=low
   [ Michael Rooney ]
   * src/python/ecryptfsapi.py: added python api
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Fri, 17 Jul 2009 03:35:41 -0500
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Fri, 17 Jul 2009 11:41:31 -0500
 
 ecryptfs-utils (75) released; urgency=low
 
