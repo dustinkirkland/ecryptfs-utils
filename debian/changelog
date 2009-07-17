@@ -74,7 +74,10 @@ ecryptfs-utils (76) unreleased; urgency=low
   * src/lib/key_management.c: fix stray semicolon that prevents .ecryptfsrc
     files from working properly, LP: #372709
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Fri, 17 Jul 2009 01:23:13 -0500
+  [ Michael Rooney ]
+  * src/python/ecryptfsapi.py: added python api
+
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Fri, 17 Jul 2009 02:39:38 -0500
 
 ecryptfs-utils (75) released; urgency=low
 
