@@ -18,14 +18,22 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 error() {
-	echo
+	echo "[FAILED]"
 	echo "ERROR: $1" 1>&2
 }
 j=0
+OKs=0
 for i in "$@"; do
-	[ "$i" = "." ] && continue
 	j=`expr $j + 1`
 	echo -n "INFO: Rewriting [$j/$#] [$i] ... "
+	if [ ! -e "$i" ] ; then
+		error "File does not exists"
+		continue
+	fi
+	if [ "$i" = "." ]; then
+		echo "[EXCLUDED]" >&2
+		continue
+	fi
 	opt=
 	if [ -d "$i" -a ! -h "$i" ]; then
 		# A directory, re-encrypt the filename
@@ -33,12 +41,12 @@ for i in "$@"; do
 			error "Could not create tempdir"
 			continue
 		}
-		mv -f -T "$i" "$temp1" || {
+		mv -f -T "$i" "$temp1" 2>/dev/null  || {
 			error "Could not rename [$i] to [$temp1]"
 			rmdir "$temp1"
 			continue
 		}
-		mv -f "$temp1" "$i"	|| {
+		mv -f "$temp1" "$i" 2>/dev/null || {
 			error "Could not rename [$temp1] to [$i]"
 		}
 	else
@@ -47,15 +55,19 @@ for i in "$@"; do
 			error "Could not create tempfile"
 			continue
 		}
-		cp -a "$i" "$temp1" || {
+		cp -a "$i" "$temp1" 2>/dev/null || {
 			error "Could not copy [$i] to [$temp1]"
 			rm -f "$temp1"
 			continue
 		}
-		mv -f "$temp1" "$i" || {
+		mv -f "$temp1" "$i" 2>/dev/null || {
 			error "Could not rename [$temp1] to [$i]"
+			continue
 		}
 	fi
 	echo "[OK]"
+	OKs=$((OKs+1))
 done
+echo "$OKs/$j rewrites succeeded"
+[ $OKs -ne $j ] && exit 1
 exit 0

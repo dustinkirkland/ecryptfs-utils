@@ -97,15 +97,20 @@ static struct param_node root_param_node = {
 		.trans_func = sig_param_node_callback}}
 };
 
-/* returns: 1 for str=="yes" or "y", 0 for "no" or "n", -1 elsewhere */
-static int is_yes(const char *str)
+/* returns: 
+ * 	on_null for str == NULL
+ *	1 for str=="yes" or "y"
+ *	0 for str=="no" or "n"
+ *	-1 elsewhere */
+static int is_yes(const char *str, int on_null)
 {
 	if (str) {
 		if (!strcmp(str,"y") || !strcmp(str,"yes"))
 			return 1;
 		if (!strcmp(str,"no") || !strcmp(str,"n"))
 			return 0;
-	}
+	} else
+		return on_null;
 
 	return -1;
 }
@@ -120,7 +125,7 @@ static int stack_push_if_yes(struct param_node *node, struct val_node **head,
 {
 	int rc;
 
-	if (((rc=is_yes(node->val)) == 1) || (node->flags & PARAMETER_SET)) {
+	if (((rc=is_yes(node->val, 0)) == 1) || (node->flags & PARAMETER_SET)) {
 		rc = stack_push(head, opt_name);
 	} else if (rc == -1)
 		rc = WRONG_VALUE;
@@ -227,7 +232,7 @@ static int get_enable_filename_crypto(struct ecryptfs_ctx *ctx,
 {
 	int yn, rc = 0;
 
-	if (((yn=is_yes(node->val)) > 0)
+	if (((yn=is_yes(node->val, 0)) > 0)
 	    || (node->flags & PARAMETER_SET)) {
 		int i;
 		struct val_node *val_node;
@@ -432,15 +437,18 @@ out:
 	return rc;
 }
 
-static int init_ecryptfs_key_bytes_param_node(char *cipher_name)
+static int init_ecryptfs_key_bytes_param_node(char *cipher_name, 
+					      int min, int max)
 {
 	int i;
 	int rc = 0;
 
 	i = 0;
 	while (supported_key_bytes[i].cipher_name) {
-		if (strcmp(cipher_name, supported_key_bytes[i].cipher_name)
-		    == 0) {
+		if ((supported_key_bytes[i].key_bytes >= min) && 
+		    (supported_key_bytes[i].key_bytes <= max) &&
+		    (strcmp(cipher_name, supported_key_bytes[i].cipher_name)
+		      == 0)) {
 			struct transition_node *tn;
 			
 			tn = &ecryptfs_key_bytes_param_node.tl[
@@ -468,6 +476,11 @@ static int init_ecryptfs_key_bytes_param_node(char *cipher_name)
 		}
 		i++;
 	}
+	if (ecryptfs_key_bytes_param_node.num_transitions == 0) {
+		syslog(LOG_ERR, "Error initializing key_bytes selection: "
+		       "there is no posibility left for used params\n");
+		return -EINVAL;
+	}
 out:
 	return rc;
 }
@@ -477,8 +490,40 @@ static int tf_ecryptfs_cipher(struct ecryptfs_ctx *ctx, struct param_node *node,
 {
 	char *opt;
 	int rc;
+	int min = 0, max = 999999;
+	struct val_node *tmp = *head, *tmpprev = NULL;
 
-	rc = init_ecryptfs_key_bytes_param_node(node->val);
+	while (tmp) {
+		char *ptr;
+		int popval = 0;
+		if (tmp->val && (strstr(tmp->val,"max_key_bytes=") != NULL) && 
+		    ((ptr=strchr(tmp->val,'=')) != NULL)) {
+			char *eptr;
+			max = strtol(++ptr, &eptr, 10);
+			if (eptr == ptr)
+				return -EINVAL;
+			popval = 1;
+		}
+		if (tmp->val && (strstr(tmp->val,"min_key_bytes=") != NULL) && 
+		    ((ptr=strchr(tmp->val,'=')) != NULL)) {
+			char *eptr;
+			min = strtol(++ptr, &eptr, 10);
+			if (eptr == ptr)
+				return -EINVAL;
+			popval = 1;
+		}
+		if (popval) {
+			if (tmp == *head)
+				*head = (*head)->next;
+			stack_pop(&tmp);
+			if (tmpprev != NULL)
+				tmpprev->next = tmp;
+		}
+		tmpprev = tmp;
+		tmp = tmp->next;
+	}
+
+	rc = init_ecryptfs_key_bytes_param_node(node->val, min, max);
 	if (rc) {
 		syslog(LOG_ERR, "%s: Error initializing key_bytes param node; "
 		       "rc = [%d]\n", __FUNCTION__, rc);

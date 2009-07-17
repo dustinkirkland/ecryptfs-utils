@@ -188,6 +188,13 @@ else
 	id "$USER" >/dev/null || error "User [$USER] does not exist"
 fi
 
+# Check if the ecryptfs group exists, and user is member of ecryptfs group
+if grep -qs "^ecryptfs:" /etc/group; then
+	if ! id "$USER" | grep -qs "\(ecryptfs\)"; then
+	       error "User needs to be a member of ecryptfs group"
+	fi
+fi
+
 # Obtain the user's home directory
 HOME=`getent passwd "$USER" | awk -F: '{print $6}'`
 if [ ! -d "$HOME" ]; then

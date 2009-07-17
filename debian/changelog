@@ -21,6 +21,40 @@ ecryptfs-utils (76) unreleased; urgency=low
     src/libecryptfs/main.c, src/pam_ecryptfs/Makefile.am,
     src/utils/manager.c, src/utils/mount.ecryptfs.c: move build from gcrypt
     to nss (this change has been pending for some time)
+  * src/utils/ecryptfs-dot-private: dropped, was too hacky
+
+  [ Michal Hlavinka (edits by Dustin Kirkland) ]
+  * doc/manpage/ecryptfs-mount-private.1,
+    doc/manpage/ecryptfs-rewrite-file.1,
+    doc/manpage/ecryptfs-setup-private.1, doc/manpage/ecryptfs.7,
+    doc/manpage/mount.ecryptfs_private.1,
+    doc/manpage/umount.ecryptfs_private.1: documentation updated to note
+    possible ecryptfs group membership requirements; Fix ecrypfs.7 man
+    page and key_mod_openssl's error message; fix typo
+  * src/libecryptfs/decision_graph.c: put a finite limit (5 tries) on
+    interactive input; fix memory leaks when asking questions
+  * src/libecryptfs/module_mgr.c: Don't error out with EINVAL when
+    verbosity=0 and some options are missing.
+  * src/utils/umount.ecryptfs.c: no error for missing key when removing it
+  * src/libecryptfs-swig/libecryptfs.i: fix compile werror, cast char*
+  * src/utils/ecryptfs_add_passphrase.c: fix/test/use return codes;
+    return nonzero for --fnek when not supported but used
+  * src/include/ecryptfs.h, src/key_mod/ecryptfs_key_mod_openssl.c,
+    src/libecryptfs/module_mgr.c: refuse mounting with too small rsa
+    key (key_mod_openssl)
+  * src/utils/ecryptfs_insert_wrapped_passphrase_into_keyring.c: fix return
+    codes
+  * src/utils/ecryptfs-rewrite-file: polish output
+  * src/libecryptfs/key_management.c: inform about full keyring; insert fnek
+    sig into keyring if fnek support check fails; don't fail if key already
+    exists in keyring
+  * src/utils/ecryptfs-setup-private: if the ecryptfs group exists, restrict
+    ecryptfs-setup-private to members of this group
+  * src/pam_ecryptfs/pam_ecryptfs.c: dynamically load ecryptfs module by
+    checking ecryptfs version
+  * src/libecryptfs/decision_graph.c, src/utils/io.c,
+    src/utils/mount.ecryptfs.c: fix EOF handling, LP: #371587
+  * src/desktop/Makefile.am: make desktop files trusted, LP: #371426
 
   [ Dustin Kirkland and Daniel Baumann ]
   * debian/control, debian/copyright, debian/ecryptfs-utils.dirs,
@@ -40,7 +74,7 @@ ecryptfs-utils (76) unreleased; urgency=low
   * src/lib/key_management.c: fix stray semicolon that prevents .ecryptfsrc
     files from working properly, LP: #372709
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Fri, 17 Jul 2009 00:31:42 -0500
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Fri, 17 Jul 2009 01:23:13 -0500
 
 ecryptfs-utils (75) released; urgency=low
 

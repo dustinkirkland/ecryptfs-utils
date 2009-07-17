@@ -175,11 +175,11 @@ int ecryptfs_add_auth_tok_to_keyring(struct ecryptfs_auth_tok *auth_tok,
 	rc = add_key("user", auth_tok_sig, (void *)auth_tok,
 		     sizeof(struct ecryptfs_auth_tok), KEY_SPEC_USER_KEYRING);
 	if (rc == -1) {
-		int errnum = errno;
-
+		rc = -errno;
 		syslog(LOG_ERR, "Error adding key with sig [%s]; rc = [%d] "
 		       "\"%m\"\n", auth_tok_sig, rc);
-		rc = (errnum < 0) ? errnum : errnum * -1;
+		if (rc == -EDQUOT)
+			syslog(LOG_WARNING, "Error adding key to keyring - keyring is full\n");
 		goto out;
 	}
 	rc = 0;
@@ -583,23 +583,25 @@ int ecryptfs_insert_wrapped_passphrase_into_keyring(
 	/* If the kernel supports filename encryption, add the associated
 	 * filename encryption key to the keyring as well
 	 */
-	if (ecryptfs_get_version(&version) == 0 &&
+	if (ecryptfs_get_version(&version) != 0 ||
 	    ecryptfs_supports_filename_encryption(version)) {
 		if ((rc = ecryptfs_add_passphrase_key_to_keyring(
 					auth_tok_sig,
 					decrypted_passphrase,
-					ECRYPTFS_DEFAULT_SALT_FNEK_HEX))) {
+					ECRYPTFS_DEFAULT_SALT_FNEK_HEX)) < 0) {
 			syslog(LOG_ERR,
 			   "Error attempting to add filename encryption key to "
 			   "user session keyring; rc = [%d]\n", rc);
+			goto out;
 		}
 	}
 	if ((rc = ecryptfs_add_passphrase_key_to_keyring(auth_tok_sig,
 							 decrypted_passphrase,
-							 salt))) {
+							 salt)) < 0) {
 		syslog(LOG_ERR, "Error attempting to add passphrase key to "
 		       "user session keyring; rc = [%d]\n", rc);
-	}
+	} else
+		rc = 0;
 out:
 	return rc;
 }
@@ -656,10 +658,13 @@ ecryptfs_add_key_module_key_to_keyring(char *auth_tok_sig,
 	rc = add_key("user", auth_tok_sig, (void *)auth_tok,
 		     (sizeof(struct ecryptfs_auth_tok) + blob_size),
 		     KEY_SPEC_USER_KEYRING);
-	if (rc < 0)
+	if (rc < 0) {
+		rc = -errno;
 		syslog(LOG_ERR, "Error adding key with sig [%s]; rc ="
 		       " [%d]\n", auth_tok_sig, rc);
-	else rc = 0;
+		if (rc == -EDQUOT)
+			syslog(LOG_WARNING, "Error adding key to keyring - keyring is full\n");
+	} else rc = 0;
 out:
 	if (auth_tok != NULL) {
 		memset(auth_tok, 0, (sizeof(struct ecryptfs_auth_tok) + blob_size));
@@ -829,7 +834,8 @@ char *ecryptfs_get_passphrase(char *prompt) {
 	ecryptfs_enable_echo(&current_settings);
 	p = strrchr(passphrase, '\n');
 	if (p) *p = '\0';
-	printf("\n");
+	if (prompt != NULL)
+		printf("\n");
 	if (strlen(passphrase) > ECRYPTFS_MAX_PASSWORD_LENGTH) {
 		fprintf(stderr,"Passphrase is too long. Use at most %u "
 			       "characters long passphrase.\n",

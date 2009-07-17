@@ -68,6 +68,7 @@ int get_string_stdin(char **val, char *prompt, int echo)
 	int length = DEFAULT_STRING_LENGTH;
 	char *temp;
 	int rc = 0;
+	int c;
 
 	printf("%s: ", prompt);
 	temp = malloc(length);
@@ -95,13 +96,21 @@ int get_string_stdin(char **val, char *prompt, int echo)
 			free(*val);
 			*val = temp;
 		}
-		(*val)[count] = mygetchar();
+		if ((c = mygetchar()) != EOF)
+			(*val)[count] = c;
+		else 
+			(*val)[count] = '\n';
 		count++;
-	} while((*val)[count-1] != '\n');
+	} while(c != EOF && (*val)[count-1] != '\n');
 	(*val)[count - 1] = '\0';
 	if (!echo) {
 		printf("\n");
 		rc = enable_echo(&saved_settings);
+	}
+	if (count == 1 && c == EOF) {
+		free(*val);
+		*val = NULL;
+		rc = -EIO;
 	}
 out:
 	return rc;
@@ -112,6 +121,7 @@ int get_string(char *val, int len, int echo)
 	int count = 0;
 	struct termios saved_settings;
 	int rc = 0;
+	int c;
 
 	if (echo == ECRYPTFS_ECHO_OFF) {
 		rc = disable_echo(&saved_settings);
@@ -119,26 +129,33 @@ int get_string(char *val, int len, int echo)
 			goto out;
 	}
 	do {
-		val[count] = mygetchar();
+		if ((c = mygetchar()) != EOF)
+			val[count] = c;
+		else 
+			val[count] = '\n';
 		count++;
-	} while(val[count-1] != '\n' && (count < len));
-	if (count > len)
-		val[len - 1] = '\0';
-	else
-		val[count - 1] = '\0';
+	} while(c != EOF && val[count-1] != '\n' && (count < len));
 	if (echo == ECRYPTFS_ECHO_OFF) {
 		printf("\n");
 		rc = enable_echo(&saved_settings);
 	}
+	if (count == 1 && c == EOF) {
+		*val = '\0';
+		rc = -EIO;
+	} else if (count > len)
+		val[len - 1] = '\0';
+	else
+		val[count - 1] = '\0';
 out:
 	return rc;
 }
 
 static inline int munch_newline(void)
 {
-	if (mygetchar() == '\n')
+	int c;
+	if ((c=mygetchar()) == '\n' || c == EOF)
 		return 0;
-	while (mygetchar() != '\n');
+	while ((c=mygetchar()) != '\n' && c != EOF);
 	return -1;
 }
 
@@ -259,7 +276,7 @@ prompt_user:
                 if (!pch) {
                         int ch;
 
-                        while ((ch = mygetchar()) != '\n');
+                        while ((ch = mygetchar()) != '\n' && ch != EOF);
                 }
                 goto prompt_user;
         }

@@ -209,7 +209,14 @@ int do_transition(struct ecryptfs_ctx *ctx, struct param_node **next,
 		  struct ecryptfs_name_val_pair *nvp_head,
 		  struct val_node **mnt_params, void **foo)
 {
+	static int repeated = 0;
+	static struct param_node *lastnode = NULL;
 	int i, rc;
+
+	if (current != lastnode)
+		repeated = 0;
+
+	lastnode = current;
 
 	for (i = 0; i < current->num_transitions; i++) {
 		struct transition_node *tn = &current->tl[i];
@@ -275,11 +282,17 @@ int do_transition(struct ecryptfs_ctx *ctx, struct param_node **next,
 				trans_func_tok_id =
 					tn->trans_func(ctx, current,
 						       mnt_params, foo);
-			if (trans_func_tok_id == WRONG_VALUE && 
-			    (ctx->verbosity || 
-			     (current->flags & STDIN_REQUIRED))) {
-			    *next = current;
-			    return 0;
+			if (trans_func_tok_id == WRONG_VALUE) { 
+				if (ctx->verbosity || 
+				    (current->flags & STDIN_REQUIRED)) {
+						if (++repeated >= 5)
+							return -EINVAL;
+						else {
+							*next = current;
+							return 0;
+						}
+				} else 
+					return -EINVAL;
 			}
 			if (trans_func_tok_id == MOUNT_ERROR || 
 			    trans_func_tok_id < 0)
@@ -289,6 +302,8 @@ int do_transition(struct ecryptfs_ctx *ctx, struct param_node **next,
 			else return -EINVAL;
 		}
 	}
+	if (current->num_transitions)
+		return MOUNT_ERROR;
 	return NULL_TOK;
 }
 
@@ -560,10 +575,13 @@ static int alloc_and_get_val(struct ecryptfs_ctx *ctx, struct param_node *node,
 			}
 			prompt[i] = '\0';
 get_value:
-			rc = (ctx->get_string)
-				(&(node->val), prompt,
-				 (node->flags
-				  & ECRYPTFS_PARAM_FLAG_ECHO_INPUT));
+			if ((rc = (ctx->get_string)
+				      (&(node->val), prompt,
+					(node->flags
+					  & ECRYPTFS_PARAM_FLAG_ECHO_INPUT)))) {
+				free(prompt);
+				return rc;
+			}
 			val = atoi(node->val);
 			if (val > 0 && val <= node->num_transitions) {
 				free(node->val);
@@ -627,26 +645,34 @@ obtain_value:
 				(&(node->val), prompt,
 				 (node->flags
 				  & ECRYPTFS_PARAM_FLAG_ECHO_INPUT));
+			free(prompt);
+			if (rc)
+				goto out;
 			if (node->val[0] == '\0' && 
 			    (node->flags & ECRYPTFS_NONEMPTY_VALUE_REQUIRED)) {
 				fprintf(stderr,"Wrong input, non-empty value "
 					"required!\n");
 				goto obtain_value;
 			}
-			free(prompt);
 			if (node->flags & VERIFY_VALUE) {
 				rc = asprintf(&verify_prompt, "Verify %s",
 					      node->prompt);
 				if (rc == -1)
-					return MOUNT_ERROR;
+					return -ENOMEM;
 				rc = (ctx->get_string)
 					(&verify, verify_prompt,
 					 (node->flags
 					  & ECRYPTFS_PARAM_FLAG_ECHO_INPUT));
+				free(verify_prompt);
 				if (rc)
-					return MOUNT_ERROR;
-				if (strcmp(verify, node->val))
+					return -EIO;
+				rc = strcmp(verify, node->val); 
+				free(verify);
+				if (rc) {
+					free(node->val);
+					node->val = NULL;
 					goto obtain_value;
+				}
 			}
 			if (node->val[0] == '\0') {
 				free(node->val);
