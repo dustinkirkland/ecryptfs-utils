@@ -20,12 +20,8 @@
 
 #include "config.h"
 #include <errno.h>
-#ifdef ENABLE_NSS
 #include <nss.h>
 #include <pk11func.h>
-#else
-#include <gcrypt.h>
-#endif /* #ifdef ENABLE_NSS */
 #include <keyutils.h>
 #ifndef S_SPLINT_S
 #include <stdio.h>
@@ -299,7 +295,6 @@ int ecryptfs_wrap_passphrase(char *filename, char *wrapping_passphrase,
 		ECRYPTFS_AES_BLOCK_SIZE + 1];
 	int encrypted_passphrase_pos = 0;
 	int decrypted_passphrase_pos = 0;
-#ifdef ENABLE_NSS
 	int tmp1_outlen = 0;
 	int tmp2_outlen = 0;
 	SECStatus err;
@@ -308,11 +303,6 @@ int ecryptfs_wrap_passphrase(char *filename, char *wrapping_passphrase,
 	PK11SlotInfo *slot = NULL;
 	PK11Context *enc_ctx = NULL;
 	SECItem *sec_param = NULL;
-#else
-#warning Building against gcrypt instead of nss
-	gcry_cipher_hd_t gcry_handle;
-	gcry_error_t gcry_err;
-#endif /* #ifdef ENABLE_NSS */
 	int encrypted_passphrase_bytes;
 	int decrypted_passphrase_bytes;
 	int fd;
@@ -344,7 +334,6 @@ int ecryptfs_wrap_passphrase(char *filename, char *wrapping_passphrase,
 					       - (decrypted_passphrase_bytes
 						  % ECRYPTFS_AES_BLOCK_SIZE));
 	encrypted_passphrase_bytes = decrypted_passphrase_bytes;
-#ifdef ENABLE_NSS
 	NSS_NoDB_Init(NULL);
 	slot = PK11_GetBestSlot(CKM_AES_ECB, NULL);
 	key_item.data = (unsigned char *)wrapping_key;
@@ -405,41 +394,6 @@ nss_finish:
 		rc = - EIO;
 		goto out;
 	}
-#else
-	if ((gcry_err = gcry_cipher_open(&gcry_handle, GCRY_CIPHER_AES,
-					 GCRY_CIPHER_MODE_ECB, 0))) {
-		syslog(LOG_ERR, "Error attempting to initialize AES cipher; "
-		       "gcry_error_t = [%d]\n", gcry_err);
-		rc = -EIO;
-		goto out;
-	}
-	if ((gcry_err = gcry_cipher_setkey(gcry_handle, wrapping_key,
-					   ECRYPTFS_AES_KEY_BYTES))) {
-		syslog(LOG_ERR, "Error attempting to set AES key; "
-		       "gcry_error_t = [%d]\n", gcry_err);
-		rc = -EIO;
-		gcry_cipher_close(gcry_handle);
-		goto out;
-	}
-	while (decrypted_passphrase_bytes > 0) {
-		if ((gcry_err = gcry_cipher_encrypt(
-			     gcry_handle,
-			     &encrypted_passphrase[encrypted_passphrase_pos],
-			     ECRYPTFS_AES_BLOCK_SIZE,
-			     &decrypted_passphrase[decrypted_passphrase_pos],
-			     ECRYPTFS_AES_BLOCK_SIZE))) {
-			syslog(LOG_ERR, "Error attempting to encrypt block; "
-			       "gcry_error = [%d]\n", gcry_err);
-			rc = -EIO;
-			gcry_cipher_close(gcry_handle);
-			goto out;
-		}
-		encrypted_passphrase_pos += ECRYPTFS_AES_BLOCK_SIZE;
-		decrypted_passphrase_pos += ECRYPTFS_AES_BLOCK_SIZE;
-		decrypted_passphrase_bytes -= ECRYPTFS_AES_BLOCK_SIZE;
-	}
-	gcry_cipher_close(gcry_handle);
-#endif /* #ifdef ENABLE_NSS */
 	unlink(filename);
 	if ((fd = open(filename, (O_WRONLY | O_CREAT | O_EXCL),
 		       (S_IRUSR | S_IWUSR))) == -1) {
@@ -485,7 +439,6 @@ int ecryptfs_unwrap_passphrase(char *decrypted_passphrase, char *filename,
 	char encrypted_passphrase[ECRYPTFS_MAX_PASSPHRASE_BYTES + 1];
 	int encrypted_passphrase_pos = 0;
 	int decrypted_passphrase_pos = 0;
-#ifdef ENABLE_NSS
 	int tmp1_outlen = 0;
 	int tmp2_outlen = 0;
 	SECStatus err;
@@ -494,10 +447,6 @@ int ecryptfs_unwrap_passphrase(char *decrypted_passphrase, char *filename,
 	PK11SlotInfo *slot = NULL;
 	PK11Context *enc_ctx = NULL;
 	SECItem *sec_param = NULL;
-#else
-	gcry_cipher_hd_t gcry_handle;
-	gcry_error_t gcry_err;
-#endif /* #ifdef ENABLE_NSS */
 	int encrypted_passphrase_bytes;
 	int fd;
 	ssize_t size;
@@ -544,7 +493,6 @@ int ecryptfs_unwrap_passphrase(char *decrypted_passphrase, char *filename,
 		goto out;
 	}
 	encrypted_passphrase_bytes = size;
-#ifdef ENABLE_NSS
 	NSS_NoDB_Init(NULL);
 	slot = PK11_GetBestSlot(CKM_AES_ECB, NULL);
 	key_item.data = (unsigned char *)wrapping_key;
@@ -604,41 +552,6 @@ nss_finish:
 		rc = - EIO;
 		goto out;
 	}
-#else
-	if ((gcry_err = gcry_cipher_open(&gcry_handle, GCRY_CIPHER_AES,
-					 GCRY_CIPHER_MODE_ECB, 0))) {
-		syslog(LOG_ERR, "Error attempting to initialize AES cipher; "
-		       "gcry_error_t = [%d]\n", gcry_err);
-		rc = -EIO;
-		goto out;
-	}
-	if ((gcry_err = gcry_cipher_setkey(gcry_handle, wrapping_key,
-					   ECRYPTFS_AES_KEY_BYTES))) {
-		syslog(LOG_ERR, "Error attempting to set AES key; "
-		       "gcry_error_t = [%d]\n", gcry_err);
-		rc = -EIO;
-		gcry_cipher_close(gcry_handle);
-		goto out;
-	}
-	memset(decrypted_passphrase, 0, ECRYPTFS_MAX_PASSPHRASE_BYTES + 1);
-	while (encrypted_passphrase_bytes > 0) {
-		if ((gcry_err = gcry_cipher_decrypt(
-			     gcry_handle,
-			     &decrypted_passphrase[encrypted_passphrase_pos],
-			     ECRYPTFS_AES_BLOCK_SIZE,
-			     &encrypted_passphrase[decrypted_passphrase_pos],
-			     ECRYPTFS_AES_BLOCK_SIZE))) {
-			syslog(LOG_ERR, "Error attempting to decrypt block; "
-			       "gcry_error = [%d]\n", gcry_err);
-			rc = -EIO;
-			gcry_cipher_close(gcry_handle);
-			goto out;
-		}
-		encrypted_passphrase_pos += ECRYPTFS_AES_BLOCK_SIZE;
-		decrypted_passphrase_pos += ECRYPTFS_AES_BLOCK_SIZE;
-		encrypted_passphrase_bytes -= ECRYPTFS_AES_BLOCK_SIZE;
-	}
-#endif /* #ifdef ENABLE_NSS */
 out:
 	return rc;
 }

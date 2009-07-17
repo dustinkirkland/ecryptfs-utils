@@ -38,11 +38,6 @@ Requirements include:
     1.0 or higher)
    - Finding its way into some distro's
    - Obtainable from <http://people.redhat.com/~dhowells/keyutils> 
-  - libgcrypt
-    - Part of most distro's; install the development package
-    - If you need to build from source, you probably will want these:
-     - <ftp://ftp.gnupg.org/gcrypt/libgpg-error>
-     - <ftp://ftp.gnupg.org/gcrypt/libgcrypt>
 
 
 KERNEL BUILD OPTIONS

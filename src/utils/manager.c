@@ -20,8 +20,8 @@
  */
 
 #include <errno.h>
-#include <gcrypt.h>
 #include <getopt.h>
+#include <sys/types.h>
 #include <keyutils.h>
 #include <stdio.h>
 #include <stdlib.h>

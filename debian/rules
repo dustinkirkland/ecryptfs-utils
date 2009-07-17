@@ -35,7 +35,7 @@ ifneq "$(wildcard /usr/share/misc/config.sub)" ""
 	cp -f /usr/share/misc/config.sub config.sub
 endif
 
-	./configure $(CROSS) --prefix=/usr --libdir=\$${prefix}/lib --mandir=\$${prefix}/share/man --enable-static --enable-gpg --disable-gui --enable-pam --disable-openssl --disable-pkcs11-helper --disable-tspi $(TPMFLAGS) CFLAGS="$(CFLAGS)"
+	./configure $(CROSS) --prefix=/usr --libdir=\$${prefix}/lib --mandir=\$${prefix}/share/man --enable-static --enable-gpg --enable-nss --disable-gui --enable-pam --disable-openssl --disable-pkcs11-helper --disable-tspi $(TPMFLAGS) CFLAGS="$(CFLAGS)"
 
 build: build-stamp
 build-stamp: config.status

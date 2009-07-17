@@ -24,7 +24,6 @@
 #include "config.h"
 #include <errno.h>
 #include <fcntl.h>
-#include <gcrypt.h>
 #include <getopt.h>
 #include <keyutils.h>
 #include <stdio.h>

@@ -12,6 +12,6 @@ uninstall-local:
 endif
 
 pam_ecryptfs_la_SOURCES = pam_ecryptfs.c
-pam_ecryptfs_la_CFLAGS = $(AM_CFLAGS) $(LIBGCRYPT_CFLAGS)
-pam_ecryptfs_la_LIBADD = $(top_builddir)/src/libecryptfs/libecryptfs.la $(PAM_LIBS) $(LIBGCRYPT_LIBS)
+pam_ecryptfs_la_CFLAGS = $(AM_CFLAGS)
+pam_ecryptfs_la_LIBADD = $(top_builddir)/src/libecryptfs/libecryptfs.la $(PAM_LIBS)
 pam_ecryptfs_la_LDFLAGS = $(AM_LDFLAGS) -module -avoid-version -shared

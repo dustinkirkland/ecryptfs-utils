@@ -14,6 +14,13 @@ ecryptfs-utils (76) unreleased; urgency=low
     - CVE-2009-1296
   * src/utils/ecryptfs-setup-private: make some of the lanuage more readable,
     (thanks, anrxc)
+  * README, configure.ac, debian/control, debian/rules,
+    doc/sourceforge_webpage/README, src/libecryptfs-swig/libecryptfs.py,
+    src/libecryptfs-swig/libecryptfs_wrap.c,
+    src/libecryptfs/key_management.c, src/libecryptfs/libecryptfs.pc.in,
+    src/libecryptfs/main.c, src/pam_ecryptfs/Makefile.am,
+    src/utils/manager.c, src/utils/mount.ecryptfs.c: move build from gcrypt
+    to nss (this change has been pending for some time)
 
   [ Dustin Kirkland and Daniel Baumann ]
   * debian/control, debian/copyright, debian/ecryptfs-utils.dirs,
@@ -33,7 +40,7 @@ ecryptfs-utils (76) unreleased; urgency=low
   * src/lib/key_management.c: fix stray semicolon that prevents .ecryptfsrc
     files from working properly, LP: #372709
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Fri, 10 Jul 2009 14:06:55 -0500
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Fri, 17 Jul 2009 00:31:42 -0500
 
 ecryptfs-utils (75) released; urgency=low
 

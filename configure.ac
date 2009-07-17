@@ -10,7 +10,7 @@
 
 
 AC_PREREQ(2.59)
-AC_INIT([ecryptfs-utils],[75])
+AC_INIT([ecryptfs-utils],[76])
 AC_CANONICAL_HOST
 AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE([${PACKAGE_NAME}], [${PACKAGE_VERSION}])
@@ -187,14 +187,6 @@ AC_ISC_POSIX
 AC_HEADER_STDC
 AC_CHECK_LIB([dl], [dlopen])
 
-# Verify gcrypt
-AC_MSG_CHECKING([for libgcrypt])
-AM_PATH_LIBGCRYPT(,,[AC_MSG_ERROR([eCryptfs userspace tools require libgcrypt
-You might find the package at:
-http://directory.fsf.org/security/libgcrypt.html
-])]
-)
-
 # Verify keyutils version 1.0 or higher
 if test -z "${KEYUTILS_LIBS}"; then
 	AC_ARG_VAR([KEYUTILS_CFLAGS], [C compiler flags for keyutils])
@@ -353,13 +345,8 @@ else
 	rootsbindir="\$(sbindir)"
 fi
 
-if test "${enable_nss}" == "yes" ; then
-        CRYPTO_CFLAGS=${NSS_CFLAGS}
-	CRYPTO_LIBS=${NSS_LIBS}
-else
-        CRYPTO_CFLAGS=${LIBGCRYPT_CFLAGS}
-	CRYPTO_LIBS=${LIBGCRYPT_LIBS}
-fi
+CRYPTO_CFLAGS=${NSS_CFLAGS}
+CRYPTO_LIBS=${NSS_LIBS}
 
 AC_SUBST([pamdir])
 AC_SUBST([pamlibdir])
