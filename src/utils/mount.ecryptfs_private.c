@@ -298,6 +298,7 @@ FILE *lock_counter(char *u) {
 	char *f;
 	int fd;
 	FILE *fh;
+	int tries = 0;
 	/* We expect TMP to exist, be writeable by the user,
 	 * and to be cleared on boot */
 	if (
@@ -314,18 +315,26 @@ FILE *lock_counter(char *u) {
 			return NULL;
 		}
 	}
+	/* Spend as much as 30 seconds trying to obtain a file lock */
+	while (flock(fd, LOCK_EX) != 0) {
+		sleep(1);
+		if (++tries > 30) {
+			close(fd);
+			return NULL;
+		}
+	}
 	fh = fdopen(fd, "r+");
 	if (fh == NULL) {
 		perror("fopen");
 		close(fd);
 		return NULL;
 	}
-	flockfile(fh);
 	return fh;
 }
 
 void unlock_counter(FILE *fh) {
 	if (fh != NULL) {
+		/* This should remove the lock too */
 		fclose(fh);
 	}
 }

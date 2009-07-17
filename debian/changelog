@@ -27,6 +27,8 @@ ecryptfs-utils (76) unreleased; urgency=low
     LP: #383746
   * src/utils/ecryptfs-umount-private: use keyctl list @u, since keyctl show
     stopped working, LP: #400484, #395082
+  * src/utils/mount.ecryptfs_private.c: fix counter file locking; solves
+    a longstanding bug about "random" umount caused by cronjobs, LP: #358573
 
   [ Michal Hlavinka (edits by Dustin Kirkland) ]
   * doc/manpage/ecryptfs-mount-private.1,
@@ -82,7 +84,7 @@ ecryptfs-utils (76) unreleased; urgency=low
   [ Michael Rooney ]
   * src/python/ecryptfsapi.py: added python api
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Fri, 17 Jul 2009 12:19:14 -0500
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Fri, 17 Jul 2009 18:10:55 -0500
 
 ecryptfs-utils (75) released; urgency=low
 
