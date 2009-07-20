@@ -315,14 +315,7 @@ FILE *lock_counter(char *u) {
 			return NULL;
 		}
 	}
-	/* Spend as much as 30 seconds trying to obtain a file lock */
-	while (flock(fd, LOCK_EX) != 0) {
-		sleep(1);
-		if (++tries > 30) {
-			close(fd);
-			return NULL;
-		}
-	}
+	flock(fd, LOCK_EX);
 	fh = fdopen(fd, "r+");
 	if (fh == NULL) {
 		perror("fopen");
