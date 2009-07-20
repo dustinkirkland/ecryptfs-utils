@@ -14,8 +14,9 @@ if [ -n "$out" ]; then
 fi
 if echo "$out" | grep -q -v "Sessions still open"; then
 	for sig in `cat "$HOME/.ecryptfs/Private.sig"`; do
-		key_id=`keyctl list @u | grep "$sig$" | awk -F: '{print $1}'`
-		keyctl unlink "$key_id" @u
+		for key_id in `keyctl list @u | grep "$sig$" | awk -F: '{print $1}'`; do
+			keyctl unlink "$key_id" @u
+		done
 	done
 fi
 if [ "$pwd_mounted" = "1" ]; then
