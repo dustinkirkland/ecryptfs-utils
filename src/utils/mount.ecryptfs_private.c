@@ -562,7 +562,7 @@ int main(int argc, char *argv[]) {
 			zero(fh_counter);
 		} else if (decrement(fh_counter) > 0) {
 			fputs("Sessions still open, not unmounting\n", stderr);
-			goto success;
+			goto fail;
 		}
 		/* Unmounting, so exit if not mounted */
 		if (is_mounted(dev, mnt, sig, mounting) == 0) {

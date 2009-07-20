@@ -8,22 +8,17 @@
 if grep -qs "$HOME/.Private $PWD ecryptfs " /proc/mounts 2>/dev/null; then
 	pwd_mounted=1
 fi
-out=`/sbin/umount.ecryptfs_private 2>&1`
-if [ -n "$out" ]; then
-	echo "$out"
-fi
-if echo "$out" | grep -q -v "Sessions still open"; then
+if /sbin/umount.ecryptfs_private; then
 	for sig in `cat "$HOME/.ecryptfs/Private.sig"`; do
 		for key_id in `keyctl list @u | grep "$sig$" | awk -F: '{print $1}'`; do
 			keyctl unlink "$key_id" @u
 		done
 	done
+	if [ "$pwd_mounted" = "1" ]; then
+		echo
+		echo "INFO: Your private directory has been unmounted."
+		echo "INFO: To see this change in your current shell:"
+		echo "  cd $PWD"
+		echo
+	fi
 fi
-if [ "$pwd_mounted" = "1" ]; then
-	echo
-	echo "INFO: Your private directory has been unmounted."
-	echo "INFO: To see this change in your current shell:"
-	echo "  cd $PWD"
-	echo
-fi
-

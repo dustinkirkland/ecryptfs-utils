@@ -2,8 +2,12 @@ ecryptfs-utils (77) unreleased; urgency=low
 
   * src/pam_ecryptfs/pam_ecryptfs.c: remove deprecated zombie code,
     LP: #401770
+  * src/utils/ecryptfs-umount-private: use for loop to loop over key
+    ids on removal
+  * src/utils/mount.ecryptfs_private.c: return non-zero on unmount failure
+    due to open sessions; handle this in ecryptfs-umount-private too
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Mon, 20 Jul 2009 12:14:06 -0500
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Mon, 20 Jul 2009 14:31:52 -0500
 
 ecryptfs-utils (76) released; urgency=low
 
