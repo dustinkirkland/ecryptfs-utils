@@ -1,4 +1,10 @@
-ecryptfs-utils (76) unreleased; urgency=low
+ecryptfs-utils (77) unreleased; urgency=low
+
+  * 
+
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Mon, 20 Jul 2009 12:12:40 -0500
+
+ecryptfs-utils (76) released; urgency=low
 
   [ Dustin Kirkland ]
   * src/utils/ecryptfs-setup-swap: switch from vol_id to blkid,
@@ -84,7 +90,7 @@ ecryptfs-utils (76) unreleased; urgency=low
   [ Michael Rooney ]
   * src/python/ecryptfsapi.py: added python api
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Fri, 17 Jul 2009 18:10:55 -0500
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Mon, 20 Jul 2009 12:12:30 -0500
 
 ecryptfs-utils (75) released; urgency=low
 
