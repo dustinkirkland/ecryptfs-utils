@@ -319,7 +319,7 @@ if test "${enable_pam}" = "yes" ; then
 		AC_CHECK_LIB(
 			[pam_misc],
 			[pam_misc_setenv],
-			[PAM_LIBS="${TSPI_LIBS} -lpam_misc"],
+			[PAM_LIBS="${PAM_LIBS} ${TSPI_LIBS} -lpam_misc"],
 			[AC_MSG_ERROR([Cannot find pam_misc])]
 		)
 	fi
