@@ -82,7 +82,7 @@ static int ecryptfs_pam_automount_set(const char *homedir)
 		if (errno != ENOENT)
 			rc = -errno;
 		goto out;
-	} 
+	}
 	free(file_path);
 	if (asprintf(&file_path, "%s/.ecryptfs/auto-mount", homedir) == -1)
 		return -ENOMEM;
@@ -90,7 +90,7 @@ static int ecryptfs_pam_automount_set(const char *homedir)
 		if (errno != ENOENT)
 			rc = -errno;
 		goto out;
-	} 
+	}
 	rc = 1;
 out:
 	free(file_path);
@@ -131,7 +131,7 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags, int argc,
 	}
 	if (!ecryptfs_pam_automount_set(homedir))
 		goto out;
-	/* we need side effect of this check: 
+	/* we need side effect of this check:
 	   load ecryptfs module if not loaded already */
 	if (ecryptfs_get_version(&version) != 0)
 		syslog(LOG_WARNING, "Can't check if kernel supports ecryptfs\n");
@@ -170,7 +170,7 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags, int argc,
 		if ((argc == 1)
 		    && (memcmp(argv[0], "unwrap\0", 7) == 0)) {
 			char *wrapped_pw_filename;
-			
+
 			rc = asprintf(
 				&wrapped_pw_filename, "%s/.ecryptfs/%s",
 				homedir,
@@ -266,7 +266,7 @@ static int private_dir(pam_handle_t *pamh, int mount)
 		return 1;
         }
         if (
-	    (asprintf(&sigfile, "%s/.ecryptfs/%s.sig", pwd->pw_dir, 
+	    (asprintf(&sigfile, "%s/.ecryptfs/%s.sig", pwd->pw_dir,
 	     PRIVATE_DIR) < 0) || sigfile == NULL) {
 		syslog(LOG_ERR, "Error allocating memory for sigfile name");
 		return 1;
@@ -282,7 +282,7 @@ static int private_dir(pam_handle_t *pamh, int mount)
 	if ((pid = fork()) < 0) {
 		syslog(LOG_ERR, "Error setting up private mount");
 		return 1;
-	} 
+	}
 	if (pid == 0) {
 		if (mount == 1) {
 		        if ((asprintf(&recorded,
@@ -307,7 +307,7 @@ static int private_dir(pam_handle_t *pamh, int mount)
 			}
 			/* run mount.ecryptfs_private as the user */
 			setresuid(pwd->pw_uid, pwd->pw_uid, pwd->pw_uid);
-			execl("/sbin/mount.ecryptfs_private", 
+			execl("/sbin/mount.ecryptfs_private",
 			      "mount.ecryptfs_private", NULL);
 		} else {
 			if (stat(autofile, &s) != 0) {
@@ -318,13 +318,13 @@ static int private_dir(pam_handle_t *pamh, int mount)
 			}
 			/* run umount.ecryptfs_private as the user */
 			setresuid(pwd->pw_uid, pwd->pw_uid, pwd->pw_uid);
-			execl("/sbin/umount.ecryptfs_private", 
+			execl("/sbin/umount.ecryptfs_private",
  			      "umount.ecryptfs_private", NULL);
 		}
 		return 1;
 	} else {
 		waitpid(pid, &rc, 0);
-		syslog(LOG_INFO, 
+		syslog(LOG_INFO,
 		       "Mount of private directory return code [%d]", rc);
 		goto out;
 	}
