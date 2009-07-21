@@ -4,6 +4,15 @@ case "${1}" in
 	configure)
 		[ -e /var/log/installer/syslog ] && sed -i '/user-setup: YOU SHOULD RECORD THIS/,+2 d' /var/log/installer/syslog
 		pam-auth-update --package
+		# Try to migrate encrypted Private counters from /tmp to /dev/shm, if sane
+		for i in $(ls /home); do
+			if [ -f "/tmp/ecryptfs-$i-Private" ] && [ ! -e "/dev/shm/ecryptfs-$i-Private" ]; then
+				o=$(stat -c %U "/tmp/ecryptfs-$i-Private")
+				if [ $i = $o ]; then
+					mv -f /tmp/ecryptfs-$i-Private /dev/shm
+				fi
+			fi
+		done
 		;;
 
 	abort-upgrade|abort-remove|abort-deconfigure)
