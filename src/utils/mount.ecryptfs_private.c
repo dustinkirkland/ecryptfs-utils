@@ -49,7 +49,7 @@
 #define KEY_CIPHER "aes"
 #define PRIVATE_DIR "Private"
 #define FSTYPE "ecryptfs"
-#define TMP "/tmp"
+#define TMP "/dev/shm"
 
 
 int check_username(char *u) {
@@ -294,18 +294,33 @@ int update_mtab(char *dev, char *mnt, char *opt) {
 	return 0;
 }
 
-FILE *lock_counter(char *u) {
+FILE *lock_counter(char *u, int uid) {
 	char *f;
 	int fd;
 	FILE *fh;
-	int tries = 0;
+	struct stat s;
+	int i = 1;
 	/* We expect TMP to exist, be writeable by the user,
 	 * and to be cleared on boot */
-	if (
-		asprintf(&f, "%s/%s-%s-%s", TMP, FSTYPE, u, PRIVATE_DIR) < 0
-	   ) {
+	if (asprintf(&f, "%s/%s-%s-%s", TMP, FSTYPE, u, PRIVATE_DIR) < 0) {
 		perror("asprintf");
 		return NULL;
+	}
+	/* If the counter path exists, and it's either not a regular
+	 * file, or it's not owned by the current user, append iterator
+	 * until we find a filename we can use.
+	 */
+	while (1) {
+		if (stat(f, &s)==0 && (!S_ISREG(s.st_mode) || s.st_uid!=uid)) {
+			free(f);
+			if (asprintf(&f, "%s/%s-%s-%s-%d", TMP, FSTYPE, u,
+			    PRIVATE_DIR, i++) < 0) {
+				perror("asprintf");
+				return NULL;
+			}
+		} else {
+			break;
+		}
 	}
 	/* open file for reading and writing */
 	if ((fd = open(f, O_RDWR)) < 0) {
@@ -434,7 +449,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	/* Lock the counter through the rest of the program */
-	fh_counter = lock_counter(pwd->pw_name);
+	fh_counter = lock_counter(pwd->pw_name, uid);
 	if (fh_counter == NULL) {
 		fputs("Error locking counter", stderr);
 		goto fail;
