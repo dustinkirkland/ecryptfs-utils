@@ -55,7 +55,7 @@ ecryptfs_generate_tpm_key_CFLAGS = $(AM_CFLAGS) $(TSPI_CFLAGS)
 ecryptfs_generate_tpm_key_LDADD = $(TSPI_LIBS)
 
 mount_ecryptfs_private_SOURCES = mount.ecryptfs_private.c
-mount_ecryptfs_private_LDADD = $(KEYUTILS_LIBS)
+mount_ecryptfs_private_LDADD = $(top_builddir)/src/libecryptfs/libecryptfs.la $(KEYUTILS_LIBS)
 
 ecryptfs_stat_SOURCES = ecryptfs-stat.c
 ecryptfs_stat_LDADD = $(top_builddir)/src/libecryptfs/libecryptfs.la

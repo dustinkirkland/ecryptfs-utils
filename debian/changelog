@@ -1,14 +1,33 @@
 ecryptfs-utils (77) unreleased; urgency=low
 
-  * src/pam_ecryptfs/pam_ecryptfs.c: remove deprecated zombie code,
-    LP: #401770
+  * src/libecryptfs/key_management.c, src/pam_ecryptfs/pam_ecryptfs.c:
+    revert the zombie code removal from pam_ecryptfs as it seems this
+    bit is still needed; fix the source of the problem introduced in
+    commit r407; check for non-zero return codes; this problem would
+    manifest itself as a) unable to unlock screensaver, b) unable to
+    switch users, c) unable to mount home folder on initial login;
+    LP: #402222, #402029
   * src/utils/ecryptfs-umount-private: use for loop to loop over key
     ids on removal
   * src/utils/mount.ecryptfs_private.c: return non-zero on unmount failure
     due to open sessions; handle this in ecryptfs-umount-private too; make
-    the flock() blocking
+    the flock() blocking; use /dev/shm for counter; add an iterator to the
+    counter file to prevent users from DoS'ing one another from accessing
+    their encrypted directories, LP: #402745
+  * debian/ecryptfs-utils.postinst: move /tmp counters to /dev/shm
+  * configure.ac: link against pam, silence shlib warning
+  * src/include/ecryptfs.h, src/libecryptfs/main.c,
+    src/pam_ecryptfs/pam_ecryptfs.c, src/utils/Makefile.am,
+    src/utils/mount.ecryptfs_private.c: move two functions from
+    mount.ecryptfs_private to libecryptfs, namely is_mounted() and
+    fetch_private_mnt(); use these in both pam_ecryptfs and
+    mount.ecryptfs_private; also move PRIVATE to ECRYPTFS_PRIVATE in
+    the ecryptfs.h headers; this will allow us to short-circuit some of the
+    costly key-loading code on pam_auth if the private dir is already
+    mounted, speeding up some subsequent authentications significantly,
+    LP: #402748
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Mon, 20 Jul 2009 15:04:09 -0500
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Tue, 21 Jul 2009 18:08:18 -0500
 
 ecryptfs-utils (76) released; urgency=low
 

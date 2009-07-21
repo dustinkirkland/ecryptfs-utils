@@ -632,5 +632,8 @@ int ecryptfs_enable_echo(struct termios *saved_settings);
 char *ecryptfs_get_passphrase(char *prompt);
 int ecryptfs_run_daemon(struct ecryptfs_messaging_ctx *mctx);
 
+#define ECRYPTFS_PRIVATE_DIR "Private"
+char *ecryptfs_fetch_private_mnt(char *pw_dir);
+int ecryptfs_private_is_mounted(char *dev, char *mnt, char *sig, int mounting);
 
 #endif

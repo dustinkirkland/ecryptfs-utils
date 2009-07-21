@@ -40,6 +40,7 @@
 #include <unistd.h>
 #include <syslog.h>
 #include <values.h>
+#include "../include/ecryptfs.h"
 
 /* Perhaps a future version of this program will allow these to be configurable
  * by the system administrator (or user?) at run time.  For now, these are set
@@ -47,7 +48,6 @@
  */
 #define KEY_BYTES 16
 #define KEY_CIPHER "aes"
-#define PRIVATE_DIR "Private"
 #define FSTYPE "ecryptfs"
 #define TMP "/dev/shm"
 
@@ -95,7 +95,7 @@ char *fetch_sig(char *pw_dir, int entry) {
 	/* Construct sig file name */
 	if (
 	    asprintf(&sig_file, "%s/.ecryptfs/%s.sig", pw_dir,
-		     PRIVATE_DIR) < 0
+		     ECRYPTFS_PRIVATE_DIR) < 0
 	   ) {
 		perror("asprintf");
 		return NULL;
@@ -152,45 +152,6 @@ char *fetch_sig(char *pw_dir, int entry) {
 	return sig;
 }
 
-char *fetch_mnt(char *pw_dir) {
-/* Read ecryptfs mount from file
- * Return a string, or pw_dir/PRIVATE_DIR
- */
-	char *mnt_file = NULL;
-	char *mnt = NULL;
-	char *mnt_default = NULL;
-	FILE *fh;
-	/* Construct mnt file name */
-	if (asprintf(&mnt_default, "%s/%s", pw_dir, PRIVATE_DIR) < 0
-	    || mnt_default == NULL) {
-		perror("asprintf");
-		return NULL;
-	}
-	if (
-	    asprintf(&mnt_file, "%s/.ecryptfs/%s.mnt", pw_dir, PRIVATE_DIR) < 0
-	    || mnt_file == NULL) {
-		perror("asprintf");
-		return NULL;
-	}
-	fh = fopen(mnt_file, "r");
-	if (fh == NULL) {
-		mnt = mnt_default;
-	} else {
-		if ((mnt = (char *)malloc(MAXPATHLEN+1)) == NULL) {
-			perror("malloc");
-			return NULL;
-		}
-		if (fgets(mnt, MAXPATHLEN, fh) == NULL) {
-			mnt = mnt_default;
-		} else {
-			/* Ensure that mnt doesn't contain newlines */
-			mnt = strtok(mnt, "\n");
-		}
-		fclose(fh);
-	}
-	return mnt;
-}
-
 int check_ownerships(int uid, char *path) {
 /* Check ownership of device and mount point.
  * Return 0 if everything is in order, 1 on error.
@@ -209,57 +170,6 @@ int check_ownerships(int uid, char *path) {
 		return 1;
 	}
 	return 0;
-}
-
-int is_mounted(char *dev, char *mnt, char *sig, int mounting) {
-/* Check if a device or mount point is mounted.
- * Return 1 if a filesystem in mtab matches dev && mnt && sig.
- * Return 0 otherwise.
- */
-	FILE *fh;
-	struct mntent *m;
-	char *opt;
-	int mounted;
-	if (asprintf(&opt, "ecryptfs_sig=%s", sig) < 0) {
-		perror("asprintf");
-		return 1;
-	}
-	fh = setmntent("/proc/mounts", "r");
-	if (fh == NULL) {
-		perror("setmntent");
-		return 1;
-	}
-	mounted = 0;
-	flockfile(fh);
-	while ((m = getmntent(fh)) != NULL) {
-		if (mounting == 1) {
-			/* If mounting, return "already mounted" if EITHER the
- 			 * dev or the mnt dir shows up in mtab/mounts;
- 			 * regardless of the signature of such mounts;
- 			 */
-			if (
-			    strcmp(m->mnt_fsname, dev) == 0 ||
-			    strcmp(m->mnt_dir, mnt) == 0
-			) {
-				mounted = 1;
-			}
-		} else {
-			/* Otherwise, we're unmounting, and we need to be
-			 * very conservative in finding a perfect match
-			 * to unmount.  The device, mountpoint, and signature
-			 * must *all* match perfectly.
-			 */
-			if (
-			    strcmp(m->mnt_fsname, dev) == 0 &&
-			    strcmp(m->mnt_dir, mnt) == 0 &&
-			    hasmntopt(m, opt) != NULL
-			) {
-				mounted = 1;
-			}
-		}
-	}
-	endmntent(fh);
-	return mounted;
 }
 
 
@@ -302,7 +212,7 @@ FILE *lock_counter(char *u, int uid) {
 	int i = 1;
 	/* We expect TMP to exist, be writeable by the user,
 	 * and to be cleared on boot */
-	if (asprintf(&f, "%s/%s-%s-%s", TMP, FSTYPE, u, PRIVATE_DIR) < 0) {
+	if (asprintf(&f, "%s/%s-%s-%s", TMP, FSTYPE, u, ECRYPTFS_PRIVATE_DIR) < 0) {
 		perror("asprintf");
 		return NULL;
 	}
@@ -314,7 +224,7 @@ FILE *lock_counter(char *u, int uid) {
 		if (stat(f, &s)==0 && (!S_ISREG(s.st_mode) || s.st_uid!=uid)) {
 			free(f);
 			if (asprintf(&f, "%s/%s-%s-%s-%d", TMP, FSTYPE, u,
-			    PRIVATE_DIR, i++) < 0) {
+			    ECRYPTFS_PRIVATE_DIR, i++) < 0) {
 				perror("asprintf");
 				return NULL;
 			}
@@ -491,12 +401,12 @@ int main(int argc, char *argv[]) {
 
 	/* Construct device, mount point, and mount options */
 	if (
-	    (asprintf(&dev, "%s/.%s", pwd->pw_dir, PRIVATE_DIR) < 0) ||
+	    (asprintf(&dev, "%s/.%s", pwd->pw_dir, ECRYPTFS_PRIVATE_DIR) < 0) ||
 	    dev == NULL) {
 		perror("asprintf (dev)");
 		goto fail;
 	}
-	mnt = fetch_mnt(pwd->pw_dir);
+	mnt = ecryptfs_fetch_private_mnt(pwd->pw_dir);
 	if (mnt == NULL) {
 		perror("asprintf (mnt)");
 		goto fail;
@@ -532,7 +442,7 @@ int main(int argc, char *argv[]) {
 			fputs("Error incrementing mount counter\n", stderr);
 		}
 		/* Mounting, so exit if already mounted */
-		if (is_mounted(dev, mnt, sig, mounting) == 1) {
+		if (ecryptfs_private_is_mounted(dev, mnt, sig, mounting) == 1) {
 			goto success;
 		}
 		/* Check ownership of dev, if mounting;
@@ -573,7 +483,7 @@ int main(int argc, char *argv[]) {
 			goto fail;
 		}
 		/* Unmounting, so exit if not mounted */
-		if (is_mounted(dev, mnt, sig, mounting) == 0) {
+		if (ecryptfs_private_is_mounted(dev, mnt, sig, mounting) == 0) {
 			goto fail;
 		}
 		/* The key is not needed for unmounting, so we set res=0.

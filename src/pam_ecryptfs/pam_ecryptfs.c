@@ -108,6 +108,7 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags, int argc,
 	char salt[ECRYPTFS_SALT_SIZE];
 	char salt_hex[ECRYPTFS_SALT_SIZE_HEX];
 	char *auth_tok_sig;
+	char *private_mnt = NULL;
 	pid_t child_pid, tmp_pid;
 	long rc;
 	uint32_t version;
@@ -130,6 +131,11 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags, int argc,
 		goto out;
 	}
 	if (!ecryptfs_pam_automount_set(homedir))
+		goto out;
+	private_mnt = ecryptfs_fetch_private_mnt(homedir);
+	if (ecryptfs_private_is_mounted(NULL, private_mnt, NULL, 1))
+		/* If private/home is already mounted, then we can skip
+		   costly loading of keys */
 		goto out;
 	/* we need side effect of this check:
 	   load ecryptfs module if not loaded already */
@@ -212,6 +218,8 @@ out_child:
 		syslog(LOG_WARNING,
 		       "waitpid() returned with error condition\n");
 out:
+	if (private_mnt != NULL)
+		free(private_mnt);
 	return PAM_SUCCESS;
 }
 

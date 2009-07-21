@@ -36,6 +36,7 @@
 #include <sys/types.h>
 #include <keyutils.h>
 #include <sys/ipc.h>
+#include <sys/param.h>
 #include <sys/shm.h>
 #include <sys/sem.h>
 #include "../include/ecryptfs.h"
@@ -88,6 +89,111 @@ int do_hash(char *src, int src_size, char *dst, int algo)
 out:
 	return (int)err;
 }
+
+/* Read ecryptfs private mount from file
+ * Allocate and return a string
+ */
+char *ecryptfs_fetch_private_mnt(char *pw_dir) {
+	char *mnt_file = NULL;
+	char *mnt_default = NULL;
+	char *mnt = NULL;
+	FILE *fh = NULL;
+	/* Construct mnt file name */
+	if (asprintf(&mnt_default, "%s/%s", pw_dir, ECRYPTFS_PRIVATE_DIR) < 0
+			|| mnt_default == NULL) {
+		perror("asprintf");
+		return NULL;
+	}
+	if (
+			asprintf(&mnt_file, "%s/.ecryptfs/%s.mnt", pw_dir, ECRYPTFS_PRIVATE_DIR) < 0
+			|| mnt_file == NULL) {
+		perror("asprintf");
+		return NULL;
+	}
+	fh = fopen(mnt_file, "r");
+	flockfile(fh);
+	if (fh == NULL) {
+		mnt = mnt_default;
+	} else {
+		if ((mnt = (char *)malloc(MAXPATHLEN+1)) == NULL) {
+			perror("malloc");
+			return NULL;
+		}
+		if (fgets(mnt, MAXPATHLEN, fh) == NULL) {
+			mnt = mnt_default;
+		} else {
+			/* Ensure that mnt doesn't contain newlines */
+			mnt = strtok(mnt, "\n");
+		}
+		fclose(fh);
+	}
+	if (mnt_file != NULL)
+		free(mnt_file);
+	if (mnt_default != NULL && mnt != mnt_default)
+		free(mnt_default);
+	return mnt;
+}
+
+
+/* Check if an ecryptfs private device or mount point is mounted.
+ * Return 1 if a filesystem in mtab matches dev && mnt && sig.
+ * Return 0 otherwise.
+ */
+int ecryptfs_private_is_mounted(char *dev, char *mnt, char *sig, int mounting) {
+	FILE *fh = NULL;
+	struct mntent *m = NULL;
+	char *opt = NULL;
+	int mounted;
+	if (asprintf(&opt, "ecryptfs_sig=%s", sig) < 0) {
+		perror("asprintf");
+		return 0;
+	}
+	fh = setmntent("/proc/mounts", "r");
+	if (fh == NULL) {
+		perror("setmntent");
+		return 0;
+	}
+	mounted = 0;
+	flockfile(fh);
+	while ((m = getmntent(fh)) != NULL) {
+		if (strcmp(m->mnt_type, "ecryptfs") != 0)
+			/* Skip if this entry is not an ecryptfs mount */
+			continue;
+		if (mounting == 1) {
+			/* If mounting, return "already mounted" if EITHER the
+ 			 * dev or the mnt dir shows up in mtab/mounts;
+ 			 * regardless of the signature of such mounts;
+ 			 */
+			if (dev != NULL && strcmp(m->mnt_fsname, dev) == 0) {
+				mounted = 1;
+				break;
+			}
+			if (mnt != NULL && strcmp(m->mnt_dir, mnt) == 0) {
+				mounted = 1;
+				break;
+			}
+		} else {
+			/* Otherwise, we're unmounting, and we need to be
+			 * very conservative in finding a perfect match
+			 * to unmount.  The device, mountpoint, and signature
+			 * must *all* match perfectly.
+			 */
+			if (
+			    strcmp(m->mnt_fsname, dev) == 0 &&
+			    strcmp(m->mnt_dir, mnt) == 0 &&
+			    hasmntopt(m, opt) != NULL
+			) {
+				mounted = 1;
+				break;
+			}
+		}
+	}
+	endmntent(fh);
+	if (opt != NULL)
+		free(opt);
+	return mounted;
+}
+
 
 /**
  * TODO: We need to support more hash algs
@@ -861,3 +967,4 @@ struct ecryptfs_ctx_ops *cryptfs_get_ctx_opts (void)
 {
 	return &ctx_ops;
 }
+
