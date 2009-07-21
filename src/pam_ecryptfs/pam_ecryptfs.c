@@ -196,6 +196,13 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags, int argc,
 			       "user session keyring; rc = [%ld]\n", rc);
 			goto out_child;
 		}
+		if (fork() == 0) {
+			if ((rc = ecryptfs_set_zombie_session_placeholder())) {
+				syslog(LOG_ERR, "Error attempting to create "
+						"and register zombie process; "
+						"rc = [%ld]\n", rc);
+			}
+		}
 out_child:
 		free(auth_tok_sig);
 		exit(0);

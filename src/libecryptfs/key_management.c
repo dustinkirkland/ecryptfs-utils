@@ -583,12 +583,12 @@ int ecryptfs_insert_wrapped_passphrase_into_keyring(
 	/* If the kernel supports filename encryption, add the associated
 	 * filename encryption key to the keyring as well
 	 */
-	if (ecryptfs_get_version(&version) != 0 ||
+	if (ecryptfs_get_version(&version) == 0 &&
 	    ecryptfs_supports_filename_encryption(version)) {
 		if ((rc = ecryptfs_add_passphrase_key_to_keyring(
 					auth_tok_sig,
 					decrypted_passphrase,
-					ECRYPTFS_DEFAULT_SALT_FNEK_HEX)) < 0) {
+					ECRYPTFS_DEFAULT_SALT_FNEK_HEX)) != 0) {
 			syslog(LOG_ERR,
 			   "Error attempting to add filename encryption key to "
 			   "user session keyring; rc = [%d]\n", rc);
@@ -597,7 +597,7 @@ int ecryptfs_insert_wrapped_passphrase_into_keyring(
 	}
 	if ((rc = ecryptfs_add_passphrase_key_to_keyring(auth_tok_sig,
 							 decrypted_passphrase,
-							 salt)) < 0) {
+							 salt)) != 0) {
 		syslog(LOG_ERR, "Error attempting to add passphrase key to "
 		       "user session keyring; rc = [%d]\n", rc);
 	} else
