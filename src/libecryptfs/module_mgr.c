@@ -412,6 +412,7 @@ static struct supported_key_bytes {
 	{"twofish", 32, 2},
 	{"blowfish", 16, 1},
 	{"blowfish", 32, 2},
+	{"blowfish", 56, 2},
 	{"khazad", 16, 1},
 	{"arc4", 16, 1},
 	{"arc4", 32, 2},

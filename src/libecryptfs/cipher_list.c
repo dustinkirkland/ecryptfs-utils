@@ -338,7 +338,7 @@ static struct cipher_name_module_map {
 	{"tea", "tea.ko", 8, 16, 16, 7, 0},
 	{"xeta", "tea.ko", 8, 16, 16, 9, 0},
 	{"xtea", "tea.ko", 8, 16, 16, 8, 0},
-	{"blowfish", "blowfish.ko", 16, 16, 32, 2, 1},
+	{"blowfish", "blowfish.ko", 16, 16, 56, 2, 1},
 	{"twofish", "twofish.ko", 16, 16, 32, 4, 1},
 	{"khazad", "khazad.ko", 8, 16, 16, 11, 0},
 	{"cast5", "cast5.ko", 8, 5, 16, 14, 1},
