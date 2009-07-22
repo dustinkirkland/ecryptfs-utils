@@ -111,10 +111,10 @@ char *ecryptfs_fetch_private_mnt(char *pw_dir) {
 		return NULL;
 	}
 	fh = fopen(mnt_file, "r");
-	flockfile(fh);
 	if (fh == NULL) {
 		mnt = mnt_default;
 	} else {
+		flockfile(fh);
 		if ((mnt = (char *)malloc(MAXPATHLEN+1)) == NULL) {
 			perror("malloc");
 			return NULL;

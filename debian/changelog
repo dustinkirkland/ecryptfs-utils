@@ -1,8 +1,12 @@
 ecryptfs-utils (78) unreleased; urgency=low
 
-  * 
+  [ James Westby ]
+  * src/libecryptfs/main.c flockfile the filehandle after checking that
+    we were able to successfully open it (LP: #403011)
+  * debian/libecryptfs0.shlibs: bump shlibs dep to 77 since we added new
+    symbols there
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Wed, 22 Jul 2009 00:10:59 -0500
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Wed, 22 Jul 2009 09:28:29 -0500
 
 ecryptfs-utils (77) released; urgency=low
 
