@@ -1,5 +1,6 @@
 ecryptfs-utils (77) unreleased; urgency=low
 
+  [ Dustin Kirkland ]
   * src/libecryptfs/key_management.c, src/pam_ecryptfs/pam_ecryptfs.c:
     revert the zombie code removal from pam_ecryptfs as it seems this
     bit is still needed; fix the source of the problem introduced in
@@ -27,7 +28,12 @@ ecryptfs-utils (77) unreleased; urgency=low
     mounted, speeding up some subsequent authentications significantly,
     LP: #402748
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Tue, 21 Jul 2009 18:08:18 -0500
+  [ Tyler Hicks ]
+  * src/libecryptfs/cipher_list.c, src/libecryptfs/module_mgr.c:
+    add blowfish/56-bytes to the list of ciphers we officially support,
+    LP: #402790
+
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Tue, 21 Jul 2009 19:13:03 -0500
 
 ecryptfs-utils (76) released; urgency=low
 
