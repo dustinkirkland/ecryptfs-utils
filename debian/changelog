@@ -27,13 +27,21 @@ ecryptfs-utils (77) unreleased; urgency=low
     costly key-loading code on pam_auth if the private dir is already
     mounted, speeding up some subsequent authentications significantly,
     LP: #402748
+  * doc/ecryptfs-mount-private.txt: removed the "$" to make copy-n-paste
+    more user friendly
+  * src/utils/ecryptfs-setup-private: when encrypting home, put the
+    .ecryptfs and .Private data in /home/.ecryptfs rather than /var/lib,
+    as users are forgetting to backup /var/lib, and are often putting
+    /home on a separate partition; furthermore, this gives users a place
+    to access their encrypted data for backup, rather than hiding the
+    data below $HOME, LP: #371719
 
   [ Tyler Hicks ]
   * src/libecryptfs/cipher_list.c, src/libecryptfs/module_mgr.c:
     add blowfish/56-bytes to the list of ciphers we officially support,
     LP: #402790
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Tue, 21 Jul 2009 19:13:03 -0500
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Tue, 21 Jul 2009 23:57:33 -0500
 
 ecryptfs-utils (76) released; urgency=low
 
