@@ -6,4 +6,4 @@ From the graphical desktop, click on:
 or
 
 From the command line, run:
- $ ecryptfs-mount-private
+ ecryptfs-mount-private
