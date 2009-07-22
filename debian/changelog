@@ -1,8 +1,8 @@
 ecryptfs-utils (79) unreleased; urgency=low
 
-  * 
+  * debian/control: updated bzr and browser urls
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Wed, 22 Jul 2009 11:29:28 -0500
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Wed, 22 Jul 2009 11:30:17 -0500
 
 ecryptfs-utils (78) released; urgency=low
 
