@@ -1,4 +1,10 @@
-ecryptfs-utils (77) unreleased; urgency=low
+ecryptfs-utils (78) unreleased; urgency=low
+
+  * 
+
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Wed, 22 Jul 2009 00:10:59 -0500
+
+ecryptfs-utils (77) released; urgency=low
 
   [ Dustin Kirkland ]
   * src/libecryptfs/key_management.c, src/pam_ecryptfs/pam_ecryptfs.c:
