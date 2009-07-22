@@ -1,4 +1,4 @@
-ecryptfs-utils (78) unreleased; urgency=low
+ecryptfs-utils (78) released; urgency=low
 
   [ James Westby ]
   * src/libecryptfs/main.c flockfile the filehandle after checking that
@@ -6,7 +6,7 @@ ecryptfs-utils (78) unreleased; urgency=low
   * debian/libecryptfs0.shlibs: bump shlibs dep to 77 since we added new
     symbols there
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Wed, 22 Jul 2009 09:28:29 -0500
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Wed, 22 Jul 2009 11:28:20 -0500
 
 ecryptfs-utils (77) released; urgency=low
 
