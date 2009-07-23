@@ -15,12 +15,13 @@
 PRIVATE_DIR="Private"
 WRAPPING_PASS="LOGIN"
 PW_ATTEMPTS=3
-MESSAGE="Enter your login passphrase: "
+TEXTDOMAIN="ecryptfs-utils"
+MESSAGE=`gettext "Enter your login passphrase:"`
 
 if [ -f $HOME/.ecryptfs/wrapping-independent ]; then
 	# use a wrapping passphrase different from the login passphrase
 	WRAPPING_PASS="INDEPENDENT"
-	MESSAGE="Enter your wrapping passphrase: "
+	MESSAGE=`gettext "Enter your wrapping passphrase:"`
 fi
 
 WRAPPED_PASSPHRASE_FILE="$HOME/.ecryptfs/wrapped-passphrase"
@@ -45,24 +46,24 @@ if [ -f "$WRAPPED_PASSPHRASE_FILE" -a -f "$MOUNT_PASSPHRASE_SIG_FILE" ]; then
 		if printf "%s\0" "$LOGINPASS" | ecryptfs-insert-wrapped-passphrase-into-keyring "$WRAPPED_PASSPHRASE_FILE" - ; then
 			break
 		else
-			echo "ERROR: Your passphrase is incorrect"
+			echo `gettext "ERROR:"` `gettext "Your passphrase is incorrect"`
 			tries=$(($tries + 1))
 			continue
 		fi
 	done
 	if [ $tries -ge $PW_ATTEMPTS ]; then
-		echo "ERROR: Too many incorrect password attempts, exiting"
+		echo `gettext "ERROR:"` `gettext "Too many incorrect password attempts, exiting"`
 		exit 1
 	fi
 	/sbin/mount.ecryptfs_private
 else
-	echo "ERROR: Encrypted $PRIVATE_DIR is not setup properly"
+	echo `gettext "ERROR:"` `gettext "Encrypted private directory is not setup properly"`
 	exit 1
 fi
 if grep -qs "$HOME/.Private $PWD ecryptfs " /proc/mounts 2>/dev/null; then
 	echo
-	echo "INFO: Your private directory has been mounted."
-	echo "INFO: To see this change in your current shell:"
+	echo `gettext "INFO:"` `gettext "Your private directory has been mounted."`
+	echo `gettext "INFO:"` `gettext "To see this change in your current shell:"`
 	echo "  cd $PWD"
 	echo
 fi

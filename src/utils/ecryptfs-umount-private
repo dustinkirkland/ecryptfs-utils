@@ -5,6 +5,8 @@
 # Original by Michael Halcrow, IBM
 # Extracted to a stand-alone script by Dustin Kirkland <kirkland@canonical.com>
 
+TEXTDOMAIN="ecryptfs-utils"
+
 if grep -qs "$HOME/.Private $PWD ecryptfs " /proc/mounts 2>/dev/null; then
 	pwd_mounted=1
 fi
@@ -16,8 +18,8 @@ if /sbin/umount.ecryptfs_private; then
 	done
 	if [ "$pwd_mounted" = "1" ]; then
 		echo
-		echo "INFO: Your private directory has been unmounted."
-		echo "INFO: To see this change in your current shell:"
+		echo `gettext "INFO:"` `gettext "Your private directory has been unmounted."`
+		echo `gettext "INFO:"` `gettext "To see this change in your current shell:"`
 		echo "  cd $PWD"
 		echo
 	fi

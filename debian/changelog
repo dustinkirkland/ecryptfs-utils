@@ -1,8 +1,14 @@
 ecryptfs-utils (79) unreleased; urgency=low
 
   * debian/control: updated bzr and browser urls
+  * src/pam_ecryptfs/pam_ecryptfs.c: silence useless, oft-shown info
+    message
+  * src/utils/ecryptfs-mount-private, src/utils/ecryptfs-rewrite-file,
+    src/utils/ecryptfs-setup-private, src/utils/ecryptfs-setup-swap,
+    src/utils/ecryptfs-umount-private: use gettext for all string printing,
+    such that we can internationalize ecryptfs
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Wed, 22 Jul 2009 11:30:17 -0500
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 23 Jul 2009 17:00:38 -0500
 
 ecryptfs-utils (78) released; urgency=low
 
