@@ -1,0 +1,389 @@
+#: src/utils/ecryptfs-mount-private:19
+msgid "Enter your login passphrase:"
+msgstr ""
+
+#: src/utils/ecryptfs-mount-private:24
+msgid "Enter your wrapping passphrase:"
+msgstr ""
+
+#: src/utils/ecryptfs-mount-private:49 src/utils/ecryptfs-mount-private:55
+#: src/utils/ecryptfs-mount-private:60 src/utils/ecryptfs-rewrite-file:24
+#: src/utils/ecryptfs-setup-private:84 src/utils/ecryptfs-setup-private:264
+#: src/utils/ecryptfs-setup-private:272 src/utils/ecryptfs-setup-private:282
+#: src/utils/ecryptfs-setup-private:313 src/utils/ecryptfs-setup-swap:25
+msgid "ERROR:"
+msgstr ""
+
+#: src/utils/ecryptfs-mount-private:49
+msgid "Your passphrase is incorrect"
+msgstr ""
+
+#: src/utils/ecryptfs-mount-private:55 src/utils/ecryptfs-setup-private:289
+msgid "Too many incorrect password attempts, exiting"
+msgstr ""
+
+#: src/utils/ecryptfs-mount-private:60
+msgid "Encrypted private directory is not setup properly"
+msgstr ""
+
+#: src/utils/ecryptfs-mount-private:65 src/utils/ecryptfs-mount-private:66
+#: src/utils/ecryptfs-rewrite-file:30 src/utils/ecryptfs-setup-private:276
+#: src/utils/ecryptfs-setup-private:344 src/utils/ecryptfs-setup-private:349
+#: src/utils/ecryptfs-setup-swap:30 src/utils/ecryptfs-umount-private:21
+#: src/utils/ecryptfs-umount-private:22
+msgid "INFO:"
+msgstr ""
+
+#: src/utils/ecryptfs-mount-private:65
+msgid "Your private directory has been mounted."
+msgstr ""
+
+#: src/utils/ecryptfs-mount-private:66 src/utils/ecryptfs-umount-private:22
+msgid "To see this change in your current shell:"
+msgstr ""
+
+#: src/utils/ecryptfs-rewrite-file:23
+msgid "[FAILED]"
+msgstr ""
+
+#: src/utils/ecryptfs-rewrite-file:30
+msgid "Rewriting"
+msgstr ""
+
+#: src/utils/ecryptfs-rewrite-file:32
+msgid "File does not exist"
+msgstr ""
+
+#: src/utils/ecryptfs-rewrite-file:36
+msgid "[EXCLUDED]"
+msgstr ""
+
+#: src/utils/ecryptfs-rewrite-file:43
+msgid "Could not create tempdir"
+msgstr ""
+
+#: src/utils/ecryptfs-rewrite-file:47 src/utils/ecryptfs-rewrite-file:52
+#: src/utils/ecryptfs-rewrite-file:66
+msgid "Could not rename"
+msgstr ""
+
+#: src/utils/ecryptfs-rewrite-file:57
+msgid "Could not create tempfile"
+msgstr ""
+
+#: src/utils/ecryptfs-rewrite-file:61
+msgid "Could not copy"
+msgstr ""
+
+#: src/utils/ecryptfs-rewrite-file:70
+msgid "[OK]"
+msgstr ""
+
+#: src/utils/ecryptfs-rewrite-file:73
+msgid "rewrites succeeded"
+msgstr ""
+
+#: src/utils/ecryptfs-setup-private:14
+msgid "Enter your login passphrase"
+msgstr ""
+
+#: src/utils/ecryptfs-setup-private:104
+msgid "Can't get ecryptfs version, ecryptfs kernel module not loaded?"
+msgstr ""
+
+#: src/utils/ecryptfs-setup-private:131
+msgid "Enter your wrapping passphrase"
+msgstr ""
+
+#: src/utils/ecryptfs-setup-private:155
+msgid "You must be root to bootstrap encrypt a home directory"
+msgstr ""
+
+#: src/utils/ecryptfs-setup-private:178 src/utils/ecryptfs-setup-private:183
+msgid "ERROR: "
+msgstr ""
+
+#: src/utils/ecryptfs-setup-private:178
+msgid "You must provide a username"
+msgstr ""
+
+#: src/utils/ecryptfs-setup-private:183 src/utils/ecryptfs-setup-private:191
+msgid "User does not exist"
+msgstr ""
+
+#: src/utils/ecryptfs-setup-private:197
+msgid "User needs to be a member of ecryptfs group"
+msgstr ""
+
+#: src/utils/ecryptfs-setup-private:204
+msgid "User home directory does not exist"
+msgstr ""
+
+#: src/utils/ecryptfs-setup-private:223
+msgid "wrapped-passphrase file already exists, use --force to overwrite."
+msgstr ""
+
+#: src/utils/ecryptfs-setup-private:226
+msgid "file already exists, use --force to overwrite."
+msgstr ""
+
+#: src/utils/ecryptfs-setup-private:230 src/utils/ecryptfs-setup-private:231
+msgid "is already mounted"
+msgstr ""
+
+#: src/utils/ecryptfs-setup-private:238 src/utils/ecryptfs-setup-private:242
+msgid "must be empty before proceeding"
+msgstr ""
+
+#: src/utils/ecryptfs-setup-private:264
+msgid "Wrapping passphrases must match"
+msgstr ""
+
+#: src/utils/ecryptfs-setup-private:272
+msgid "You must provide a login passphrase"
+msgstr ""
+
+#: src/utils/ecryptfs-setup-private:276
+msgid "Skipping password verification"
+msgstr ""
+
+#: src/utils/ecryptfs-setup-private:298
+msgid "Enter your mount passphrase [leave blank to generate one]: "
+msgstr ""
+
+#: src/utils/ecryptfs-setup-private:308
+msgid "Enter your mount passphrase (again): "
+msgstr ""
+
+#: src/utils/ecryptfs-setup-private:313
+msgid "Mount passphrases do not match"
+msgstr ""
+
+#: src/utils/ecryptfs-setup-private:321
+msgid "Too many incorrect passphrase attempts, exiting"
+msgstr ""
+
+#: src/utils/ecryptfs-setup-private:327
+msgid ""
+"YOU SHOULD RECORD YOUR MOUNT PASSPHRASE AND STORE IT IN A SAFE LOCATION."
+msgstr ""
+
+#: src/utils/ecryptfs-setup-private:329
+msgid "THIS WILL BE REQUIRED IF YOU NEED TO RECOVER YOUR DATA AT A LATER TIME."
+msgstr ""
+
+#: src/utils/ecryptfs-setup-private:336
+msgid "Could not create crypt directory"
+msgstr ""
+
+#: src/utils/ecryptfs-setup-private:337
+msgid "Could not create mount directory"
+msgstr ""
+
+#: src/utils/ecryptfs-setup-private:344
+msgid "will not be mounted on login"
+msgstr ""
+
+#: src/utils/ecryptfs-setup-private:346
+msgid "Could not setup ecryptfs auto-mount"
+msgstr ""
+
+#: src/utils/ecryptfs-setup-private:349
+msgid "will not be unmounted on logout"
+msgstr ""
+
+#: src/utils/ecryptfs-setup-private:351
+msgid "Could not setup ecryptfs auto-umount"
+msgstr ""
+
+#: src/utils/ecryptfs-setup-private:355
+msgid "Could not remove ecryptfs wrapping-independent"
+msgstr ""
+
+#: src/utils/ecryptfs-setup-private:357
+msgid "Could not setup ecryptfs wrapping-independent"
+msgstr ""
+
+#: src/utils/ecryptfs-setup-private:365
+msgid "Could not backup existing data"
+msgstr ""
+
+#: src/utils/ecryptfs-setup-private:381
+msgid "Could not wrap passphrase"
+msgstr ""
+
+#: src/utils/ecryptfs-setup-private:389
+msgid "Could not add passphrase to the current keyring"
+msgstr ""
+
+#: src/utils/ecryptfs-setup-private:393
+msgid "Could not obtain the key signature"
+msgstr ""
+
+#: src/utils/ecryptfs-setup-private:396
+msgid "Could not create signature file"
+msgstr ""
+
+#: src/utils/ecryptfs-setup-private:399
+msgid "Could not create mountpoint file"
+msgstr ""
+
+#: src/utils/ecryptfs-setup-private:403
+msgid "Done configuring."
+msgstr ""
+
+#: src/utils/ecryptfs-setup-private:433
+msgid "Testing mount/write/umount/read..."
+msgstr ""
+
+#: src/utils/ecryptfs-setup-private:434
+msgid "Could not mount private ecryptfs directory"
+msgstr ""
+
+#: src/utils/ecryptfs-setup-private:435
+msgid "Could not create empty file"
+msgstr ""
+
+#: src/utils/ecryptfs-setup-private:436
+msgid "Could not generate random data"
+msgstr ""
+
+#: src/utils/ecryptfs-setup-private:437
+msgid "Could not write encrypted file"
+msgstr ""
+
+#: src/utils/ecryptfs-setup-private:438
+msgid "Could not read encrypted file"
+msgstr ""
+
+#: src/utils/ecryptfs-setup-private:439
+msgid "Could not unmount private ecryptfs directory"
+msgstr ""
+
+#: src/utils/ecryptfs-setup-private:440
+msgid "Could not mount private ecryptfs directory (2)"
+msgstr ""
+
+#: src/utils/ecryptfs-setup-private:441
+msgid "Could not read encrypted file (2)"
+msgstr ""
+
+#: src/utils/ecryptfs-setup-private:445
+msgid "Could not unmount private ecryptfs directory (2)"
+msgstr ""
+
+#: src/utils/ecryptfs-setup-private:447
+msgid "Testing failed."
+msgstr ""
+
+#: src/utils/ecryptfs-setup-private:449
+msgid "Testing succeeded."
+msgstr ""
+
+#: src/utils/ecryptfs-setup-private:453
+msgid "Logout, and log back in to begin using your encrypted directory."
+msgstr ""
+
+#: src/utils/ecryptfs-setup-swap:34
+msgid "WARNING:"
+msgstr ""
+
+#: src/utils/ecryptfs-setup-swap:39
+msgid "Usage:"
+msgstr ""
+
+#: src/utils/ecryptfs-setup-swap:60
+msgid "Please install"
+msgstr ""
+
+#: src/utils/ecryptfs-setup-swap:63
+msgid "This program must be run with 'sudo', or as root"
+msgstr ""
+
+#: src/utils/ecryptfs-setup-swap:70
+msgid "You do not currently have any swap space defined."
+msgstr ""
+
+#: src/utils/ecryptfs-setup-swap:72
+msgid "You can create a swap file by doing:"
+msgstr ""
+
+#: src/utils/ecryptfs-setup-swap:77
+msgid "And then re-run"
+msgstr ""
+
+#: src/utils/ecryptfs-setup-swap:81
+msgid "You have more than one swap space defined."
+msgstr ""
+
+#: src/utils/ecryptfs-setup-swap:82
+msgid "only supports setting up a single swap space"
+msgstr ""
+
+#: src/utils/ecryptfs-setup-swap:89
+msgid "does not appear to be swap space"
+msgstr ""
+
+#: src/utils/ecryptfs-setup-swap:94
+msgid "already appears to be encrypted."
+msgstr ""
+
+#: src/utils/ecryptfs-setup-swap:103
+msgid "already has an entry in /etc/crypttab."
+msgstr ""
+
+#: src/utils/ecryptfs-setup-swap:107
+msgid "already has an entry in /etc/fstab."
+msgstr ""
+
+#: src/utils/ecryptfs-setup-swap:113
+msgid "There appears to be a cryptswap entry in /etc/cryptab; aborting."
+msgstr ""
+
+#: src/utils/ecryptfs-setup-swap:118
+msgid "There appears to be a cryptswap entry in /etc/fstab; aborting."
+msgstr ""
+
+#: src/utils/ecryptfs-setup-swap:124
+msgid "Commented out your unencrypted swap from /etc/fstab"
+msgstr ""
+
+#: src/utils/ecryptfs-setup-swap:126
+msgid "Your swap space isn't currently listed in /etc/fstab"
+msgstr ""
+
+#: src/utils/ecryptfs-setup-swap:134
+msgid ""
+"An encrypted swap is required to help ensure that encrypted files are not "
+"leaked to disk in an unencrypted format."
+msgstr ""
+
+#: src/utils/ecryptfs-setup-swap:136
+msgid ""
+"HOWEVER, THE SWAP ENCRYPTION CONFIGURATION PRODUCED BY THIS PROGRAM WILL "
+"BREAK HIBERNATE/RESUME ON THIS SYSTEM!"
+msgstr ""
+
+#: src/utils/ecryptfs-setup-swap:138
+msgid "NOTE: Your suspend/resume capabilities will not be affected."
+msgstr ""
+
+#: src/utils/ecryptfs-setup-swap:140
+msgid "Do you want to proceed with encrypting your swap?"
+msgstr ""
+
+#: src/utils/ecryptfs-setup-swap:145
+msgid "Aborting."
+msgstr ""
+
+#: src/utils/ecryptfs-setup-swap:153
+msgid "Setting up swap:"
+msgstr ""
+
+#: src/utils/ecryptfs-setup-swap:170
+msgid "Successfully setup encrypted swap!"
+msgstr ""
+
+#: src/utils/ecryptfs-umount-private:21
+msgid "Your private directory has been unmounted."
+msgstr ""

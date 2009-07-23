@@ -1,5 +1,8 @@
 #!/usr/bin/make -f
 
+PKG=ecryptfs-utils
+PO_DIR=debian/po
+
 DEB_HOST_GNU_TYPE	?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
 DEB_BUILD_GNU_TYPE	?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
 
@@ -15,11 +18,30 @@ ifneq ($(DEB_BUILD_ARCH),s390)
 	TPMFLAGS = --enable-opencryptoki
 endif
 
+install-po: update-pot
+	for po in ${PO_DIR}/*.po ; do \
+		lang=$${po#po/}; lang=$${lang%.po}; \
+		mkdir -p ${PO_DIR}/locale/$${lang}/LC_MESSAGES/; \
+		msgfmt $${po} -o ${PO_DIR}/locale/$${lang}/LC_MESSAGES/${PKG}.mo ; \
+	done
+
+update-pot:
+	rm -f ${PO_DIR}/${PKG}.pot
+	xgettext -o ${PO_DIR}/${PKG}.pot -L Shell -f ${PO_DIR}/POTFILES.sh
+	for po in ${PO_DIR}/*.po ; do \
+		msgmerge $${po} ${PO_DIR}/${PKG}.pot -o $${po} ; \
+	done
+
 clean:
 	dh_testdir
 	dh_testroot
 	rm -f build-stamp
 	rm -f config.guess config.sub
+	for po in ${PO_DIR}/*.po ; do \
+		lang=$${po#po/}; lang=$${lang%.po}; \
+		rm -f ${PO_DIR}/locale/$${lang}/LC_MESSAGES/${PKG}.mo ; \
+	done
+
 
 	[ ! -f Makefile ] || $(MAKE) distclean
 
@@ -45,7 +67,7 @@ build-stamp: config.status
 
 	touch build-stamp
 
-install: build
+install: build install-po
 	dh_testdir
 	dh_testroot
 	dh_prep

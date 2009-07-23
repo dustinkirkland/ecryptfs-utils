@@ -7,8 +7,12 @@ ecryptfs-utils (79) unreleased; urgency=low
     src/utils/ecryptfs-setup-private, src/utils/ecryptfs-setup-swap,
     src/utils/ecryptfs-umount-private: use gettext for all string printing,
     such that we can internationalize ecryptfs
+  * po/POTFILES.sh, po/ecryptfs-utils.pot, po/fr.po, rules: add po to the
+    build system; for now, in the debian/ directory; this should be put in
+    the upstream source tree eventually (but I need some help with the
+    automake/autoconf integration)
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 23 Jul 2009 17:00:38 -0500
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 23 Jul 2009 18:21:20 -0500
 
 ecryptfs-utils (78) released; urgency=low
 
