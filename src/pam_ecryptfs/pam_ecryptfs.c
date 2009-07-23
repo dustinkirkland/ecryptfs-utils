@@ -339,8 +339,6 @@ static int private_dir(pam_handle_t *pamh, int mount)
 		return 1;
 	} else {
 		waitpid(pid, &rc, 0);
-		syslog(LOG_INFO,
-		       "Mount of private directory return code [%d]", rc);
 		goto out;
 	}
 out:
