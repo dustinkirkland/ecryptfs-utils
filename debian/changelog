@@ -21,12 +21,15 @@ ecryptfs-utils (79) unreleased; urgency=low
   * debian/lintian/ecryptfs-utils: added a lintian overrides file
   * debian/lintian/ecryptfs-utils, debian/ecryptfs-utils.install: add and
     install some proper lintian overrides
-  * src/libecryptfs/module_mgr.c: fix typo
+  * src/libecryptfs/module_mgr.c: fix typo, LP: #408437
 
   [ Evan Dandrea ]
   * ecryptfs-setup-swap: support more than one encrypted swap device
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Mon, 17 Aug 2009 11:42:12 -0500
+  [ Dorin Scutarașu ]
+  * src/libecryptfs/key_management.c: fix null pointer deref, LP: #409565
+
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Mon, 17 Aug 2009 11:48:08 -0500
 
 ecryptfs-utils (78) released; urgency=low
 

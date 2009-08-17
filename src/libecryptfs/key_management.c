@@ -689,7 +689,7 @@ int ecryptfs_read_salt_hex_from_rc(char *salt_hex)
 		}
 		goto out;
 	}
-	nvp = &nvp_list_head;
+	nvp = nvp_list_head.next;
 	while (nvp) {
 		if (strcmp(nvp->name, "salt") == 0) {
 			int valsize;
