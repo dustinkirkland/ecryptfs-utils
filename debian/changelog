@@ -1,4 +1,4 @@
-ecryptfs-utils (79) unreleased; urgency=low
+ecryptfs-utils (79) released; urgency=low
 
   [ Dustin Kirkland ]
   * debian/control: updated bzr and browser urls, bumped standards version
@@ -29,7 +29,7 @@ ecryptfs-utils (79) unreleased; urgency=low
   [ Dorin Scutarașu ]
   * src/libecryptfs/key_management.c: fix null pointer deref, LP: #409565
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Mon, 17 Aug 2009 11:48:08 -0500
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Mon, 17 Aug 2009 11:58:35 -0500
 
 ecryptfs-utils (78) released; urgency=low
 
