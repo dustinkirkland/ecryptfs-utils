@@ -22,6 +22,7 @@ dist_man_MANS = \
 	ecryptfs-rewrite-file.1 \
 	ecryptfs-setup-private.1 \
 	ecryptfs-setup-swap.1 \
+	ecryptfs-stat.1 \
 	ecryptfs-umount-private.1 \
 	ecryptfs-unwrap-passphrase.1 \
 	ecryptfs-wrap-passphrase.1 \
