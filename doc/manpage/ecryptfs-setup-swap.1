@@ -1,0 +1,29 @@
+.TH ecryptfs-setup-swap 1 2009-08-17 ecryptfs-utils "eCryptfs"
+.SH NAME
+ecryptfs-setup-swap \- ensure that any swap space is encrypted
+
+.SH SYNOPSIS
+\fBecryptfs-setup-swap [-f|--force]
+
+.SH DESCRIPTION
+This script will detect existing swap partitions or swap files, and encrypt them, using cryptsetup.
+
+Encrypted swap is essential to securing any system using eCryptfs, since decrypted file contents will exist in the system's memory, which may be swapped to disk at any time.  If the system swap space is not also encrypted, it is possible that decrypted files could be written to disk in clear text.
+
+Note that most Linux distributions do not yet support resuming from an encrypted swap space, and thus hibernate/resume will not work.  Suspend/resume is unaffected.
+
+Upon running the utility, the user will be informed of the hibernate/resume break, and asked to confirm the behavior.  The -f|--force option can be used to bypass this interactive prompt.
+
+.SH SEE ALSO
+.PD 0
+.TP
+\fBcryptsetup\fP(8)
+
+.TP
+\fIhttp://launchpad.net/ecryptfs/\fP
+.PD
+
+.SH AUTHOR
+This manpage and the utility was written by Dustin Kirkland <kirkland@canonical.com> for Ubuntu systems (but may be used by others).  Permission is granted to copy, distribute and/or modify this document under the terms of the GNU General Public License, Version 2 or any later version published by the Free Software Foundation.
+
+On Debian systems, the complete text of the GNU General Public License can be found in /usr/share/common-licenses/GPL.
