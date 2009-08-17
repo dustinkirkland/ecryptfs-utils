@@ -212,7 +212,7 @@ out:
 static struct param_node filename_crypto_fnek_sig_param_node = {
 	.num_mnt_opt_names = 1,
 	.mnt_opt_names = {"ecryptfs_fnek_sig"},
-	.prompt = "Filname Encryption Key (FNEK) Signature",
+	.prompt = "Filename Encryption Key (FNEK) Signature",
 	.val_type = VAL_STR,
 	.val = NULL,
 	.display_opts = NULL,
