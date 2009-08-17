@@ -27,6 +27,7 @@ dist_man_MANS = \
 	ecryptfs-unwrap-passphrase.1 \
 	ecryptfs-wrap-passphrase.1 \
 	mount.ecryptfs.8 \
+	umount.ecryptfs.8 \
 	mount.ecryptfs_private.1 \
 	pam_ecryptfs.8 \
 	umount.ecryptfs_private.1
