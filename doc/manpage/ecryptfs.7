@@ -95,9 +95,7 @@ only for testing purposes.
 
 The following command will layover mount eCryptfs on /secret with a passphrase contained in a file stored on secure media mounted at /mnt/secureusb/.
 
-\fBmount -t ecryptfs -o
-key=passphrase:passphrase_passwd_file=/mnt/secureusb/passwd_file.txt
-/secret /secret\fP
+\fBmount -t ecryptfs -o key=passphrase:passphrase_passwd_file=/mnt/secureusb/passwd_file.txt /secret /secret\fP
 
 .PP
 
