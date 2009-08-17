@@ -19,11 +19,13 @@ ecryptfs-utils (79) unreleased; urgency=low
     doc/manpage/umount.ecryptfs.8, doc/manpage/Makefile.am: added manpagess
   * doc/manpage/ecryptfs.7: fix lintian warning
   * debian/lintian/ecryptfs-utils: added a lintian overrides file
+  * debian/lintian/ecryptfs-utils, debian/ecryptfs-utils.install: add and
+    install some proper lintian overrides
 
   [ Evan Dandrea ]
   * ecryptfs-setup-swap: support more than one encrypted swap device
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Mon, 17 Aug 2009 10:41:28 -0500
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Mon, 17 Aug 2009 11:14:44 -0500
 
 ecryptfs-utils (78) released; urgency=low
 

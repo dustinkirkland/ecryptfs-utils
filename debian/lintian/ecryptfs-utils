@@ -1,0 +1,14 @@
+# This setuid is required for encrypted-home and encrypted-private;
+# Other distros or sysadmins could perhaps make it 4750, and create
+# an ecryptfs group, adding permitted users to this group (though
+# we're not doing this in Ubuntu).
+ecryptfs-utils: setuid-binary sbin/mount.ecryptfs_private 4755 root/root
+
+# The *.desktop files need to be executable
+ecryptfs-utils: executable-not-elf-or-script ./usr/share/ecryptfs-utils/ecryptfs-mount-private.desktop
+ecryptfs-utils: executable-not-elf-or-script ./usr/share/ecryptfs-utils/ecryptfs-setup-private.desktop
+ecryptfs-utils: executable-not-elf-or-script ./usr/share/ecryptfs-utils/ecryptfs-record-passphrase
+
+# We're not creating these files, but rather moving them, and the utilities
+# that use them provide the necessary owernship checks
+ecryptfs-utils: possibly-insecure-handling-of-tmp-files-in-maintainer-script postinst:9
