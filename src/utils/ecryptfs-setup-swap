@@ -30,8 +30,8 @@ info() {
 	echo `gettext "INFO:"` "$1"
 }
 
-warning() {
-	echo `gettext "WARNING:"`
+warn() {
+	echo `gettext "WARNING:"` "$1" 1>&2
 }
 
 usage() {
@@ -63,11 +63,10 @@ done
 [ -w /etc/passwd ] || error `gettext "This program must be run with 'sudo', or as root"`
 
 # Count swap spaces available
-# BUG: We only support setting up a single swap space at this time
 if [ $(grep -c "^/" /proc/swaps) -eq 0 ]; then
 	mem=$(grep "^MemTotal:" /proc/meminfo | awk '{print $2}')
 	swapsize=$((4*$mem))
-	info `gettext "You do not currently have any swap space defined."`
+	info "You do not currently have any swap space defined."
 	echo
 	echo `gettext "You can create a swap file by doing:"`
 	echo " $ sudo dd if=/dev/zero of=/swapfile count=$swapsize"
@@ -77,60 +76,47 @@ if [ $(grep -c "^/" /proc/swaps) -eq 0 ]; then
 	echo `gettext "And then re-run"` "$0"
 	echo
 	exit 0
-elif [ $(grep -c "^/" /proc/swaps) -gt 1 ]; then
-	info `gettext "You have more than one swap space defined."`
-	error "$0" `gettext "only supports setting up a single swap space"`
-else
-	swap=$(grep "^/" /proc/swaps | awk '{print $1}')
 fi
 
-# Make sure this is swap space
-if ! blkid "$swap" | grep -qs "TYPE=.*swap"; then
-	error "[$swap]" `gettext "does not appear to be swap space"`
-fi
+swaps=$(grep "^/" /proc/swaps | awk '{print $1}')
 
-# Check if this this swap space is already setup for encryption
-if /sbin/dmsetup table "$swap" | grep -qs " crypt " 2>/dev/null; then
-	info "[$swap]" `gettext "already appears to be encrypted."`
+filtered_swaps=$(
+for swap in $swaps; do
+	# Make sure this is swap space
+	if ! blkid "$swap" | grep -qs "TYPE=.*swap"; then
+		warn "[$swap]" `gettext "does not appear to be swap space, skipping."`
+		continue
+	fi
+
+	# Check if this swap space is already setup for encryption
+	if /sbin/dmsetup table "$swap" | grep -qs " crypt " 2>/dev/null; then
+		warn "[$swap]" `gettext "already appears to be encrypted, skipping."`
+		continue
+	fi
+
+	base=$(basename "$swap")
+	if grep -qs "^$base.*swap.*cipher" /etc/crypttab 2>/dev/null; then
+		warn "[$swap]" `gettext "already has an entry in /etc/crypttab, skipping."`
+		continue
+	fi
+	if grep -qs "$swap" /etc/initramfs-tools/conf.d/cryptroot 2>/dev/null; then
+		warn "[$swap]" `gettext "already has an entry in /etc/crypttab, skipping."`
+		continue
+	fi
+
+	echo $swap
+done
+)
+swaps="$filtered_swaps"
+if [ -z "$swaps" ]; then
+	warn "There were no usable swap devices to be encrypted.  Exiting."
 	exit 0
-else
-	# keep going
-	/bin/true
 fi
-
-base=$(basename "$swap")
-if grep -qs "^$base.*swap.*cipher" /etc/crypttab 2>/dev/null; then
-	info "[$swap]" `gettext "already has an entry in /etc/crypttab."`
-	exit 0
-fi
-if grep -qs "$swap" /etc/initramfs-tools/conf.d/cryptroot 2>/dev/null; then
-	info "[$swap]" `gettext "already has an entry in /etc/fstab."`
-	exit 0
-fi
-
-# Ensure available dev mapper name 'cryptswap'
-if grep -qs "^cryptswap" /etc/crypttab; then
-	error `gettext "There appears to be a cryptswap entry in /etc/cryptab; aborting."`
-fi
-
-# Ensure available fstab entry
-if grep -qs "^/dev/mapper/cryptswap" /etc/fstab; then
-	error `gettext "There appears to be a cryptswap entry in /etc/fstab; aborting."`
-fi
-
-# Ensure that the existing swap space exists in fstab
-if grep -qs "^$swap" /etc/fstab; then
-	sed -i "s:^$swap:\#$swap:" /etc/fstab
-	info `gettext "Commented out your unencrypted swap from /etc/fstab"`
-else
-	info `gettext "Your swap space isn't currently listed in /etc/fstab"`
-fi
-
 ##########################################################################
 # Warn the user about breaking hibernate mode
 if [ "$FORCE" != 1 ]; then
 	echo
-	warning
+	echo `gettext "WARNING:"`
 	echo `gettext "An encrypted swap is required to help ensure that encrypted files are not leaked to disk in an unencrypted format."`
 	echo
 	echo `gettext "HOWEVER, THE SWAP ENCRYPTION CONFIGURATION PRODUCED BY THIS PROGRAM WILL BREAK HIBERNATE/RESUME ON THIS SYSTEM!"`
@@ -150,13 +136,27 @@ fi
 ##########################################################################
 
 
-info `gettext "Setting up swap:"` "[$swap]"
+i=0
+for swap in $swaps; do
+	info `gettext "Setting up swap:"` "[$swap]"
+	uuid=$(blkid -o value -s UUID $swap)
+	for target in "UUID=$uuid" $swap; do
+		if [ -n "$target" ] && grep -qs "^$target " /etc/fstab; then
+			sed -i "s:^$target :\#$target :" /etc/fstab
+			warn "Commented out your unencrypted swap from /etc/fstab"
+		fi
+	done
 
-# Add crypttab entry
-echo "cryptswap $swap /dev/urandom swap,cipher=aes-cbc-essiv:sha256" >> /etc/crypttab
+	while :; do
+		i=$((i+1))
+		[ -e "/dev/mapper/cryptswap$i" ] || break
+	done
+	# Add crypttab entry
+	echo "cryptswap$i $swap /dev/urandom swap,cipher=aes-cbc-essiv:sha256" >> /etc/crypttab
 
-# Add fstab entry
-echo "/dev/mapper/cryptswap none swap sw 0 0" >> /etc/fstab
+	# Add fstab entry
+	echo "/dev/mapper/cryptswap$i none swap sw 0 0" >> /etc/fstab
+done
 
 # Turn swap off
 swapoff -a

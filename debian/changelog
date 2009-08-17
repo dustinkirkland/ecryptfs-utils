@@ -1,5 +1,6 @@
 ecryptfs-utils (79) unreleased; urgency=low
 
+  [ Dustin Kirkland ]
   * debian/control: updated bzr and browser urls
   * src/pam_ecryptfs/pam_ecryptfs.c: silence useless, oft-shown info
     message
@@ -11,8 +12,14 @@ ecryptfs-utils (79) unreleased; urgency=low
     build system; for now, in the debian/ directory; this should be put in
     the upstream source tree eventually (but I need some help with the
     automake/autoconf integration)
+  * ecryptfs-setup-swap: exit(0) if there's no swaps to encrypt, ensures
+    that this script succeeds if there is no swap space that needs to be
+    secured, or if the existing swap space is already secured
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 23 Jul 2009 18:21:20 -0500
+  [ Evan Dandrea ]
+  * ecryptfs-setup-swap: support more than one encrypted swap device
+
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Mon, 17 Aug 2009 08:51:31 -0500
 
 ecryptfs-utils (78) released; urgency=low
 
