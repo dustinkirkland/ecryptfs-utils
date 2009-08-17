@@ -4,7 +4,7 @@ Priority: optional
 Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 XSBC-Original-Maintainer: Daniel Baumann <daniel@debian.org>
 Build-Depends: debhelper (>= 7), autotools-dev, autoconf, automake, libtool, libgpg-error-dev, libgpgme11-dev, libkeyutils-dev, libnss3-dev, libopencryptoki-dev [alpha amd64 arm armel hppa ia64 i386 m68k mips mipsel powerpc sparc], libpam0g-dev, libpkcs11-helper1-dev, libtspi-dev [alpha amd64 arm armel hppa ia64 i386 m68k mips mipsel powerpc sparc], pkg-config, python-dev, swig
-Standards-Version: 3.8.1
+Standards-Version: 3.8.3
 Homepage: https://launchpad.net/ecryptfs
 Vcs-Bzr: https://code.launchpad.net/~ecryptfs/ecryptfs/ecryptfs-utils
 Vcs-Browser: http://bazaar.launchpad.net/~ecryptfs/ecryptfs/ecryptfs-utils/files
