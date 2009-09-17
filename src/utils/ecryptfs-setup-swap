@@ -22,16 +22,16 @@
 TEXTDOMAIN="ecryptfs-utils"
 
 error() {
-	echo `gettext "ERROR:"` "$1" 1>&2
+	echo `gettext "ERROR:"` "$@" 1>&2
 	exit 1
 }
 
 info() {
-	echo `gettext "INFO:"` "$1"
+	echo `gettext "INFO:"` "$@"
 }
 
 warn() {
-	echo `gettext "WARNING:"` "$1" 1>&2
+	echo `gettext "WARNING:"` "$@" 1>&2
 }
 
 usage() {
@@ -89,7 +89,7 @@ for swap in $swaps; do
 	fi
 
 	# Check if this swap space is already setup for encryption
-	if /sbin/dmsetup table "$swap" | grep -qs " crypt " 2>/dev/null; then
+	if /sbin/dmsetup table "$swap" 2>/dev/null | grep -qs " crypt "; then
 		warn "[$swap]" `gettext "already appears to be encrypted, skipping."`
 		continue
 	fi
