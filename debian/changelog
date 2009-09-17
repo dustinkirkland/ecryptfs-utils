@@ -1,8 +1,10 @@
 ecryptfs-utils (80) unreleased; urgency=low
 
-  * 
+  [ Michael Terry ]
+  * src/utils/ecryptfs-setup=swap: clean up some error message reporting,
+    LP: #430891
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Mon, 17 Aug 2009 11:58:52 -0500
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 17 Sep 2009 12:01:06 -0500
 
 ecryptfs-utils (79) released; urgency=low
 
