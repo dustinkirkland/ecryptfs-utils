@@ -117,6 +117,8 @@ Where file.txt contains the contents
 .SH NOTES
 Do not run eCryptfs in verbose-mode unless you are doing so for the sole purpose of development, since secret values will be written out to the system log in that case. Make certain that your eCryptfs mount covers all locations where your applications may write sensitive data. In addition, use dm-crypt to encrypt your swap space with a random key on boot, or see \fBecryptfs-setup-swap\fP(1).
 
+Passphrases have a maximum length of 64 characters.
+
 .SH BUGS
 Please post bug reports to the eCryptfs bug tracker on Launchpad.net: https://bugs.launchpad.net/ecryptfs/+filebug.
 
