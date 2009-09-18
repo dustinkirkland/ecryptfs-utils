@@ -6,8 +6,9 @@ ecryptfs-utils (80) unreleased; urgency=low
 
   [ Dustin Kirkland ]
   * doc/manpage/ecryptfs.7: note the 64-char passphrase limit, LP: #386504
+  * src/utils/ecryptfs-setup-private: minor documentation change
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Fri, 18 Sep 2009 13:27:28 -0500
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Fri, 18 Sep 2009 17:05:39 -0500
 
 ecryptfs-utils (79) released; urgency=low
 
