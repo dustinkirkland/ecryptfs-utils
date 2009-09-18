@@ -37,7 +37,7 @@ warn() {
 usage() {
 	echo
 	echo `gettext "Usage:"`
-	echo "  $0 [-f|--force]"
+	echo "  $0 [-f|--force] [-n|--no-reload]"
 	echo
 	exit 1
 }
@@ -48,6 +48,10 @@ while [ ! -z "$1" ]; do
 	case "$1" in
 		-f|--force)
 			FORCE=1
+			shift 1
+		;;
+		-n|--no-reload)
+			NO_RELOAD=1
 			shift 1
 		;;
 		*)
@@ -83,8 +87,13 @@ swaps=$(grep "^/" /proc/swaps | awk '{print $1}')
 filtered_swaps=$(
 for swap in $swaps; do
 	# Make sure this is swap space
-	if ! blkid "$swap" | grep -qs "TYPE=.*swap"; then
+	if [ "$(blkid -o value -s TYPE $swap)" != "swap" ]; then
 		warn "[$swap]" `gettext "does not appear to be swap space, skipping."`
+		continue
+	fi
+	
+	if [ "${swap#/dev/ram}" != "$swap" ]; then
+		warn "[$swap]" `gettext "is a RAM device, skipping."`
 		continue
 	fi
 
@@ -158,13 +167,15 @@ for swap in $swaps; do
 	echo "/dev/mapper/cryptswap$i none swap sw 0 0" >> /etc/fstab
 done
 
-# Turn swap off
-swapoff -a
+if [ "$NO_RELOAD" != 1 ]; then
+	# Turn swap off
+	swapoff -a
 
-# Restart cryptdisks
-/etc/init.d/cryptdisks restart
+	# Restart cryptdisks
+	/etc/init.d/cryptdisks restart
 
-# Turn the swap on
-swapon -a
+	# Turn the swap on
+	swapon -a
+fi
 
 info `gettext "Successfully setup encrypted swap!"`
