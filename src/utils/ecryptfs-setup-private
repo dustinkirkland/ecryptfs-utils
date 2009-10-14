@@ -191,6 +191,9 @@ else
 	id "$USER" >/dev/null || error `gettext "User does not exist"` "[$USER]"
 fi
 
+# Obtain USER's primary group
+GROUP=$(id -g $USER)
+
 # Check if the ecryptfs group exists, and user is member of ecryptfs group
 if grep -qs "^ecryptfs:" /etc/group; then
 	if ! id "$USER" | grep -qs "\(ecryptfs\)"; then
@@ -410,9 +413,9 @@ if [ "$BOOTSTRAP" = "1" ]; then
 	# and the calling 'adduser' is about to copy over /etc/skel
 	# NOTE: it is the responsibility of 'adduser' to unmount!
 	# And ensure that $USER owns the files/dirs we've created as root
-	chown $USER:$USER "$CRYPTDIR" /dev/shm/.ecryptfs-$USER
-	chown -R $USER:$USER $ECRYPTFS_DIR/$USER
-	chown -R $USER:$USER $MOUNTPOINT
+	chown $USER:$GROUP "$CRYPTDIR" /dev/shm/.ecryptfs-$USER
+	chown -R $USER:$GROUP $ECRYPTFS_DIR/$USER
+	chown -R $USER:$GROUP $MOUNTPOINT
 	if [ "$FNEK" = "--fnek" ]; then
 		fnek_sig=`tail -n 1 "$HOME/.ecryptfs/$PRIVATE_DIR.sig"`
 		sig=`head -n 1 "$HOME/.ecryptfs/$PRIVATE_DIR.sig"`
@@ -424,8 +427,8 @@ if [ "$BOOTSTRAP" = "1" ]; then
 	mount -i -t ecryptfs -o "rw,$sig_opt,ecryptfs_cipher=$CIPHER,ecryptfs_key_bytes=$KEYBYTES" "$CRYPTDIR" "$MOUNTPOINT" || error "Could not mount"
 	ln -sf $ECRYPTFS_DIR/$USER/.ecryptfs $MOUNTPOINT/.ecryptfs
 	ln -sf $ECRYPTFS_DIR/$USER/.$PRIVATE_DIR $MOUNTPOINT/.$PRIVATE_DIR
-	chown -R $USER:$USER $ECRYPTFS_DIR/$USER
-	chown -R $USER:$USER $MOUNTPOINT
+	chown -R $USER:$GROUP $ECRYPTFS_DIR/$USER
+	chown -R $USER:$GROUP $MOUNTPOINT
 	exit 0
 fi
 
