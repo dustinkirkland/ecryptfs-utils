@@ -282,7 +282,7 @@ if [ -z "$LOGINPASS" ] && [ "$BOOTSTRAP" != "1" ]; then
 				if printf "%s\0" "$LOGINPASS" | /sbin/unix_chkpwd "$USER" nullok; then
 					break
 				else
-					echo `gettext "ERROR:"` `getext "Your login passphrase is incorrect"`
+					echo `gettext "ERROR:"` `gettext "Your login passphrase is incorrect"`
 					tries=$(($tries + 1))
 				fi
 			fi

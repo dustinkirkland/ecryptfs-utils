@@ -4,7 +4,7 @@ ecryptfs-utils (82) UNRELEASED; urgency=low
     incorrectly assumed that the home/private dir ownerships should
     be owned by USER:USER; instead, default to USER:GROUP, where
     GROUP is the USER's primary group by default, LP: #445301
-
+  * src/utils/ecryptfs-setup-private: fix typo, s/getext/gettext, LP: #456565
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Wed, 14 Oct 2009 14:48:01 -0500
 
