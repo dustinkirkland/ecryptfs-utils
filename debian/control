@@ -12,7 +12,7 @@ Vcs-Browser: http://bazaar.launchpad.net/~ecryptfs/ecryptfs/ecryptfs-utils/files
 Package: ecryptfs-utils
 Section: misc
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, keyutils, libnss3-1d, libpam-runtime (>= 1.0.1-6)
+Depends: ${shlibs:Depends}, ${misc:Depends}, keyutils, libnss3-1d, libpam-runtime (>= 1.0.1-6), gettext-base
 Suggests: cryptsetup, opencryptoki
 Description: ecryptfs cryptographic filesystem (utilities)
  eCryptfs is a POSIX-compliant enterprise-class stacked cryptographic filesystem
