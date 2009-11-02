@@ -81,14 +81,15 @@ you will need to very carefully perform the following actions manually:
 }
 
 error() {
-	echo `gettext "ERROR:"` "$1" 1>&2
+	echo `gettext "ERROR:"` "$@" 1>&2
 	exit 1
 }
 
 error_testing() {
 	rm -f "$1" >/dev/null
+	shift
 	/sbin/umount.ecryptfs_private >/dev/null
-	error "$2"
+	error "$@"
 	exit 1
 }
 

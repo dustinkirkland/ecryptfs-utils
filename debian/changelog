@@ -7,6 +7,8 @@ ecryptfs-utils (82) UNRELEASED; urgency=low
   * src/utils/ecryptfs-setup-private, debian/control: LP: #456565
     - fix typo, s/getext/gettext
     - depend on gettext-base
+  * src/utils/ecryptfs-setup-private: fix printing of error strings,
+    which was broken by the gettext integration, LP: #471725
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Wed, 14 Oct 2009 14:48:01 -0500
 
