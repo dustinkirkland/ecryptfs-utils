@@ -11,7 +11,7 @@ WRAPPING_PASS="LOGIN"
 ECRYPTFS_DIR="/home/.ecryptfs"
 PW_ATTEMPTS=3
 TEXTDOMAIN="ecryptfs-utils"
-MESSAGE=`gettext "Enter your login passphrase"`
+MESSAGE="$(gettext 'Enter your login passphrase')"
 CIPHER="aes"
 KEYBYTES="16"
 FNEK=
@@ -81,7 +81,7 @@ you will need to very carefully perform the following actions manually:
 }
 
 error() {
-	echo `gettext "ERROR:"` "$@" 1>&2
+	echo "$(gettext 'ERROR: ')" "$@" 1>&2
 	exit 1
 }
 
@@ -102,7 +102,7 @@ random_passphrase () {
 
 filename_encryption_available() {
 	version=$(cat /sys/fs/ecryptfs/version 2>/dev/null)
-	[ -z "$version" ] && error `gettext "Can't get ecryptfs version, ecryptfs kernel module not loaded?"`
+	[ -z "$version" ] && error "$(gettext 'Cannot get ecryptfs version, ecryptfs kernel module not loaded?')"
 	[ $(($version & 0x100)) -eq 0 ] && return 1
 	return 0
 }
@@ -129,7 +129,7 @@ while [ ! -z "$1" ]; do
 		;;
 		-w|--wrapping)
 			WRAPPING_PASS="INDEPENDENT"
-			MESSAGE=`gettext "Enter your wrapping passphrase"`
+			MESSAGE="$(gettext 'Enter your wrapping passphrase')"
 			shift 1
 		;;
 		-f|--force)
@@ -153,7 +153,7 @@ while [ ! -z "$1" ]; do
 			exit 0
 		;;
 		-b|--bootstrap)
-			[ `whoami` = "root" ] || error `gettext "You must be root to bootstrap encrypt a home directory"`
+			[ `whoami` = "root" ] || error "$(gettext 'You must be root to bootstrap encrypt a home directory')"
 			BOOTSTRAP=1
 			MOUNTPASS=`random_passphrase $KEYBYTES`
 			RANDOM_MOUNTPASS=1
@@ -172,16 +172,16 @@ done
 # Prompt for the USER name, if not on the command line and not in the env
 if [ -z "$USER" ]; then
 	while [ true ]; do
-		echo -n gettext `"Enter the username: "`
+		echo -n "$(gettext 'Enter the username: ')"
 		USER=`head -n1`
 		echo
 		if [ -z "$USER" ]; then
-			echo `gettext "ERROR: "` `gettext "You must provide a username"`
+			echo "$(gettext 'ERROR: ')" "$(gettext 'You must provide a username')"
 			continue
 		else
 			# Verify that the user exists
 			if ! id "$USER" >/dev/null; then
-				echo `gettext "ERROR: "` `gettext "User does not exist"` " [$USER]"
+				echo "$(gettext 'ERROR: ')" "$(gettext 'User does not exist')" " [$USER]"
 				continue
 			fi
 			break
@@ -189,7 +189,7 @@ if [ -z "$USER" ]; then
 	done
 else
 	# Verify that the user exists
-	id "$USER" >/dev/null || error `gettext "User does not exist"` "[$USER]"
+	id "$USER" >/dev/null || error "$(gettext 'User does not exist')" "[$USER]"
 fi
 
 # Obtain USER's primary group
@@ -198,14 +198,14 @@ GROUP=$(id -g $USER)
 # Check if the ecryptfs group exists, and user is member of ecryptfs group
 if grep -qs "^ecryptfs:" /etc/group; then
 	if ! id "$USER" | grep -qs "\(ecryptfs\)"; then
-	       error `gettext "User needs to be a member of ecryptfs group"`
+	       error "$(gettext 'User needs to be a member of ecryptfs group')"
 	fi
 fi
 
 # Obtain the user's home directory
 HOME=`getent passwd "$USER" | awk -F: '{print $6}'`
 if [ ! -d "$HOME" ]; then
-	error `gettext "User home directory does not exist"` "[$HOME]"
+	error "$(gettext 'User home directory does not exist')" "[$HOME]"
 fi
 
 if [ "$BOOTSTRAP" = "1" ]; then
@@ -224,26 +224,26 @@ fi
 
 # Check for previously setup private directory
 if [ -s "$HOME/.ecryptfs/wrapped-passphrase" -a "$FORCE" != "1" ]; then
-	error `gettext "wrapped-passphrase file already exists, use --force to overwrite."`
+	error "$(gettext 'wrapped-passphrase file already exists, use --force to overwrite.')"
 fi
 if [ -s "$HOME/.ecryptfs/$PRIVATE_DIR.sig" -a "$FORCE" != "1" ]; then
-	error "$PRIVATE_DIR.sig" `gettext "file already exists, use --force to overwrite."`
+	error "$PRIVATE_DIR.sig" "$(gettext 'file already exists, use --force to overwrite.')"
 fi
 
 # Check for active mounts
-grep -qs "$MOUNTPOINT " /proc/mounts && error "[$MOUNTPOINT]" `gettext "is already mounted"`
-grep -qs "$CRYPTDIR " /proc/mounts && error "[$CRYPTDIR]" `gettext "is already mounted"`
+grep -qs "$MOUNTPOINT " /proc/mounts && error "[$MOUNTPOINT]" "$(gettext 'is already mounted')"
+grep -qs "$CRYPTDIR " /proc/mounts && error "[$CRYPTDIR]" "$(gettext 'is already mounted')"
 
 # Check that the mount point and encrypted directory are empty (skip symlinks).
 # Perhaps one day we could provide a migration mode (using rsync or something),
 # but this would be VERY hard to do safely.
 count=`ls -Al "$MOUNTPOINT" 2>/dev/null | egrep -c "^[drwx-]{10}"`
 if [ "$count" != "0" ]; then
-	error "$MOUNTPOINT" `gettext "must be empty before proceeding"`
+	error "$MOUNTPOINT" "$(gettext 'must be empty before proceeding')"
 fi
 count=`ls -Al "$CRYPTDIR" 2>/dev/null | egrep -c "^[dlrwx-]{10}"`
 if [ "$count" != "0" ]; then
-	error "$CRYPTDIR" `gettext "must be empty before proceeding"`
+	error "$CRYPTDIR" "$(gettext 'must be empty before proceeding')"
 fi
 
 stty_orig=`stty -g`
@@ -265,7 +265,7 @@ if [ -z "$LOGINPASS" ] && [ "$BOOTSTRAP" != "1" ]; then
 			stty $stty_orig
 			echo
 			if [ "$LOGINPASS" != "$LOGINPASS2" ]; then
-				echo `gettext "ERROR:"` `gettext "Wrapping passphrases must match"`
+				echo "$(gettext 'ERROR: ')" "$(gettext 'Wrapping passphrases must match')"
 			else
 				break
 			fi
@@ -273,24 +273,24 @@ if [ -z "$LOGINPASS" ] && [ "$BOOTSTRAP" != "1" ]; then
 			continue
 		fi
 		if [ -z "$LOGINPASS" ]; then
-			echo `gettext "ERROR:"` `gettext "You must provide a login passphrase"`
+			echo "$(gettext 'ERROR: ')" "$(gettext 'You must provide a login passphrase')"
 			tries=$(($tries + 1))
 		else
 			if [ "$NOPWCHECK" = "1" ]; then
-				echo `gettext "INFO:"` `gettext "Skipping password verification"`
+				echo "$(gettext 'INFO:')" "$(gettext 'Skipping password verification')"
 				break
 			else
 				if printf "%s\0" "$LOGINPASS" | /sbin/unix_chkpwd "$USER" nullok; then
 					break
 				else
-					echo `gettext "ERROR:"` `gettext "Your login passphrase is incorrect"`
+					echo "$(gettext 'ERROR: ')" "$(gettext 'Your login passphrase is incorrect')"
 					tries=$(($tries + 1))
 				fi
 			fi
 		fi
 	done
 	if [ $tries -ge $PW_ATTEMPTS ]; then
-		error `gettext "Too many incorrect password attempts, exiting"`
+		error "$(gettext 'Too many incorrect password attempts, exiting')"
 	fi
 fi
 
@@ -299,7 +299,7 @@ if [ -z "$MOUNTPASS" ]; then
 	tries=0
 	while [ $tries -lt $PW_ATTEMPTS ]; do
 		stty -echo
-		echo -n `gettext "Enter your mount passphrase [leave blank to generate one]: "`
+		echo -n "$(gettext 'Enter your mount passphrase [leave blank to generate one]: ')"
 		MOUNTPASS=`head -n1`
 		stty $stty_orig
 		echo
@@ -309,12 +309,12 @@ if [ -z "$MOUNTPASS" ]; then
 			break
 		else
 			stty -echo
-			echo -n `gettext "Enter your mount passphrase (again): "`
+			echo -n "$(gettext 'Enter your mount passphrase (again): ')"
 			MOUNTPASS2=`head -n1`
 			stty $stty_orig
 			echo
 			if [ "$MOUNTPASS" != "$MOUNTPASS2" ]; then
-				echo `gettext "ERROR:"` `gettext "Mount passphrases do not match"`
+				echo "$(gettext 'ERROR: ')" "$(gettext 'Mount passphrases do not match')"
 				tries=$(($tries + 1))
 			else
 				break
@@ -322,43 +322,43 @@ if [ -z "$MOUNTPASS" ]; then
 		fi
 	done
 	if [ $tries -ge $PW_ATTEMPTS ]; then
-		error `gettext "Too many incorrect passphrase attempts, exiting"`
+		error "$(gettext 'Too many incorrect passphrase attempts, exiting')"
 	fi
 fi
 
 echo
 echo "************************************************************************"
-echo `gettext "YOU SHOULD RECORD YOUR MOUNT PASSPHRASE AND STORE IT IN A SAFE LOCATION."`
+echo "$(gettext 'YOU SHOULD RECORD YOUR MOUNT PASSPHRASE AND STORE IT IN A SAFE LOCATION.')"
 echo "  ecryptfs-unwrap-passphrase ~/.ecryptfs/wrapped-passphrase"
-echo `gettext "THIS WILL BE REQUIRED IF YOU NEED TO RECOVER YOUR DATA AT A LATER TIME."`
+echo "$(gettext 'THIS WILL BE REQUIRED IF YOU NEED TO RECOVER YOUR DATA AT A LATER TIME.')"
 echo "************************************************************************"
 echo
 
 ###############################################################################
 
 # Setup private directory in home
-mkdir -m 700 -p "$CRYPTDIR" || error `gettext "Could not create crypt directory"` "[$CRYPTDIR]"
-mkdir -m 700 -p "$MOUNTPOINT" || error `gettext "Could not create mount directory"` "[$MOUNTPOINT]"
+mkdir -m 700 -p "$CRYPTDIR" || error "$(gettext 'Could not create crypt directory')" "[$CRYPTDIR]"
+mkdir -m 700 -p "$MOUNTPOINT" || error "$(gettext 'Could not create mount directory')" "[$MOUNTPOINT]"
 ln -sf /usr/share/ecryptfs-utils/ecryptfs-mount-private.txt "$MOUNTPOINT"/README.txt
 ln -sf /usr/share/ecryptfs-utils/ecryptfs-mount-private.desktop "$MOUNTPOINT"/Access-Your-Private-Data.desktop
 chmod 500 "$MOUNTPOINT"
 
 # Setup ~/.ecryptfs directory
 if [ "$NOAUTOMOUNT" = "1" ]; then
-	echo `gettext "INFO:"` "$HOME/$PRIVATE_DIR" `gettext "will not be mounted on login"`
+	echo "$(gettext 'INFO:')" "$HOME/$PRIVATE_DIR" "$(gettext 'will not be mounted on login')"
 else
-	touch $HOME/.ecryptfs/auto-mount || error `gettext "Could not setup ecryptfs auto-mount"`
+	touch $HOME/.ecryptfs/auto-mount || error "$(gettext 'Could not setup ecryptfs auto-mount')"
 fi
 if [ "$NOAUTOUMOUNT" = "1" ]; then
-	echo `gettext "INFO:"` "$HOME/$PRIVATE_DIR" `gettext "will not be unmounted on logout"`
+	echo "$(gettext 'INFO:')" "$HOME/$PRIVATE_DIR" "$(gettext 'will not be unmounted on logout')"
 else
-	touch $HOME/.ecryptfs/auto-umount || error `gettext "Could not setup ecryptfs auto-umount"`
+	touch $HOME/.ecryptfs/auto-umount || error "$(gettext 'Could not setup ecryptfs auto-umount')"
 fi
 
 if [ "$WRAPPING_PASS" = "LOGIN" ]; then
-	rm -f $HOME/.ecryptfs/wrapping-independent || error `gettext "Could not remove ecryptfs wrapping-independent"`
+	rm -f $HOME/.ecryptfs/wrapping-independent || error "$(gettext 'Could not remove ecryptfs wrapping-independent')"
 else
-	touch $HOME/.ecryptfs/wrapping-independent || error `gettext "Could not setup ecryptfs wrapping-independent"`
+	touch $HOME/.ecryptfs/wrapping-independent || error "$(gettext 'Could not setup ecryptfs wrapping-independent')"
 fi
 
 
@@ -366,7 +366,7 @@ fi
 timestamp=`date +%Y%m%d%H%M%S`
 for i in "$HOME/.ecryptfs/wrapped-passphrase" "$HOME/.ecryptfs/$PRIVATE_DIR.sig"; do
 	if [ -s "$i" ]; then
-		mv -f "$i" "$i.$timestamp" || error `gettext "Could not backup existing data"` "[$i]"
+		mv -f "$i" "$i.$timestamp" || error "(gettext 'Could not backup existing data')" "[$i]"
 	fi
 done
 
@@ -382,7 +382,7 @@ if [ "$BOOTSTRAP" = "1" ]; then
 	printf "%s" "$MOUNTPASS" > "$temp"
 	mv "$temp" "/dev/shm/.ecryptfs-$USER"
 else
-	printf "%s\n%s" "$MOUNTPASS" "$LOGINPASS" | ecryptfs-wrap-passphrase "$HOME/.ecryptfs/wrapped-passphrase" - || error `gettext "Could not wrap passphrase"`
+	printf "%s\n%s" "$MOUNTPASS" "$LOGINPASS" | ecryptfs-wrap-passphrase "$HOME/.ecryptfs/wrapped-passphrase" - || error "$(gettext 'Could not wrap passphrase')"
 fi
 umask $u
 
@@ -390,21 +390,21 @@ umask $u
 # On subsequent logins, this should be handled by "pam_ecryptfs.so unwrap"
 response=`printf "%s" "$MOUNTPASS" | ecryptfs-add-passphrase $FNEK -`
 if [ $? -ne 0 ]; then
-	error `gettext "Could not add passphrase to the current keyring"`
+	error "$(gettext 'Could not add passphrase to the current keyring')"
 fi
 sig=`echo "$response" | grep "Inserted auth tok" | sed "s/^.*\[//" | sed "s/\].*$//"`
 if ! echo "$sig" | egrep -qs "^[0-9a-fA-F]{$KEYBYTES,$KEYBYTES}$"; then
-	error `gettext "Could not obtain the key signature"`
+	error "$(gettext 'Could not obtain the key signature')"
 fi
 temp=`mktemp`
-echo "$sig" > "$temp" || error `gettext "Could not create signature file"` "[$HOME/.ecryptfs/$PRIVATE_DIR.sig]"
+echo "$sig" > "$temp" || error "$(gettext 'Could not create signature file')" "[$HOME/.ecryptfs/$PRIVATE_DIR.sig]"
 mv "$temp" "$HOME/.ecryptfs/$PRIVATE_DIR.sig"
 temp=`mktemp`
-echo "$MOUNTPOINT" > "$temp" || error `gettext "Could not create mountpoint file"` "[$HOME/.ecryptfs/$PRIVATE_DIR.mnt]"
+echo "$MOUNTPOINT" > "$temp" || error "$(gettext 'Could not create mountpoint file')" "[$HOME/.ecryptfs/$PRIVATE_DIR.mnt]"
 mv "$temp" "$HOME/.ecryptfs/$PRIVATE_DIR.mnt"
 
 echo
-echo `gettext "Done configuring."`
+echo "$(gettext 'Done configuring.')"
 echo
 
 # Skip the tests if we're in bootstrap mode, but exit with the encrypted
@@ -434,26 +434,27 @@ if [ "$BOOTSTRAP" = "1" ]; then
 fi
 
 # Now let's perform some basic mount/write/umount/read sanity testing...
-echo `gettext "Testing mount/write/umount/read..."`
-/sbin/mount.ecryptfs_private || error `gettext "Could not mount private ecryptfs directory"`
-temp=`mktemp "$MOUNTPOINT/ecryptfs.test.XXXXXX"` || error_testing "$temp" `gettext "Could not create empty file"`
-random_data=`head -c 16000 /dev/urandom | od -x` || error_testing "$temp" `gettext "Could not generate random data"`
-echo "$random_data" > "$temp" || error_testing "$temp" `gettext "Could not write encrypted file"`
-md5sum1=`md5sum "$temp"` || error_testing "$temp" `gettext "Could not read encrypted file"`
-/sbin/umount.ecryptfs_private || error_testing "$temp" `gettext "Could not unmount private ecryptfs directory"`
-/sbin/mount.ecryptfs_private || error_testing "$temp" `gettext "Could not mount private ecryptfs directory (2)"`
-md5sum2=`md5sum "$temp"` || error_testing "$temp" `gettext "Could not read encrypted file (2)"`
+echo "$(gettext 'Testing mount/write/umount/read...')"
+/sbin/mount.ecryptfs_private || error "$(gettext 'Could not mount private ecryptfs directory')"
+temp=`mktemp "$MOUNTPOINT/ecryptfs.test.XXXXXX"` || error_testing "$temp" "$(gettext 'Could not create empty file')"
+random_data=`head -c 16000 /dev/urandom | od -x` || error_testing "$temp" "$(gettext 'Could not generate random data')"
+echo "$random_data" > "$temp" || error_testing "$temp" "$(gettext 'Could not write encrypted file')"
+md5sum1=`md5sum "$temp"` || error_testing "$temp" "$(gettext 'Could not read encrypted file')"
+/sbin/umount.ecryptfs_private || error_testing "$temp" "$(gettext 'Could not unmount private ecryptfs directory')"
+/sbin/mount.ecryptfs_private || error_testing "$temp" "$(gettext 'Could not mount private ecryptfs directory (2)')"
+md5sum2=`md5sum "$temp"` || error_testing "$temp" "$(gettext 'Could not read encrypted file (2)')"
 rm -f "$temp"
 # Use ecryptfs-umount-private on the final run, to clear the used keys
 # out of the keyring
-ecryptfs-umount-private || error_testing "$temp" `gettext "Could not unmount private ecryptfs directory (2)"`
+ecryptfs-umount-private || error_testing "$temp" "$(gettext 'Could not unmount private ecryptfs directory (2)')"
 if [ "$md5sum1" != "$md5sum2" ]; then
-	error `gettext "Testing failed."`
+	error "$(gettext 'Testing failed.')"
 else
-	echo `gettext "Testing succeeded."`
+	echo "$(gettext 'Testing succeeded.')"
 fi
 
 echo
-echo `gettext "Logout, and log back in to begin using your encrypted directory."`
+echo "$(gettext 'Logout, and log back in to begin using your encrypted directory.')"
 echo
+
 exit 0
