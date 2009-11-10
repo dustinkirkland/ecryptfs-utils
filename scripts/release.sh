@@ -38,3 +38,7 @@ echo -n "  "
 ls ../ecryptfs-utils*.orig.tar.gz
 echo "---->  https://launchpad.net/ecryptfs/trunk/+addrelease"
 echo
+echo " dch --release released"
+echo " debcommit --release"
+echo " bzr push lp:ecryptfs"
+echo
