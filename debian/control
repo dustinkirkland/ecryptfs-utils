@@ -3,7 +3,24 @@ Section: misc
 Priority: optional
 Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 XSBC-Original-Maintainer: Daniel Baumann <daniel@debian.org>
-Build-Depends: debhelper (>= 7), autotools-dev, autoconf, automake, libtool, libgpg-error-dev, libgpgme11-dev, libkeyutils-dev, libnss3-dev, libopencryptoki-dev [alpha amd64 arm armel hppa ia64 i386 m68k mips mipsel powerpc sparc], libpam0g-dev, libpkcs11-helper1-dev, libtspi-dev [alpha amd64 arm armel hppa ia64 i386 m68k mips mipsel powerpc sparc], pkg-config, python-dev, swig
+Build-Depends:
+ debhelper (>= 7),
+ autotools-dev,
+ autoconf,
+ automake,
+ libtool,
+ libgcrypt11-dev,
+ libgpg-error-dev,
+ libgpgme11-dev,
+ libkeyutils-dev,
+ libnss3-dev,
+ libopencryptoki-dev [alpha amd64 arm armel hppa ia64 i386 m68k mips mipsel powerpc sparc],
+ libpam0g-dev,
+ libpkcs11-helper1-dev,
+ libtspi-dev [alpha amd64 arm armel hppa ia64 i386 m68k mips mipsel powerpc sparc],
+ pkg-config,
+ python-dev,
+ swig
 Standards-Version: 3.8.3
 Homepage: https://launchpad.net/ecryptfs
 Vcs-Bzr: https://code.launchpad.net/~ecryptfs/ecryptfs/ecryptfs-utils
@@ -12,8 +29,16 @@ Vcs-Browser: http://bazaar.launchpad.net/~ecryptfs/ecryptfs/ecryptfs-utils/files
 Package: ecryptfs-utils
 Section: misc
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, keyutils, libnss3-1d, libpam-runtime (>= 1.0.1-6), gettext-base
-Suggests: cryptsetup, opencryptoki
+Depends:
+ ${misc:Depends},
+ ${shlibs:Depends},
+ keyutils,
+ libnss3-1d,
+ libpam-runtime (>= 1.0.1-6),
+ gettext-base
+Suggests:
+ cryptsetup,
+ opencryptoki
 Description: ecryptfs cryptographic filesystem (utilities)
  eCryptfs is a POSIX-compliant enterprise-class stacked cryptographic filesystem
  for Linux.
@@ -33,7 +58,9 @@ Description: ecryptfs cryptographic filesystem (utilities)
 Package: libecryptfs0
 Section: libs
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends:
+ ${misc:Depends},
+ ${shlibs:Depends}
 Description: ecryptfs cryptographic filesystem (library)
  eCryptfs is a POSIX-compliant enterprise-class stacked cryptographic filesystem
  for Linux.
@@ -43,7 +70,17 @@ Description: ecryptfs cryptographic filesystem (library)
 Package: libecryptfs-dev
 Section: libdevel
 Architecture: any
-Depends: libecryptfs0 (= ${binary:Version}), libgpg-error-dev, libgpgme11-dev, libkeyutils-dev, libopencryptoki-dev [alpha amd64 arm armel hppa ia64 i386 m68k mips mipsel powerpc sparc], libpam0g-dev, libpkcs11-helper1-dev, libtspi-dev [alpha amd64 arm armel hppa ia64 i386 m68k mips mipsel powerpc sparc]
+Depends:
+ ${misc:Depends},
+ libecryptfs0 (= ${binary:Version}),
+ libgcrypt11-dev,
+ libgpg-error-dev,
+ libgpgme11-dev,
+ libkeyutils-dev,
+ libopencryptoki-dev [alpha amd64 arm armel hppa ia64 i386 m68k mips mipsel powerpc sparc],
+ libpam0g-dev,
+ libpkcs11-helper1-dev,
+ libtspi-dev [alpha amd64 arm armel hppa ia64 i386 m68k mips mipsel powerpc sparc]
 Description: ecryptfs cryptographic filesystem (development)
  eCryptfs is a POSIX-compliant enterprise-class stacked cryptographic filesystem
  for Linux.

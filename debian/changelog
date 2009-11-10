@@ -11,6 +11,11 @@ ecryptfs-utils (82) UNRELEASED; urgency=low
     which was broken by the gettext integration, LP: #471725;
     in doing so, use $() in place of ``, use '' for gettext arguments,
     and wrap gettext in "", like this: foo="$(gettext 'blah blah')"
+  * debian/control: one package per line, helps tremendously when looking
+    at diffs
+  * debian/copyright: Add new fields
+  * debian/ecryptfs-utils.postinst: minor set -e change
+
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Wed, 14 Oct 2009 14:48:01 -0500
 

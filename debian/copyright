@@ -1,9 +1,11 @@
 Authors:
  Phillip Hellewell <hacker@byu.net>
- Michael A. Halcrow <mhalcrow@us.ibm.com>
+ Michael A. Halcrow <mike@halcrow.us>
  Dustin Kirkland <kirkland@canonical.com>
  Tyler Hicks <tyhicks@linux.vnet.ibm.com>
-Download: https://launchpad.net/ecryptfs/trunk
+
+Upstream-Contact: Dustin Kirkland <kirkland@canonical.com>
+Upstream-Homepage: https://launchpad.net/ecryptfs
 
 Files: *
 Copyright:
