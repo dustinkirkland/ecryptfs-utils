@@ -1,4 +1,4 @@
-ecryptfs-utils (82) UNRELEASED; urgency=low
+ecryptfs-utils (82) released; urgency=low
 
   * src/utils/ecryptfs-setup-private: fix bug where setup-private
     incorrectly assumed that the home/private dir ownerships should
@@ -17,7 +17,7 @@ ecryptfs-utils (82) UNRELEASED; urgency=low
   * debian/ecryptfs-utils.postinst: minor set -e change
 
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Wed, 14 Oct 2009 14:48:01 -0500
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Tue, 10 Nov 2009 11:31:25 -0600
 
 ecryptfs-utils (81) released; urgency=low
 
