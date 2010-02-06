@@ -1,3 +1,11 @@
+ecryptfs-utils (82ubuntu1) UNRELEASED; urgency=low
+
+  * libecryptfs/key_management.c, utils/mount.ecryptfs_private.c:
+    - use the session keyring, rather than the user keyring, such that
+      keys are automatically cleared on logout
+
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Sat, 06 Feb 2010 17:48:57 -0600
+
 ecryptfs-utils (82) released; urgency=low
 
   * src/utils/ecryptfs-setup-private: fix bug where setup-private
