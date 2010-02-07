@@ -1,4 +1,5 @@
-/**
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4 -*-
+ *
  * pam_ecryptfs.c: PAM module that sends the user's authentication
  * tokens into the kernel keyring.
  *
@@ -73,17 +74,6 @@ static int ecryptfs_pam_automount_set(const char *homedir)
 	char *file_path;
 	int rc = 0;
 	struct stat s;
-	if (asprintf(
-		&file_path, "%s/.ecryptfs/%s",
-		homedir,
-		ECRYPTFS_DEFAULT_WRAPPED_PASSPHRASE_FILENAME) == -1)
-		return -ENOMEM;
-	if (stat(file_path, &s) != 0) {
-		if (errno != ENOENT)
-			rc = -errno;
-		goto out;
-	}
-	free(file_path);
 	if (asprintf(&file_path, "%s/.ecryptfs/auto-mount", homedir) == -1)
 		return -ENOMEM;
 	if (stat(file_path, &s) != 0) {
@@ -133,10 +123,13 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags, int argc,
 	if (!ecryptfs_pam_automount_set(homedir))
 		goto out;
 	private_mnt = ecryptfs_fetch_private_mnt(homedir);
-	if (ecryptfs_private_is_mounted(NULL, private_mnt, NULL, 1))
+	if (ecryptfs_private_is_mounted(NULL, private_mnt, NULL, 1)) {
+		syslog(LOG_INFO, "%s: %s is already mounted\n", __FUNCTION__,
+			homedir);
 		/* If private/home is already mounted, then we can skip
 		   costly loading of keys */
 		goto out;
+	}
 	/* we need side effect of this check:
 	   load ecryptfs module if not loaded already */
 	if (ecryptfs_get_version(&version) != 0)
@@ -176,6 +169,8 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags, int argc,
 		if ((argc == 1)
 		    && (memcmp(argv[0], "unwrap\0", 7) == 0)) {
 			char *wrapped_pw_filename;
+			char *unwrapped_pw_filename;
+			struct stat s;
 
 			rc = asprintf(
 				&wrapped_pw_filename, "%s/.ecryptfs/%s",
@@ -184,6 +179,11 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags, int argc,
 			if (rc == -1) {
 				syslog(LOG_ERR, "Unable to allocate memory\n");
 				rc = -ENOMEM;
+				goto out_child;
+			}
+			if (wrap_passphrase_if_necessary(name, wrapped_pw_filename, passphrase, salt) == 0) {
+				syslog(LOG_INFO, "Passphrase file wrapped");
+			} else {
 				goto out_child;
 			}
 			rc = ecryptfs_insert_wrapped_passphrase_into_keyring(
@@ -355,6 +355,33 @@ static int umount_private_dir(pam_handle_t *pamh)
 	return private_dir(pamh, 0);
 }
 
+static int wrap_passphrase_if_necessary(char *username, char *wrapped_pw_filename, char *passphrase, char *salt) {
+	char *unwrapped_pw_filename = NULL;
+	struct stat s;
+
+	rc = asprintf(&unwrapped_pw_filename, "/dev/shm/.ecryptfs-%s", username);
+	if (rc == -1) {
+		syslog(LOG_ERR, "Unable to allocate memory\n");
+		return -ENOMEM;
+	}
+	/* If /dev/shm/.ecryptfs-$USER exists and owned by the user
+	   and ~/.ecryptfs/wrapped-passphrase does not exist
+	   and a passphrase is set:
+	   wrap the unwrapped passphrase file */
+	if (stat(unwrapped_pw_filename, &s) == 0 && (s.st_uid == uid) &&
+	    stat(wrapped_pw_filename, &s) != 0  &&
+	    passphrase != NULL && *passphrase != '\0' &&
+	    username != NULL && *username != '\0') {
+		setuid(uid);
+		rc = ecryptfs_wrap_passphrase_file(wrapped_pw_filename, passphrase, salt, unwrapped_pw_filename);
+		if (rc != 0) {
+			syslog(LOG_ERR, "Error wrapping cleartext password; " "rc = [%d]\n", rc);
+		}
+		return rc;
+	}
+	return 0;
+}
+
 PAM_EXTERN int
 pam_sm_open_session(pam_handle_t *pamh, int flags,
 		    int argc, const char *argv[])
@@ -381,12 +408,10 @@ PAM_EXTERN int pam_sm_chauthtok(pam_handle_t * pamh, int flags,
 	char *old_passphrase = NULL;
 	char *new_passphrase = NULL;
 	char *wrapped_pw_filename;
-	char *unwrapped_pw_filename;
 	char *name = NULL;
 	char salt[ECRYPTFS_SALT_SIZE];
 	char salt_hex[ECRYPTFS_SALT_SIZE_HEX];
 	pid_t child_pid, tmp_pid;
-	struct stat s;
 	int rc = PAM_SUCCESS;
 
 	rc = pam_get_user(pamh, &username, NULL);
@@ -441,35 +466,17 @@ PAM_EXTERN int pam_sm_chauthtok(pam_handle_t * pamh, int flags,
 		rc = -ENOMEM;
 		goto out;
 	}
-	rc = asprintf(&unwrapped_pw_filename, "/dev/shm/.ecryptfs-%s", name);
-	if (rc == -1) {
-		syslog(LOG_ERR, "Unable to allocate memory\n");
-		rc = -ENOMEM;
-		goto out;
-	}
 	if ((rc = ecryptfs_read_salt_hex_from_rc(salt_hex))) {
 		from_hex(salt, ECRYPTFS_DEFAULT_SALT_HEX, ECRYPTFS_SALT_SIZE);
 	} else {
 		from_hex(salt, salt_hex, ECRYPTFS_SALT_SIZE);
 	}
-	/* If /dev/shm/.ecryptfs-$USER exists and owned by the user
-	   and ~/.ecryptfs/wrapped-passphrase does not exist
-	   and a new_passphrase is set:
-	   wrap the unwrapped passphrase file */
-	if (stat(unwrapped_pw_filename, &s) == 0 && (s.st_uid == uid) &&
-	    stat(wrapped_pw_filename, &s) != 0  &&
-	    new_passphrase != NULL && *new_passphrase != '\0' &&
-	    name != NULL && *name != '\0') {
-		setuid(uid);
-		rc = ecryptfs_wrap_passphrase_file(wrapped_pw_filename,
-			new_passphrase, salt, unwrapped_pw_filename);
-		if (rc != 0) {
-			syslog(LOG_ERR,
-			  "Error wrapping cleartext password; "
-	       		  "rc = [%d]\n", rc);
-		}
+	if (wrap_passphrase_if_necessary(name, wrapped_pw_filename, new_passphrase, salt) == 0) {
+		syslog(LOG_INFO, "Passphrase file wrapped");
+	} else {
 		goto out;
 	}
+
 	seteuid(saved_uid);
 	if (!old_passphrase || !new_passphrase || *new_passphrase == '\0') {
 		syslog(LOG_WARNING, "eCryptfs PAM passphrase change module "
