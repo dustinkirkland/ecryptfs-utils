@@ -159,20 +159,21 @@ int ecryptfs_add_auth_tok_to_keyring(struct ecryptfs_auth_tok *auth_tok,
 				     char *auth_tok_sig)
 {
 	int rc;
-	int keyring;
 
-	keyring = add_key("keyring", "ecryptfs", 0, NULL, KEY_SPEC_SESSION_KEYRING);
-	/* BUG: check add_key() return code */
-	if (keyring == -1) {
+	rc = (int)keyctl_search(KEY_SPEC_USER_KEYRING, "user", auth_tok_sig, 0);
+	if (rc != -1) { /* we already have this key in keyring; we're done */
+		rc = 1;
+		goto out;
+	} else if ((rc == -1) && (errno != ENOKEY)) {
 		int errnum = errno;
 
-		syslog(LOG_ERR, "add_key failed: %m errno=[%d]\n",
+		syslog(LOG_ERR, "keyctl_search failed: %m errno=[%d]\n",
 		       errnum);
 		rc = (errnum < 0) ? errnum : errnum * -1;
 		goto out;
 	}
 	rc = add_key("user", auth_tok_sig, (void *)auth_tok,
-		     sizeof(struct ecryptfs_auth_tok), keyring);
+		     sizeof(struct ecryptfs_auth_tok), KEY_SPEC_USER_KEYRING);
 	if (rc == -1) {
 		rc = -errno;
 		syslog(LOG_ERR, "Error adding key with sig [%s]; rc = [%d] "

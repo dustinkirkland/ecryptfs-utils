@@ -143,7 +143,7 @@ char *fetch_sig(char *pw_dir, int entry) {
 	/* Validate that signature is in the current keyring,
 	 * compile with -lkeyutils
 	 */
-	if (request_key("user", sig, 0) < 0) {
+	if (keyctl_search(KEY_SPEC_USER_KEYRING, "user", sig, 0) < 0) {
 		perror("keyctl_search");
 		fputs("Perhaps try the interactive 'ecryptfs-mount-private'\n",
 			stderr);
