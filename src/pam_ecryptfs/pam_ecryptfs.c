@@ -87,6 +87,35 @@ out:
 	return rc;
 }
 
+static int wrap_passphrase_if_necessary(char *username, uid_t uid, char *wrapped_pw_filename, char *passphrase, char *salt)
+{
+	char *unwrapped_pw_filename = NULL;
+	struct stat s;
+	int rc = 0;
+
+	rc = asprintf(&unwrapped_pw_filename, "/dev/shm/.ecryptfs-%s", username);
+	if (rc == -1) {
+		syslog(LOG_ERR, "Unable to allocate memory\n");
+		return -ENOMEM;
+	}
+	/* If /dev/shm/.ecryptfs-$USER exists and owned by the user
+	   and ~/.ecryptfs/wrapped-passphrase does not exist
+	   and a passphrase is set:
+	   wrap the unwrapped passphrase file */
+	if (stat(unwrapped_pw_filename, &s) == 0 && (s.st_uid == uid) &&
+	    stat(wrapped_pw_filename, &s) != 0  &&
+	    passphrase != NULL && *passphrase != '\0' &&
+	    username != NULL && *username != '\0') {
+		setuid(uid);
+		rc = ecryptfs_wrap_passphrase_file(wrapped_pw_filename, passphrase, salt, unwrapped_pw_filename);
+		if (rc != 0) {
+			syslog(LOG_ERR, "Error wrapping cleartext password; " "rc = [%d]\n", rc);
+		}
+		return rc;
+	}
+	return 0;
+}
+
 PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags, int argc,
 				   const char **argv)
 {
@@ -353,35 +382,6 @@ static int mount_private_dir(pam_handle_t *pamh)
 static int umount_private_dir(pam_handle_t *pamh)
 {
 	return private_dir(pamh, 0);
-}
-
-static int wrap_passphrase_if_necessary(char *username, uid_t uid, char *wrapped_pw_filename, char *passphrase, char *salt)
-{
-	char *unwrapped_pw_filename = NULL;
-	struct stat s;
-	int rc = 0;
-
-	rc = asprintf(&unwrapped_pw_filename, "/dev/shm/.ecryptfs-%s", username);
-	if (rc == -1) {
-		syslog(LOG_ERR, "Unable to allocate memory\n");
-		return -ENOMEM;
-	}
-	/* If /dev/shm/.ecryptfs-$USER exists and owned by the user
-	   and ~/.ecryptfs/wrapped-passphrase does not exist
-	   and a passphrase is set:
-	   wrap the unwrapped passphrase file */
-	if (stat(unwrapped_pw_filename, &s) == 0 && (s.st_uid == uid) &&
-	    stat(wrapped_pw_filename, &s) != 0  &&
-	    passphrase != NULL && *passphrase != '\0' &&
-	    username != NULL && *username != '\0') {
-		setuid(uid);
-		rc = ecryptfs_wrap_passphrase_file(wrapped_pw_filename, passphrase, salt, unwrapped_pw_filename);
-		if (rc != 0) {
-			syslog(LOG_ERR, "Error wrapping cleartext password; " "rc = [%d]\n", rc);
-		}
-		return rc;
-	}
-	return 0;
 }
 
 PAM_EXTERN int
