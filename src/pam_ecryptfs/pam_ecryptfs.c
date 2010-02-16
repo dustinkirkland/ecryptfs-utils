@@ -181,7 +181,7 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags, int argc,
 				rc = -ENOMEM;
 				goto out_child;
 			}
-			if (wrap_passphrase_if_necessary(name, wrapped_pw_filename, passphrase, salt) == 0) {
+			if (wrap_passphrase_if_necessary(username, uid, wrapped_pw_filename, passphrase, salt) == 0) {
 				syslog(LOG_INFO, "Passphrase file wrapped");
 			} else {
 				goto out_child;
@@ -355,9 +355,11 @@ static int umount_private_dir(pam_handle_t *pamh)
 	return private_dir(pamh, 0);
 }
 
-static int wrap_passphrase_if_necessary(char *username, char *wrapped_pw_filename, char *passphrase, char *salt) {
+static int wrap_passphrase_if_necessary(char *username, uid_t uid, char *wrapped_pw_filename, char *passphrase, char *salt)
+{
 	char *unwrapped_pw_filename = NULL;
 	struct stat s;
+	int rc = 0;
 
 	rc = asprintf(&unwrapped_pw_filename, "/dev/shm/.ecryptfs-%s", username);
 	if (rc == -1) {
@@ -471,7 +473,7 @@ PAM_EXTERN int pam_sm_chauthtok(pam_handle_t * pamh, int flags,
 	} else {
 		from_hex(salt, salt_hex, ECRYPTFS_SALT_SIZE);
 	}
-	if (wrap_passphrase_if_necessary(name, wrapped_pw_filename, new_passphrase, salt) == 0) {
+	if (wrap_passphrase_if_necessary(username, uid, wrapped_pw_filename, new_passphrase, salt) == 0) {
 		syslog(LOG_INFO, "Passphrase file wrapped");
 	} else {
 		goto out;

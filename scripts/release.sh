@@ -8,7 +8,7 @@ error() {
 	exit 1
 }
 
-head -n1 debian/changelog | grep "unreleased" || error "This version must be 'unreleased'"
+head -n1 debian/changelog | grep -i "unreleased" || error "This version must be 'unreleased'"
 
 
 rm -f ./ecryptfs-utils*.tar.*
