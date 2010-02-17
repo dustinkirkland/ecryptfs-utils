@@ -1,4 +1,4 @@
-ecryptfs-utils (83) UNRELEASED; urgency=low
+ecryptfs-utils (83) released; urgency=low
 
   [ David Planella ]
   * Makefile.am, configure.ac, debian/control, debian/po/POTFILES.sh,
@@ -55,7 +55,7 @@ ecryptfs-utils (83) UNRELEASED; urgency=low
   * src/desktop/ecryptfs-record-passphrase: revert the _ bit, as it's not quite
     working yet, will need to talk to David to fix
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Sat, 06 Feb 2010 17:48:57 -0600
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Wed, 17 Feb 2010 15:16:05 -0600
 
 ecryptfs-utils (82) released; urgency=low
 
