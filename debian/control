@@ -8,6 +8,7 @@ Build-Depends:
  autotools-dev,
  autoconf,
  automake,
+ intltool,
  libtool,
  libgcrypt11-dev,
  libgpg-error-dev,

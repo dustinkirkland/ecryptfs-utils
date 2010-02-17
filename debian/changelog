@@ -1,5 +1,16 @@
 ecryptfs-utils (83) UNRELEASED; urgency=low
 
+  [ David Planella ]
+  * Makefile.am, configure.ac, debian/control, debian/po/POTFILES.sh,
+    debian/po/ecryptfs-utils.pot, debian/po/fr.po, debian/rules,
+    po/POTFILES.in, src/desktop/Makefile.am,
+    src/desktop/ecryptfs-mount-private.desktop,
+    src/desktop/ecryptfs-mount-private.desktop.in,
+    src/desktop/ecryptfs-record-passphrase,
+    src/desktop/ecryptfs-setup-private.desktop,
+    src/desktop/ecryptfs-setup-private.desktop.in:
+    - internationalization work for LP: #358283
+
   [ Yan Li <yan.i.li@intel.com> ]
   * src/pam_ecryptfs/pam_ecryptfs.c, src/utils/Makefile.am,
     src/utils/ecryptfs-migrate-home: add a script and pam hooks to

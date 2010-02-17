@@ -345,6 +345,19 @@ else
 	rootsbindir="\$(sbindir)"
 fi
 
+GETTEXT_PACKAGE=ecryptfs-utils
+AC_SUBST(GETTEXT_PACKAGE)
+AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE,"$GETTEXT_PACKAGE",
+                   [the gettext translation domain])
+
+AM_GLIB_GNU_GETTEXT
+
+IT_PROG_INTLTOOL([0.41.0])
+
+LOCALEDIR='${prefix}/${datadir}/locale'
+AC_SUBST(LOCALEDIR)
+
+
 CRYPTO_CFLAGS=${NSS_CFLAGS}
 CRYPTO_LIBS=${NSS_LIBS}
 
@@ -395,11 +408,14 @@ AC_CONFIG_FILES([
 	src/key_mod/Makefile
 	src/daemon/Makefile
 	src/desktop/Makefile
+	src/desktop/ecryptfs-mount-private.desktop
+	src/desktop/ecryptfs-setup-private.desktop
 	src/include/Makefile
 	doc/manpage/Makefile
 	src/pam_ecryptfs/Makefile
 	src/libecryptfs/libecryptfs.pc
 	src/libecryptfs-swig/Makefile
+	po/Makefile.in
 ])
 AC_OUTPUT
 
