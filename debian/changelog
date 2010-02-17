@@ -15,6 +15,7 @@ ecryptfs-utils (82ubuntu1) UNRELEASED; urgency=low
     - check if already encrypted
     - handle migration of multiple users on boot
     - fix all whitespace, use tabs for indents
+    - use quotes around variables, rather than ${} (stylistic preference)
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Sat, 06 Feb 2010 17:48:57 -0600
 
