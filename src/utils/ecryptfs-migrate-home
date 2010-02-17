@@ -83,9 +83,9 @@ assert_dir_empty() {
 # get user home by username
 get_user_home () {
 	local USER_NAME="$1"
-	local USER_HOME=$(grep "^$USER_ID:" /etc/passwd | cut -d":" -f 6)
+	local USER_HOME=$(grep "^$USER_NAME:" /etc/passwd | cut -d":" -f 6)
 	if [ -z "$USER_HOME" ]; then
-		error "Cannot find the home directory of $USER_ID."
+		error "Cannot find the home directory of $USER_NAME."
 	fi
 	echo "$USER_HOME"
 }
@@ -136,7 +136,7 @@ encrypt_dir () {
 	orig=$(mktemp -d /home/$USER.XXXXXXXX)
 	mv "$USER_HOME" "$orig"
 	mkdir -p -m 700 "$USER_HOME"
-	chown -R $USER_ID:$USER_ID "$USER_HOME"
+	chown -R "$USER_NAME:$USER_NAME" "$USER_HOME"
 	ECRYPTFS_SETUP_PRIVATE_ARGS=""
 	if [ -n "$LOGINPASS" ]; then
 		ECRYPTFS_SETUP_PRIVATE_ARGS="-l $LOGINPASS"
@@ -144,7 +144,7 @@ encrypt_dir () {
 	if [ -n "$MOUNTPASS" ]; then
 		ECRYPTFS_SETUP_PRIVATE_ARGS="$ECRYPTFS_SETUP_PRIVATE_ARGS -m $MOUNTPASS"
 	fi
-	if ! ecryptfs-setup-private -u "$USER_ID" -b $ECRYPTFS_SETUP_PRIVATE_ARGS; then
+	if ! ecryptfs-setup-private -u "$USER_NAME" -b $ECRYPTFS_SETUP_PRIVATE_ARGS; then
 		# too bad, something went wrong, we'll try to recover
 		rm -rf "$USER_HOME"
 		mv "$orig" "$USER_HOME"
