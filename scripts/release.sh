@@ -12,7 +12,8 @@ head -n1 debian/changelog | grep -i "unreleased" || error "This version must be 
 
 
 rm -f ./ecryptfs-utils*.tar.*
-./scripts/bootstrap.sh
+autoreconf -i -v -f
+intltoolize --force
 ./configure --prefix=/usr
 make dist
 for i in `ls ecryptfs-utils-*.tar.gz`; do
