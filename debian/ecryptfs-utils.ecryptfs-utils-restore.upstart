@@ -1,11 +1,11 @@
-# eCryptfs
+# eCryptfs restore
 description "eCryptfs"
 author "Dustin Kirkland <kirkland@canonical.com>"
 
 start on runlevel [2345]
-stop on runlevel [!2345]
+task
 
-# These scripts are necessary in support of ecryptfs-migrate-home.
+# This task is necessary in support of ecryptfs-migrate-home.
 #
 # The administrator is strongly advised that the migrated user must
 # log in before reboot in order for the migration to take effect, as
@@ -16,22 +16,11 @@ stop on runlevel [!2345]
 # however, it's slightly less secure, as these files should not be written
 # to disk, if possible.
 
-pre-start script
+script
 	for i in /var/tmp/.ecryptfs-*; do
 		u=$(echo "$i" | sed "s:^/var/tmp/.ecryptfs-::")
 		if [ "$(stat -c %U $i)" = "$u" ]; then
 			mv -n "$i" /dev/shm
-		fi
-	done
-end script
-
-exec /bin/true
-
-pre-stop script
-	for i in /dev/shm/.ecryptfs-*; do
-		u=$(echo "$i" | sed "s:^/dev/shm/.ecryptfs-::")
-		if [ "$(stat -c %U $i)" = "$u" ]; then
-			mv -n "$i" /var/tmp
 		fi
 	done
 end script

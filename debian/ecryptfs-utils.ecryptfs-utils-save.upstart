@@ -1,0 +1,26 @@
+# eCryptfs save
+description "eCryptfs"
+author "Dustin Kirkland <kirkland@canonical.com>"
+
+start on runlevel [!2345]
+task
+
+# This task is necessary in support of ecryptfs-migrate-home.
+#
+# The administrator is strongly advised that the migrated user must
+# log in before reboot in order for the migration to take effect, as
+# the data in /dev/shm will be lost.
+#
+# The code below moves the /dev/shm data to /var/tmp to persist across
+# boots and prevent users from locking themselves out of their system,
+# however, it's slightly less secure, as these files should not be written
+# to disk, if possible.
+
+script
+	for i in /dev/shm/.ecryptfs-*; do
+		u=$(echo "$i" | sed "s:^/dev/shm/.ecryptfs-::")
+		if [ "$(stat -c %U $i)" = "$u" ]; then
+			mv -n "$i" /var/tmp
+		fi
+	done
+end script

@@ -34,8 +34,9 @@ ecryptfs-utils (83) UNRELEASED; urgency=low
       reboot (possible we should use an init script to move these to
       /var/tmp on reboot)
     - ensure permissions are set correctly
-  * debian/ecryptfs-utils.upstart, debian/rules: try to protect migrating
-    users who don't login before the next reboot
+  * ecryptfs-utils.ecryptfs-utils-restore.upstart,
+    ecryptfs-utils.ecryptfs-utils-save.upstart, rules:
+    - try to protect migrating users who don't login before the next reboot
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Sat, 06 Feb 2010 17:48:57 -0600
 
