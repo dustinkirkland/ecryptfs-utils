@@ -28,6 +28,7 @@ ecryptfs-utils (82ubuntu1) UNRELEASED; urgency=low
     - no decimals on awk calculation
     - mktemp on the target user, not root
     - check that there is enough disk space available to do the migration
+    - ensure the user's homedir group is correct
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Sat, 06 Feb 2010 17:48:57 -0600
 

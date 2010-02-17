@@ -128,13 +128,14 @@ encrypt_dir () {
 		echo
 		lsof +D "$USER_HOME" | sed "s/^/    /"
 		echo
-		error "Cannot proceed"
+		error "Cannot proceed."
 	fi
 	# start encryption
 	orig=$(mktemp -d /home/$USER_NAME.XXXXXXXX)
 	mv "$USER_HOME" "$orig"
 	mkdir -p -m 700 "$USER_HOME"
-	chown -R "$USER_NAME:$USER_NAME" "$USER_HOME"
+	USER_GROUP=$(id -g "$USER_NAME")
+	chown "$USER_NAME:$USER_GROUP" "$USER_HOME"
 	ECRYPTFS_SETUP_PRIVATE_ARGS=""
 	if [ -n "$LOGINPASS" ]; then
 		ECRYPTFS_SETUP_PRIVATE_ARGS="-l $LOGINPASS"
