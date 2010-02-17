@@ -55,9 +55,7 @@ warning() {
 }
 
 info() {
-	if [ "$VERBOSE" = "1" ]; then
-		echo "$(gettext 'INFO: ')" "$@" 1>&2
-	fi
+	echo "$(gettext 'INFO: ')" "$@" 1>&2
 }
 
 assert_dir_empty() {
@@ -158,7 +156,6 @@ encrypt_dir () {
 }
 
 DO_ENCRYPT=
-VERBOSE=
 while true; do
 	[ -z "$1" ] && break
 	case "$1" in
