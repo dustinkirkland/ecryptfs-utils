@@ -154,14 +154,23 @@ encrypt_dir () {
 	rsync -a "$orig/" "$USER_HOME/"
 	umount "$USER_HOME/"
 	echo
-	info "======================================================================"
-	info "The file encryption appears to have completed successfully, however,"
-	info "$USER_NAME MUST LOGIN IMMEDIATELY (BEFORE THE NEXT REBOOT) TO COMPLETE THE MIGRATION!!!"
-	info "======================================================================"
+	echo "========================================================================"
+	echo "Some Important Notes!"
 	echo
-	info "If $USER_NAME can log in and read and write their files, then the migration is complete, and you should remove $orig."
+	echo " 1. The file encryption appears to have completed successfully, however,"
+	echo "    $USER_NAME MUST LOGIN IMMEDIATELY, _BEFORE_THE_NEXT_REBOOT_,"
+	echo "    TO COMPLETE THE MIGRATION!!!"
 	echo
-	info "Otherwise, remove $USER_HOME and move $orig back to $USER_HOME."
+	echo " 2. If $USER_NAME can log in and read and write their files, then the migration is complete,"
+	echo "    and you should remove $orig."
+	echo "    Otherwise, restore $orig back to $USER_HOME."
+	echo
+	echo " 3. $USER_NAME should also run 'ecryptfs-unwrap-passphrase' and record"
+	echo "    their randomly generated mount passphrase as soon as possible."
+	echo
+	echo " 4. To ensure the integrity of all encrypted data on this system, you"
+	echo "    should also encrypted swap space with 'ecryptfs-setup-swap'."
+	echo "========================================================================"
 	echo
 }
 
