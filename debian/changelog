@@ -34,6 +34,7 @@ ecryptfs-utils (83) UNRELEASED; urgency=low
       reboot (possible we should use an init script to move these to
       /var/tmp on reboot)
     - ensure permissions are set correctly
+    - improve text at the end of the migration
   * ecryptfs-utils.ecryptfs-utils-restore.upstart,
     ecryptfs-utils.ecryptfs-utils-save.upstart, rules:
     - try to protect migrating users who don't login before the next reboot

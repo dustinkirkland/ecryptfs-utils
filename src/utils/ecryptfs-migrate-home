@@ -153,12 +153,16 @@ encrypt_dir () {
 	info "Encrypted home has been set up, encrypting files now...this may take a while."
 	rsync -a "$orig/" "$USER_HOME/"
 	umount "$USER_HOME/"
-	info
+	echo
+	info "======================================================================"
 	info "The file encryption appears to have completed successfully, however,"
 	info "$USER_NAME MUST LOGIN IMMEDIATELY (BEFORE THE NEXT REBOOT) TO COMPLETE THE MIGRATION!!!"
-	info
+	info "======================================================================"
+	echo
 	info "If $USER_NAME can log in and read and write their files, then the migration is complete, and you should remove $orig."
+	echo
 	info "Otherwise, remove $USER_HOME and move $orig back to $USER_HOME."
+	echo
 }
 
 DO_ENCRYPT=
