@@ -1,4 +1,4 @@
-ecryptfs-utils (82ubuntu1) UNRELEASED; urgency=low
+ecryptfs-utils (83) UNRELEASED; urgency=low
 
   [ Yan Li <yan.i.li@intel.com> ]
   * src/pam_ecryptfs/pam_ecryptfs.c, src/utils/Makefile.am,
