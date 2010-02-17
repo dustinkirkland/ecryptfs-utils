@@ -133,7 +133,7 @@ encrypt_dir () {
 		error "Cannot proceed"
 	fi
 	# start encryption
-	orig=$(mktemp -d /home/$USER.XXXXXXXX)
+	orig=$(mktemp -d /home/$USER_NAME.XXXXXXXX)
 	mv "$USER_HOME" "$orig"
 	mkdir -p -m 700 "$USER_HOME"
 	chown -R "$USER_NAME:$USER_NAME" "$USER_HOME"
