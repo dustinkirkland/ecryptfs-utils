@@ -51,6 +51,7 @@ ecryptfs-utils (83) UNRELEASED; urgency=low
     ecryptfs-utils.ecryptfs-utils-save.upstart, rules:
     - try to protect migrating users who don't login before the next reboot
   * debian/ecryptfs-utils.install: install the locale messages
+  * src/desktop/ecryptfs-record-passphrase: improve dialog text
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Sat, 06 Feb 2010 17:48:57 -0600
 
