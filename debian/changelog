@@ -14,6 +14,7 @@ ecryptfs-utils (82ubuntu1) UNRELEASED; urgency=low
     - improve usage statement and error text
     - check if already encrypted
     - handle migration of multiple users on boot
+    - fix all whitespace, use tabs for indents
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Sat, 06 Feb 2010 17:48:57 -0600
 
