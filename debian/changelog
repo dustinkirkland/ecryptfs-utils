@@ -33,6 +33,7 @@ ecryptfs-utils (82ubuntu1) UNRELEASED; urgency=low
       before the reboot, as their wrapped passphrase will be cleared on
       reboot (possible we should use an init script to move these to
       /var/tmp on reboot)
+    - ensure permissions are set correctly
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Sat, 06 Feb 2010 17:48:57 -0600
 

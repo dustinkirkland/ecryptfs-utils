@@ -131,11 +131,12 @@ encrypt_dir () {
 		error "Cannot proceed."
 	fi
 	# start encryption
-	orig=$(mktemp -d /home/$USER_NAME.XXXXXXXX)
-	mv "$USER_HOME" "$orig"
+	orig=$(mktemp /home/$USER_NAME.XXXXXXXX)
+	rm "$orig" && mv "$USER_HOME" "$orig"
+	chmod 700 "$orig"
 	mkdir -p -m 700 "$USER_HOME"
 	USER_GROUP=$(id -g "$USER_NAME")
-	chown "$USER_NAME:$USER_GROUP" "$USER_HOME"
+	chown "$USER_NAME:$USER_GROUP" "$USER_HOME" "$orig"
 	ECRYPTFS_SETUP_PRIVATE_ARGS=""
 	if [ -n "$LOGINPASS" ]; then
 		ECRYPTFS_SETUP_PRIVATE_ARGS="-l $LOGINPASS"
