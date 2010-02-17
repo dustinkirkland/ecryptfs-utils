@@ -30,10 +30,9 @@ usage() {
        echo "
 Usage:
 
-$0 -u USER [-v|--verbose]
+$0 -u USER
 
  -u,--user       Migrate USER's home directory to an encrypted home directory
- -v,--verbose    Output debug messages
 
 WARNING: Make a complete backup copy of the non-encrypted data to
 another system or external media. This script is dangerous and, in
@@ -167,10 +166,6 @@ while true; do
 			DO_ENCRYPT=1
 			USER_NAME="$2"
 			shift 2
-		;;
-		-v|--verbose)
-			VERBOSE=1
-			shift 1
 		;;
 		*)
 			usage

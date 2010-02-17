@@ -22,6 +22,7 @@ ecryptfs-utils (82ubuntu1) UNRELEASED; urgency=low
       + other modes can be re-added, if necessary, and if security
         concerns can be addressed
     - ensure running as root
+    - drop verbose option, always print useful info messages
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Sat, 06 Feb 2010 17:48:57 -0600
 
