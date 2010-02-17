@@ -12,6 +12,8 @@ ecryptfs-utils (82ubuntu1) UNRELEASED; urgency=low
     - use = and !=, and quote vars, rather than testing with -ne, -eq,
       for better shell portability
     - improve usage statement and error text
+    - check if already encrypted
+    - handle migration of multiple users on boot
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Sat, 06 Feb 2010 17:48:57 -0600
 

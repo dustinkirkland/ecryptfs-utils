@@ -151,9 +151,15 @@ sanity_check () {
        local USER_ID=${1}
        local USER_HOME=${2%/}
 
+       # Check if already encrypted
+       [ -z "$USER_HOME" ] || USER_HOME=$(get_user_home "$USER_ID")
+       if [ -e "${USER_HOME}/.ecryptfs" ]; then
+               error "${USER_HOME} appears to be encrypted already"
+       fi
+
        # Is $USER_HOME a mountpoint?
        if mount | grep -q -F " ${USER_HOME} "; then
-               error "${USER_HOME} is a mountpoint or it's already encrypted, we can't migrate it for now"
+               error "${USER_HOME} is a mountpoint, we can't migrate it for now"
        fi
 
        # Check for rsync
@@ -278,17 +284,13 @@ if [ "$DO_SETUP" = "1" ]; then
        if [ "$(id -u)" = "0" ]; then
                error "can't encrypt root's home, you should use setup as a normal user"
        fi
-
        # LOGINPASS and MOUNTPASS will just be ignored here
        if [ -n "${LOGINPASS}" ] || [ -n "${MOUNTPASS}" ]; then
                warning "Setting up encryption on next boot, and LOGINPASS/MOUNTPASS will just be ignored. A random MOUNTPASS will be generated automatically"
        fi
-
-       sanity_check $HOME
-
+       sanity_check "$(id -u)" "$HOME"
        # set up a tag
        touch ~/${ENCRYPT_TAG_FILE_NAME}
-
        echo "Your home directory will be encrypted at the next reboot"
        exit 0
 fi
@@ -296,33 +298,21 @@ fi
 if [ "$DO_BOOT" = "1" ]; then
        # I must be run as root now
        if [ "$(id -u)" != "0" ]; then
-               error "boot mode can only be used as root"
+               error "Boot mode can only be used as root"
        fi
-
-       # search for ENCRYPT_TAG_FILE_NAME, FIXME: now we handle the first
-       # one only fow now
-       USER_HOME=$(ls /home/*/${ENCRYPT_TAG_FILE_NAME} 2>/dev/null | head -1)
-       USER_HOME=${USER_HOME%/*}
-       if [ -z "$USER_HOME" ]; then
-               debug "no encrypt tag file found, bye"
-               exit 0
-       fi
-       USER_ID=$(get_user_id "${USER_HOME}")
-
-       rm -f "${USER_HOME}/${ENCRYPT_TAG_FILE_NAME}"
-
-       # check for ecryptfs kernel module
-       lsmod | grep -q ecryptfs || {
-               modprobe ecryptfs
-       }
-
-       sanity_check "$USER_ID" "$USER_HOME"
-       encrypt_dir "$USER_ID" "$USER_HOME"
+       modprobe -q ecryptfs
+       # search for ENCRYPT_TAG_FILE_NAME
+       for USER_HOME in $(ls /home/*/$ENCRYPT_TAG_FILE_NAME | sed "s:/$ENCRYPT_TAG_FILE_NAME$::" 2>/dev/null); do
+		USER_ID=$(get_user_id "$USER_HOME")
+		sanity_check "$USER_ID" "$USER_HOME"
+		encrypt_dir "$USER_ID" "$USER_HOME"
+		rm -f "$USER_HOME/$ENCRYPT_TAG_FILE_NAME"
+       done
        exit 0
 fi
 
 if [ "$DO_ENCRYPT" = "1" ]; then
        sanity_check "$USER_ID" "$USER_HOME"
-       encrypt_dir "$USER_ID" "$USER_HOME" "${LOGINPASS}" "${MOUNTPASS}"
+       encrypt_dir "$USER_ID" "$USER_HOME" "$LOGINPASS" "$MOUNTPASS"
        exit 0
 fi
