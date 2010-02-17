@@ -29,6 +29,10 @@ ecryptfs-utils (82ubuntu1) UNRELEASED; urgency=low
     - mktemp on the target user, not root
     - check that there is enough disk space available to do the migration
     - ensure the user's homedir group is correct
+    - add critical instructions, user *must* login after the migration and
+      before the reboot, as their wrapped passphrase will be cleared on
+      reboot (possible we should use an init script to move these to
+      /var/tmp on reboot)
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Sat, 06 Feb 2010 17:48:57 -0600
 
