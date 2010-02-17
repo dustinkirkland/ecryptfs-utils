@@ -12,8 +12,8 @@ _Description:
  directory, you will need this passphrase. Please print or write it down and
  store it in a safe location.
  .
- If you click "Run this action now", enter your login password at the "Passphrase"
- prompt and you can display your randomly generated passphrase.
+ If you click "Run this action now", enter your login password at the
+ "Passphrase" prompt and you can display your randomly generated passphrase.
  .
  Otherwise, you will need to run "ecryptfs-unwrap-passphrase" from the command
  line to retrive and record your generated passphrase.
