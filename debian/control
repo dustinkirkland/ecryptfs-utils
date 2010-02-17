@@ -36,6 +36,9 @@ Depends:
  libnss3-1d,
  libpam-runtime (>= 1.0.1-6),
  gettext-base
+Recommends:
+ lsof,
+ rsync
 Suggests:
  cryptsetup,
  opencryptoki
