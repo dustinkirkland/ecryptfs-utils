@@ -21,6 +21,7 @@ ecryptfs-utils (82ubuntu1) UNRELEASED; urgency=low
         security reasons and to avoid race conditions
       + other modes can be re-added, if necessary, and if security
         concerns can be addressed
+    - ensure running as root
   * src/utils/Makefile.am: install to /usr/sbin, since this is an
     administrative utility
 

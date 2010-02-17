@@ -182,6 +182,10 @@ if [ "$DO_ENCRYPT" != "1" ]; then
 	usage
 fi
 
+if [ "$(id -u)" != "0" ]; then
+	error "This program must be executed with root privileges"
+fi
+
 if [ "$DO_ENCRYPT" = "1" ]; then
 	USER_HOME=$(get_user_home "$USER_NAME")
 	sanity_check "$USER_NAME" "$USER_HOME"
