@@ -104,7 +104,7 @@ sanity_check () {
 	# available. To make a full copy, we will need at least 2.5x the
 	# disk usage of the target home directory.
 	info "Checking disk space, this may take a few moments.  Please be patient."
-	needed=$(du -s "$USER_HOME" | awk '{printf "%f", $1*2.5}')
+	needed=$(du -s "$USER_HOME" | awk '{printf "%.0f", $1*2.5}')
 	free=$(df -P "$USER_HOME" | tail -n 1 | awk '{print $4}')
 	if [ $needed -gt $free ]; then
 		info "2.5x the size your current home directory is required to perform a migration."

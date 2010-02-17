@@ -25,6 +25,7 @@ ecryptfs-utils (82ubuntu1) UNRELEASED; urgency=low
     - drop verbose option, always print useful info messages
     - call the user $USER_NAME rather than $USER_ID since id implies
       number, and here we're deailing with names
+    - no decimals on awk calculation
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Sat, 06 Feb 2010 17:48:57 -0600
 
