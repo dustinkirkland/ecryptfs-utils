@@ -10,6 +10,7 @@ ecryptfs-utils (83) UNRELEASED; urgency=low
     src/desktop/ecryptfs-setup-private.desktop,
     src/desktop/ecryptfs-setup-private.desktop.in:
     - internationalization work for LP: #358283
+  * po/LINGUAS, po/ca.po: Catalan translation
 
   [ Yan Li <yan.i.li@intel.com> ]
   * src/pam_ecryptfs/pam_ecryptfs.c, src/utils/Makefile.am,
