@@ -88,6 +88,7 @@ binary-arch: install
 	dh_installchangelogs ChangeLog
 	dh_installdocs
 	dh_install --fail-missing --sourcedir=debian/tmp
+	dh_installinit --noscripts --error-handler=true
 	dh_lintian
 	dh_link
 	dh_strip
