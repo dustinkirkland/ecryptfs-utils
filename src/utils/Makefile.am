@@ -5,7 +5,6 @@ EXTRA_DIST=ecryptfsrc ecryptfs-rewrite-file ecryptfs-setup-private ecryptfs-setu
 rootsbin_PROGRAMS=mount.ecryptfs \
 		  umount.ecryptfs \
 		  mount.ecryptfs_private
-rootsbin_SCRIPTS=ecryptfs-migrate-home
 bin_PROGRAMS=ecryptfs-manager ecryptfs-wrap-passphrase \
 	     ecryptfs-unwrap-passphrase \
 	     ecryptfs-insert-wrapped-passphrase-into-keyring \
@@ -16,7 +15,8 @@ bin_SCRIPTS = ecryptfs-setup-private \
 	      ecryptfs-setup-swap \
 	      ecryptfs-mount-private \
 	      ecryptfs-umount-private \
-	      ecryptfs-rewrite-file
+	      ecryptfs-rewrite-file \
+	      ecryptfs-migrate-home
 bin2dir = $(bindir)
 
 noinst_PROGRAMS=test
