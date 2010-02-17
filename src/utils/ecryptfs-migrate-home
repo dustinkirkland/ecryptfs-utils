@@ -5,7 +5,7 @@
 # Written by Yan Li <yan.i.li@intel.com>, <yanli@gnome.org>
 # Copyright (C) 2010 Intel Corporation
 #
-# Some house cleaning by Dustin Kirkland <kirkland@canonical.com>
+# Modified by Dustin Kirkland <kirkland@canonical.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
@@ -24,61 +24,23 @@
 
 set -e
 
-# consts
-# ENCRYPT_TAG_FILE_NAME can't contain spaces
-ENCRYPT_TAG_FILE_NAME=.ENCRYPT_ME_ON_NEXT_BOOT
 PRIVATE_DIR="Private"
 
 usage() {
        echo "
 Usage:
 
-$0 [-e|-s|-b]
+$0 -u USER [-v|--verbose]
 
-This program has 3 different modes, User mode (-e), Administrator mode (-s),
-and Boot mode (-b).
+ -u,--user       Migrate USER's home directory to an encrypted home directory
+ -v,--verbose    Output debug messages
 
-User mode...
-$0 -e USER [-l|--loginpass LOGINPASS] [-m|--mountpass MOUNTPASS] [-v|--verbose]
-
- -e, --encrypt    Encrypt USER's home in place
-                   * NOTE: only root can run this
- -l, --loginpass  Login/Wrapping passphrase for USER,
-                  used to wrap MOUNTPASS
- -m, --mountpass  Passphrase for mounting the ecryptfs directory,
-                  defaults to randomly generated
- -v, --verbose    Output debug messages
-
-Administrator mode...
-$0 -s
- -s, --setup      Set up encryption for current user to run on next boot,
-                   * NOTE: non-root users can run this
-
-Boot mode...
-$0 -b
- -b, --boot       Boot mode. Use this option on boot to do encryption on
-                  demand. SHOULD ONLY BE CALLED from a boot script. You
-                  should NOT use this option directly, (only root
-                   * NOTE: only root can run this in an init script
-
-This program encrypts an user's home directory.
-
-There are two ways to use this script:
-
- a. you can run this script as root, to encrypt any directory by using
-    the -e option. You have to make sure that directory is not in use
-    (the script will also check for this)
-
- b. if your distro supports this, you can also run this script a a
-    normal user with -s (or --setup) to setup encryption to run on
-    next reboot, and your home will be automatically encrypted on next
-    boot. If your distro didn't support this, running with -s is no
-    use
-
-WARNING: Make a complete backup copy of your non-encrypted data to
+WARNING: Make a complete backup copy of the non-encrypted data to
 another system or external media. This script is dangerous and, in
 case of an error, could result in data lost, or lock you out of your
 system!
+
+This program must be executed by root.
 
 "
 	exit 1
@@ -93,16 +55,14 @@ warning() {
 	echo "$(gettext 'WARNING: ')" "$@" 1>&2
 }
 
-debug() {
+info() {
 	if [ "$VERBOSE" = "1" ]; then
-		echo "$(gettext 'DEBUG: ')" "$@" 1>&2
+		echo "$(gettext 'INFO: ')" "$@" 1>&2
 	fi
 }
 
 assert_dir_empty() {
-	# arguments:
 	local DIR="$1"
-
 	if [ -e "$DIR" ]; then
 		# if $DIR is a directory, make sure it's empty
 		if [ -d "$DIR" ]; then
@@ -113,87 +73,69 @@ assert_dir_empty() {
 				echo 1>&2 "follow the instructions in:"
 				echo 1>&2 "    ecryptfs-setup-private --undo"
 				echo 1>&2 
-				error "$DIR is not empty, can't continue"
+				error "$DIR is not empty, cannot continue."
 			fi
 		else
-			error "$DIR exists but is not an empty directory, can't continue"
+			error "$DIR exists but is not an empty directory, cannot continue."
 		fi
 	fi
 }
 
-# get user home by id
+# get user home by username
 get_user_home () {
-	local USER_ID=$1
+	local USER_NAME="$1"
 	local USER_HOME=$(grep "^$USER_ID:" /etc/passwd | cut -d":" -f 6)
 	if [ -z "$USER_HOME" ]; then
-		error "Can't find user home for $USER_ID"
+		error "Cannot find the home directory of $USER_ID."
 	fi
-	echo $USER_HOME
-}
-
-# get user id by home
-get_user_id () {
-	local USER_HOME=$1
-	local USER_ID=$(grep -F ":$USER_HOME:" /etc/passwd | cut -d":" -f 1)
-	if [ -z "$USER_ID" ]; then
-		error "Can't find user home for $USER_ID"
-	fi
-	echo $USER_ID
+	echo "$USER_HOME"
 }
 
 sanity_check () {
-	# arguments:
-	# remove trailing "/"
-	local USER_ID="$1"
-	local USER_HOME=${2%/}
-	# Check if already encrypted
-	[ -z "$USER_HOME" ] || USER_HOME=$(get_user_home "$USER_ID")
+	local USER_NAME="$1"
+	local USER_HOME="$2"
 	if [ -e "$USER_HOME/.ecryptfs" ]; then
-		error "$USER_HOME appears to be encrypted already"
-	fi
-	# Is $USER_HOME a mountpoint?
-	if mount | grep -q -F " $USER_HOME "; then
-		error "$USER_HOME is a mountpoint, we can't migrate it for now"
+		error "$USER_HOME appears to be encrypted already."
 	fi
 	# Check for rsync
 	if ! which rsync >/dev/null 2>&1; then
-		error "Please install the rsync package"
+		error "Please install the rsync package."
 	fi
 	# Check free space: make sure we have sufficient disk space
-	# available. To make a full copy, we will need at least 2x the
+	# available. To make a full copy, we will need at least 2.5x the
 	# disk usage of the target home directory.
-	# TODO: not implemented yet
-	# if DO_NOT_HAVE_ENOUGH_SPACE; then
-	#       error "not enough free space, I need at least 2x the disk usage of your current home directory"
-	# fi
-	# Check directories
-	assert_dir_empty "$USER_HOME.old" && rm -rf "$USER_HOME.old"
+	info "Checking disk space, this may take a few moments.  Please be patient."
+	needed=$(du -s "$USER_HOME" | awk '{printf "%f", $1*2.5}')
+	free=$(df -P "$USER_HOME" | tail -n 1 | awk '{print $4}')
+	if [ $needed -gt $free ]; then
+		info "2.5x the size your current home directory is required to perform a migration."
+		info "Once the migration succeeds, you may recover most of this space by deleting the cleartext directory."
+		error "Not enough free disk space."
+	fi
 	assert_dir_empty "$USER_HOME/.$PRIVATE_DIR"
 	assert_dir_empty "$USER_HOME/.ecryptfs"
-	assert_dir_empty "/home/.ecryptfs/$USER_ID"
+	assert_dir_empty "/home/.ecryptfs/$USER_NAME"
 }
 
 encrypt_dir () {
-	# argument:
-	# remove trailing "/"
-	local USER_ID="$1"
-	local USER_HOME=${2%/}
-	local LOGINPASS="${3}"
-	local MOUNTPASS="${4}"
-	# check whether USER_HOME is in use
+	local USER_NAME="$1"
+	local USER_HOME="$2"
 	if ! which lsof >/dev/null 2>&1; then
-		warning "lsof not found, I don't know whether your home is in use or not"
-	else
-		debug "checking for open files in $USER_HOME"
-		lsof=$(lsof +D "$USER_HOME" | wc -l)
-		if [ "$lsof" != "0" ]; then
-			lsof +D "$USER_HOME"
-			echo
-			error "user $USER_ID has opened the files above, can't proceed"
-		fi
+		info "Please install lsof."
+		error "Can not tell whether $USER_HOME is in use or not."
+	fi
+	info "Checking for open files in $USER_HOME"
+	lsof=$(lsof +D "$USER_HOME" | wc -l)
+	if [ "$lsof" != "0" ]; then
+		info "The following files are in use:"
+		echo
+		lsof +D "$USER_HOME" | sed "s/^/    /"
+		echo
+		error "Cannot proceed"
 	fi
 	# start encryption
-	mv "$USER_HOME" "$USER_HOME.old"
+	orig=$(mktemp -d /home/$USER.XXXXXXXX)
+	mv "$USER_HOME" "$orig"
 	mkdir -p -m 700 "$USER_HOME"
 	chown -R $USER_ID:$USER_ID "$USER_HOME"
 	ECRYPTFS_SETUP_PRIVATE_ARGS=""
@@ -206,55 +148,29 @@ encrypt_dir () {
 	if ! ecryptfs-setup-private -u "$USER_ID" -b $ECRYPTFS_SETUP_PRIVATE_ARGS; then
 		# too bad, something went wrong, we'll try to recover
 		rm -rf "$USER_HOME"
-		mv "$USER_HOME.old" "$USER_HOME"
+		mv "$orig" "$USER_HOME"
 		exit 1
 	fi
-	debug "encrypt home has been set up, encrypting files now..."
-	rsync -a "$USER_HOME.old/" "$USER_HOME/"
+	info "Encrypted home has been set up, encrypting files now...this may take a while."
+	rsync -a "$orig/" "$USER_HOME/"
 	umount "$USER_HOME/"
+	info "The migration appears to have completed successfully."
+	info "You may remove $orig once you are satisified with the migration."
 }
 
-DO_SETUP=
-DO_BOOT=
 DO_ENCRYPT=
 VERBOSE=
 while true; do
 	[ -z "$1" ] && break
 	case "$1" in
-		-u|--username)
-			USER="$2"
+		-u|--user)
+			DO_ENCRYPT=1
+			USER_NAME="$2"
 			shift 2
-		;;
-		-l|--loginpass)
-			LOGINPASS="$2"
-			shift 2
-		;;
-		-m|--mountpass)
-			MOUNTPASS="$2"
-			shift 2
-		;;
-		-w|--wrapping)
-			WRAPPING_PASS="INDEPENDENT"
-			MESSAGE="$(gettext 'Enter your wrapping passphrase')"
-			shift 1
-		;;
-		-s|--setup)
-			DO_SETUP=1
-			shift 1
-		;;
-		-b|--boot)
-			DO_BOOT=1
-			shift 1
 		;;
 		-v|--verbose)
 			VERBOSE=1
 			shift 1
-		;;
-		-e|--encrypt)
-			DO_ENCRYPT=1
-			USER_ID=$2
-			USER_HOME=$(get_user_home "$USER_ID")
-			shift 2
 		;;
 		*)
 			usage
@@ -262,43 +178,12 @@ while true; do
 	esac
 done
 
-if [ "$DO_SETUP""$DO_BOOT""$DO_ENCRYPT" != "1" ]; then
+if [ "$DO_ENCRYPT" != "1" ]; then
 	usage
 fi
 
-if [ "$DO_SETUP" = "1" ]; then
-	# we can't encrypt root's home
-	if [ "$(id -u)" = "0" ]; then
-		error "can't encrypt root's home, you should use setup as a normal user"
-	fi
-	# LOGINPASS and MOUNTPASS will just be ignored here
-	if [ -n "$LOGINPASS" ] || [ -n "$MOUNTPASS" ]; then
-		warning "Setting up encryption on next boot, and LOGINPASS/MOUNTPASS will just be ignored. A random MOUNTPASS will be generated automatically"
-	fi
-	sanity_check "$(id -u)" "$HOME"
-	# set up a tag
-	touch "$HOME"/"$ENCRYPT_TAG_FILE_NAME"
-	echo "Your home directory will be encrypted at the next reboot"
-	exit 0
-fi
-
-if [ "$DO_BOOT" = "1" ]; then
-	if [ "$(id -u)" != "0" ]; then
-		error "Boot mode can only be used as root"
-	fi
-	modprobe -q ecryptfs
-	# search for ENCRYPT_TAG_FILE_NAME
-	for USER_HOME in $(ls /home/*/$ENCRYPT_TAG_FILE_NAME | sed "s:/$ENCRYPT_TAG_FILE_NAME$::" 2>/dev/null); do
-		USER_ID=$(get_user_id "$USER_HOME")
-		sanity_check "$USER_ID" "$USER_HOME"
-		encrypt_dir "$USER_ID" "$USER_HOME"
-		rm -f "$USER_HOME/$ENCRYPT_TAG_FILE_NAME"
-	done
-	exit 0
-fi
-
 if [ "$DO_ENCRYPT" = "1" ]; then
-	sanity_check "$USER_ID" "$USER_HOME"
-	encrypt_dir "$USER_ID" "$USER_HOME" "$LOGINPASS" "$MOUNTPASS"
-	exit 0
+	USER_HOME=$(get_user_home "$USER_NAME")
+	sanity_check "$USER_NAME" "$USER_HOME"
+	encrypt_dir "$USER_NAME" "$USER_HOME" "$LOGINPASS" "$MOUNTPASS"
 fi

@@ -16,6 +16,11 @@ ecryptfs-utils (82ubuntu1) UNRELEASED; urgency=low
     - handle migration of multiple users on boot
     - fix all whitespace, use tabs for indents
     - use quotes around variables, rather than ${} (stylistic preference)
+    - major simplification for immediate release
+      + remove boot and user modes; only support administrator mode for
+        security reasons and to avoid race conditions
+      + other modes can be re-added, if necessary, and if security
+        concerns can be addressed
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Sat, 06 Feb 2010 17:48:57 -0600
 
