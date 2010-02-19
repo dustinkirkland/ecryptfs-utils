@@ -1,6 +1,10 @@
 ecryptfs-utils (84) UNRELEASED; urgency=low
 
   * src/desktop/ecryptfs-record-passphrase: fix typo, LP: #524139
+  * debian/rules, debian/control:
+    - disable the gpg key module, as it's not yet functional
+    - clean up unneeded build-deps
+    - also, not using opencryptoki either
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Wed, 17 Feb 2010 15:16:20 -0600
 

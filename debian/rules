@@ -14,10 +14,6 @@ endif
 
 DEB_BUILD_ARCH		?= $(shell dpkg-architecture -qDEB_BUILD_ARCH)
 
-ifneq ($(DEB_BUILD_ARCH),s390)
-	TPMFLAGS = --enable-opencryptoki
-endif
-
 clean:
 	dh_testdir
 	dh_testroot
@@ -39,7 +35,7 @@ ifneq "$(wildcard /usr/share/misc/config.sub)" ""
 	cp -f /usr/share/misc/config.sub config.sub
 endif
 
-	./configure $(CROSS) --prefix=/usr --libdir=\$${prefix}/lib --mandir=\$${prefix}/share/man --enable-static --enable-gpg --enable-nss --disable-gui --enable-pam --disable-openssl --disable-pkcs11-helper --disable-tspi $(TPMFLAGS) CFLAGS="$(CFLAGS)"
+	./configure $(CROSS) --prefix=/usr --libdir=\$${prefix}/lib --mandir=\$${prefix}/share/man --enable-static --disable-gpg --enable-nss --disable-gui --enable-pam --disable-openssl --disable-pkcs11-helper --disable-tspi CFLAGS="$(CFLAGS)"
 
 build: build-stamp
 build-stamp: config.status
