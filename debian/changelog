@@ -1,6 +1,6 @@
 ecryptfs-utils (84) UNRELEASED; urgency=low
 
-  * 
+  * src/desktop/ecryptfs-record-passphrase: fix typo, LP: #524139
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Wed, 17 Feb 2010 15:16:20 -0600
 

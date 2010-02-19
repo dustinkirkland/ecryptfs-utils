@@ -15,5 +15,5 @@ Description: To encrypt your home directory or "Private" folder, a strong
  "Passphrase" prompt and you can display your randomly generated passphrase.
  .
  Otherwise, you will need to run "ecryptfs-unwrap-passphrase" from the command
- line to retrive and record your generated passphrase.
+ line to retrieve and record your generated passphrase.
 
