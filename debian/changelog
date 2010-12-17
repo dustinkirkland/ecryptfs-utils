@@ -10,7 +10,7 @@ ecryptfs-utils (84) UNRELEASED; urgency=low
   * doc/manpage/ecryptfs-recover-private.1, doc/manpage/Makefile.am,
     po/POTFILES.in, src/utils/ecryptfs-recover-private,
     src/utils/Makefile.am: add a utility to simplify data recovery
-    of an encrypted private directory from a Live ISO
+    of an encrypted private directory from a Live ISO, LP: #689969
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Wed, 17 Feb 2010 15:16:20 -0600
 
