@@ -4,6 +4,7 @@ EXTRA_DIST=ecryptfsrc ecryptfs-rewrite-file ecryptfs-setup-private ecryptfs-setu
 
 rootsbin_PROGRAMS=mount.ecryptfs \
 		  umount.ecryptfs \
+		  ecryptfs-recover-private \
 		  mount.ecryptfs_private
 bin_PROGRAMS=ecryptfs-manager ecryptfs-wrap-passphrase \
 	     ecryptfs-unwrap-passphrase \

@@ -1,0 +1,64 @@
+#!/bin/sh -e
+#
+#    ecryptfs-recover-private
+#    Copyright (C) 2010 Canonical Ltd.
+#
+#    Authors: Dustin Kirkland <kirkland@canonical.com>
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, version 2 of the License.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+error() {
+	echo "ERROR: $@" 1>&2
+	exit 1
+}
+
+info() {
+	echo "INFO: $@"
+}
+
+[ "$(id -u)" = "0" ] || error "This program must be run as root"
+
+info "Searching for encrypted private directories (this might take a while)..."
+for d in $(find / -type d -name ".Private"); do
+	if [ -f "$d/../.ecryptfs/Private.sig" ]; then
+		mount_sig=$(head -n1 "$d/../.ecryptfs/Private.sig")
+		fnek_sig=$(tail -n1 "$d/../.ecryptfs/Private.sig")
+		info "Found [$d]"
+		echo -n "Recover this private directory [Y/n]?: "
+		answer=$(head -n1)
+		case "$answer" in n*|N*) continue ;; esac
+		info "Enter your LOGIN passphrase..."
+		if [ -f "$d/../.ecryptfs/wrapped-passphrase" ]; then
+			ecryptfs-insert-wrapped-passphrase-into-keyring "$d/../.ecryptfs/wrapped-passphrase"
+		else
+			info "Could not find your wrapped passphrase."
+			echo
+			info "To recover this private directory, you MUST have your original MOUNT passphrase."
+			echo
+			info "When you first setup your encrypted private directory, you were told to record"
+			info "your mount passphrase."
+			echo
+			info "It should be 32 characters long, consisting of [0-9] and [a-f]."
+			echo
+			echo -n "Enter your MOUNT passphrase: "
+			stty_orig=$(stty -g)
+			stty -echo
+			passphrase=$(head -n1)
+			stty $stty_orig
+			echo
+		fi
+		tmpdir=$(mktemp -d /tmp/ecryptfs.XXXXXXXX)
+		mount -i -t ecryptfs -o "ecryptfs_sig=$mount_sig,ecryptfs_fnek_sig=$fnek_sig,ecryptfs_cipher=aes,ecryptfs_key_bytes=16" "$d" "$tmpdir"
+		info "Success, private data mounted at [$tmpdir]"
+	fi
+done

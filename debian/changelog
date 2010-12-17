@@ -7,6 +7,10 @@ ecryptfs-utils (84) UNRELEASED; urgency=low
     - also, not using opencryptoki either
   * doc/manpage/ecryptfs.7: fix minor documentation bug, reported by
     email by Jon 'maddog' Hall
+  * doc/manpage/ecryptfs-recover-private.1, doc/manpage/Makefile.am,
+    po/POTFILES.in, src/utils/ecryptfs-recover-private,
+    src/utils/Makefile.am: add a utility to simplify data recovery
+    of an encrypted private directory from a Live ISO
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Wed, 17 Feb 2010 15:16:20 -0600
 

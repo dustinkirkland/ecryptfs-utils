@@ -1,0 +1,31 @@
+.TH ecryptfs-recover-private 1 2010-12-17 ecryptfs-utils "eCryptfs"
+.SH NAME
+\fBecryptfs-recover-private\fP \- find and mount any encrypted private directories
+
+.SH SYNOPSIS
+\fBecryptfs-recover-private\fP
+
+.SH DESCRIPTION
+This utility searches the entire system looking for encrypted private directories, as configured by \fBecryptfs-setup-private\fP(1).  It must run under \fBsudo\fP(8) or with root permission, in order to search the filesystem and perform the mounts.
+
+If an encrypted directory and a \fIwrapped-passphrase\fP file are found, the user is prompted for the login (wrapping) passphrase, the keys are inserted into the keyring, and the data is decrypted and mounted.
+
+If no \fIwrapped-passphrase\fP file is found, the user will be prompted for their mount passphrase.  This passphrase is typically 32 characters of [0-9a-f].  All users are prompted to urgently record this randomly generated passphrase when they first setup their encrypted private directory. 
+
+The destination mount of the decrypted data is a temporary directory, in the form of \fI/tmp/ecryptfs.XXXXXXXX\fP.
+
+This utility should typically be used from a LiveISO or recovery image.
+
+.SH SEE ALSO
+\fBecryptfs-setup-private\fP(1), \fBsudo\fP(8)
+
+\fIhttp://blog.dustinkirkland.com/2009/03/mounting-your-encrypted-home-from.html\fP
+
+.TP
+\fIhttp://launchpad.net/ecryptfs/\fP
+.PD
+
+.SH AUTHOR
+This manpage was written by Dustin Kirkland <kirkland@canonical.com> for Ubuntu systems (but may be used by others).  Permission is granted to copy, distribute and/or modify this document under the terms of the GNU General Public License, Version 2 or any later version published by the Free Software Foundation.
+
+On Debian systems, the complete text of the GNU General Public License can be found in /usr/share/common-licenses/GPL.
