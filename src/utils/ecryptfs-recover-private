@@ -26,39 +26,75 @@ info() {
 	echo "INFO: $@"
 }
 
-[ "$(id -u)" = "0" ] || error "This program must be run as root"
+# We need root access to do the deep find and the mount
+[ "$(id -u)" = "0" ] || error "This program must be run as root."
 
-info "Searching for encrypted private directories (this might take a while)..."
-for d in $(find / -type d -name ".Private"); do
-	if [ -f "$d/../.ecryptfs/Private.sig" ]; then
-		mount_sig=$(head -n1 "$d/../.ecryptfs/Private.sig")
-		fnek_sig=$(tail -n1 "$d/../.ecryptfs/Private.sig")
-		info "Found [$d]"
-		echo -n "Recover this private directory [Y/n]?: "
+# Handle parameters
+if [ -d "$1" ]; then
+	# Allow for target directories on the command line
+	dirs="$@"
+else
+	# Otherwise, search the system for directories named ".Private"
+	info "Searching for encrypted private directories (this might take a while)..."
+	dirs=$(find / -type d -name ".Private")
+	if [ -z "$dirs" ]; then
+		info "Hint: click 'Places' and select your hard disk, then run this again."
+		error "No private directories found; make sure that your root filesystem is mounted."
+	fi
+fi
+
+# Examine directories
+for d in $dirs; do
+	if [ -d "$d" ]; then
+		info "Found [$d]."
+		echo -n "Try to recover this directory? [Y/n]: "
 		answer=$(head -n1)
 		case "$answer" in n*|N*) continue ;; esac
-		info "Enter your LOGIN passphrase..."
-		if [ -f "$d/../.ecryptfs/wrapped-passphrase" ]; then
-			ecryptfs-insert-wrapped-passphrase-into-keyring "$d/../.ecryptfs/wrapped-passphrase"
-		else
-			info "Could not find your wrapped passphrase."
-			echo
-			info "To recover this private directory, you MUST have your original MOUNT passphrase."
-			echo
-			info "When you first setup your encrypted private directory, you were told to record"
-			info "your mount passphrase."
-			echo
-			info "It should be 32 characters long, consisting of [0-9] and [a-f]."
-			echo
-			echo -n "Enter your MOUNT passphrase: "
-			stty_orig=$(stty -g)
-			stty -echo
-			passphrase=$(head -n1)
-			stty $stty_orig
-			echo
-		fi
-		tmpdir=$(mktemp -d /tmp/ecryptfs.XXXXXXXX)
-		mount -i -t ecryptfs -o "ecryptfs_sig=$mount_sig,ecryptfs_fnek_sig=$fnek_sig,ecryptfs_cipher=aes,ecryptfs_key_bytes=16" "$d" "$tmpdir"
-		info "Success, private data mounted at [$tmpdir]"
+	else
+		continue
 	fi
+	# Determine if filename encryption is on
+	ls "$d/ECRYPTFS_FNEK_ENCRYPTED"* >/dev/null 2>&1 && fnek="--fnek" || fnek=
+	if [ -f "$d/../.ecryptfs/wrapped-passphrase" ]; then
+		# Use the wrapped-passphrase, if available
+		info "Enter your LOGIN passphrase..."
+		ecryptfs-insert-wrapped-passphrase-into-keyring "$d/../.ecryptfs/wrapped-passphrase"
+		sigs=$(cat "$d/../.ecryptfs/Private.sig")
+	else
+		# Fall back to mount passphrase
+		echo
+		info "Could not find your wrapped passphrase file."
+		info "To recover this directory, you MUST have your original MOUNT passphrase."
+		info "When you first setup your encrypted private directory, you were told to record"
+		info "your MOUNT passphrase."
+		info "It should be 32 characters long, consisting of [0-9] and [a-f]."
+		echo
+		echo -n "Enter your MOUNT passphrase: "
+		stty_orig=$(stty -g)
+		stty -echo
+		passphrase=$(head -n1)
+		stty $stty_orig
+		echo
+		sigs=$(printf "%s\0" "$passphrase" | ecryptfs-add-passphrase $fnek | grep "^Inserted" | sed -e "s/^.*\[//" -e "s/\].*$//")
+	fi
+	case $(echo "$sigs" | wc -l) in
+		1)
+			mount_sig=$(echo "$sigs" | head -n1)
+			fnek_sig=
+			mount_opts="ro,ecryptfs_sig=$mount_sig,ecryptfs_cipher=aes,ecryptfs_key_bytes=16"
+		;;
+		2)
+			mount_sig=$(echo "$sigs" | head -n1)
+			fnek_sig=$(echo "$sigs" | tail -n1)
+			mount_opts="ro,ecryptfs_sig=$mount_sig,ecryptfs_fnek_sig=$fnek_sig,ecryptfs_cipher=aes,ecryptfs_key_bytes=16"
+		;;
+		*)
+			continue
+		;;
+	esac
+	(keyctl list @u | grep -qs "$mount_sig") || error "The key required to access this private data is not available."
+	(keyctl list @u | grep -qs "$fnek_sig") || error "The key required to access this private data is not available."
+	tmpdir=$(mktemp -d /tmp/ecryptfs.XXXXXXXX)
+	mount -i -t ecryptfs -o "$mount_opts" "$d" "$tmpdir"
+	info "Success!  Private data mounted read-only at [$tmpdir]."
 done
