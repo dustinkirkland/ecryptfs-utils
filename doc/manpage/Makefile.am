@@ -18,7 +18,7 @@ dist_man_MANS = \
 	ecryptfs-insert-wrapped-passphrase-into-keyring.1 \
 	ecryptfs-manager.8 \
 	ecryptfs-mount-private.1 \
-	ecryptfs-recover-private.8 \
+	ecryptfs-recover-private.1 \
 	ecryptfs-rewrap-passphrase.1 \
 	ecryptfs-rewrite-file.1 \
 	ecryptfs-setup-private.1 \
