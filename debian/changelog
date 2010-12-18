@@ -1,4 +1,4 @@
-ecryptfs-utils (84) UNRELEASED; urgency=low
+ecryptfs-utils (84) released; urgency=low
 
   * src/desktop/ecryptfs-record-passphrase: fix typo, LP: #524139
   * debian/rules, debian/control:
@@ -12,7 +12,7 @@ ecryptfs-utils (84) UNRELEASED; urgency=low
     src/utils/Makefile.am: add a utility to simplify data recovery
     of an encrypted private directory from a Live ISO, LP: #689969
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Wed, 17 Feb 2010 15:16:20 -0600
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Fri, 17 Dec 2010 20:12:47 -0600
 
 ecryptfs-utils (83) released; urgency=low
 
