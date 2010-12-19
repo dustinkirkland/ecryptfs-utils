@@ -59,7 +59,7 @@ for d in $dirs; do
 		# Use the wrapped-passphrase, if available
 		info "Enter your LOGIN passphrase..."
 		ecryptfs-insert-wrapped-passphrase-into-keyring "$d/../.ecryptfs/wrapped-passphrase"
-		sigs=$(cat "$d/../.ecryptfs/Private.sig")
+		sigs=$(sed -e "s/[^0-9a-f]//g" "$d/../.ecryptfs/Private.sig")
 	else
 		# Fall back to mount passphrase
 		echo
@@ -75,7 +75,7 @@ for d in $dirs; do
 		passphrase=$(head -n1)
 		stty $stty_orig
 		echo
-		sigs=$(printf "%s\0" "$passphrase" | ecryptfs-add-passphrase $fnek | grep "^Inserted" | sed -e "s/^.*\[//" -e "s/\].*$//")
+		sigs=$(printf "%s\0" "$passphrase" | ecryptfs-add-passphrase $fnek | grep "^Inserted" | sed -e "s/^.*\[//" -e "s/\].*$//" -e "s/[^0-9a-f]//g")
 	fi
 	case $(echo "$sigs" | wc -l) in
 		1)

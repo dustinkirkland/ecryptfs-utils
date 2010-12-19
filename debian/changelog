@@ -1,3 +1,9 @@
+ecryptfs-utils (85) UNRELEASED; urgency=low
+
+  * src/utils/ecryptfs-recover-private: clean sigs of invalid characters
+
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Sun, 19 Dec 2010 10:50:52 -0600
+
 ecryptfs-utils (84) released; urgency=low
 
   * src/desktop/ecryptfs-record-passphrase: fix typo, LP: #524139
