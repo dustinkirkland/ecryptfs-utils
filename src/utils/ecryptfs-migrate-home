@@ -81,7 +81,7 @@ assert_dir_empty() {
 # get user home by username
 get_user_home () {
 	local USER_NAME="$1"
-	local USER_HOME=$(grep "^$USER_NAME:" /etc/passwd | cut -d":" -f 6)
+	local USER_HOME=$(getent passwd "$USER_NAME" | cut -d":" -f 6)
 	if [ -z "$USER_HOME" ]; then
 		error "Cannot find the home directory of $USER_NAME."
 	fi
