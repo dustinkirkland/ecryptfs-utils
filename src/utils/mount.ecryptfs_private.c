@@ -31,6 +31,7 @@
 #include <sys/param.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <errno.h>
 #include <keyutils.h>
 #include <mntent.h>
 #include <pwd.h>
@@ -414,7 +415,7 @@ int main(int argc, char *argv[]) {
 	if (fnek == 1) {
 		/* Filename encryption is on, so specific the fnek sig */
 		if ((asprintf(&opt,
-"ecryptfs_sig=%s,ecryptfs_fnek_sig=%s,ecryptfs_cipher=%s,ecryptfs_key_bytes=%d",
+"ecryptfs_sig=%s,ecryptfs_fnek_sig=%s,ecryptfs_cipher=%s,ecryptfs_key_bytes=%d,ecryptfs_unlink_sigs",
 		 sig, sig_fnek, KEY_CIPHER, KEY_BYTES) < 0) ||
 		 opt == NULL) {
 			perror("asprintf (opt)");
@@ -423,7 +424,7 @@ int main(int argc, char *argv[]) {
 	} else {
 		/* Filename encryption is off; legacy support */
 		if ((asprintf(&opt,
-		 "ecryptfs_sig=%s,ecryptfs_cipher=%s,ecryptfs_key_bytes=%d",
+		 "ecryptfs_sig=%s,ecryptfs_cipher=%s,ecryptfs_key_bytes=%d,ecryptfs_unlink_sigs",
 		 sig, KEY_CIPHER, KEY_BYTES) < 0) ||
 		 opt == NULL) {
 			perror("asprintf (opt)");
@@ -475,12 +476,27 @@ int main(int argc, char *argv[]) {
 			goto fail;
 		}
 	} else {
+		int rc = 0;
 		/* Decrement counter, exiting if >0, and non-forced unmount */
 		if (force == 1) {
 			zero(fh_counter);
 		} else if (decrement(fh_counter) > 0) {
 			fputs("Sessions still open, not unmounting\n", stderr);
 			goto fail;
+		}
+		/* Attempt to clear the user's keys from the keyring,
+                   to prevent root from mounting without the user's key.
+                   This is a best-effort basis, so we'll just print messages
+                   on error. */
+		if (sig != NULL) {
+			rc = ecryptfs_remove_auth_tok_from_keyring(sig);
+			if (rc != 0 && rc != ENOKEY)
+				fputs("Could not remove key from keyring, try 'ecryptfs-umount-private'\n", stderr);
+		}
+		if (sig_fnek != NULL) {
+			rc = ecryptfs_remove_auth_tok_from_keyring(sig_fnek);
+			if (rc != 0 && rc != ENOKEY)
+				fputs("Could not remove key from keyring, try 'ecryptfs-umount-private'\n", stderr);
 		}
 		/* Unmounting, so exit if not mounted */
 		if (ecryptfs_private_is_mounted(dev, mnt, sig, mounting) == 0) {

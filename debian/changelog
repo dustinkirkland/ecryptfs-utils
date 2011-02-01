@@ -1,6 +1,11 @@
 ecryptfs-utils (85) UNRELEASED; urgency=low
 
   * src/utils/ecryptfs-recover-private: clean sigs of invalid characters
+  * src/utils/mount.ecryptfs_private.c:
+    - fix bug LP: #313812, clear used keys on unmount
+    - add ecryptfs_unlink_sigs to the mount opts, so that unmounts from
+      umount.ecryptfs behave similarly
+    - use ecryptfs_remove_auth_tok_from_keyring() on the sig and sig_fnek
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Sun, 19 Dec 2010 10:50:52 -0600
 
