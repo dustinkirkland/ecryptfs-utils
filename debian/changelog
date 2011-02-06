@@ -4,6 +4,9 @@ ecryptfs-utils (86) UNRELEASED; urgency=low
   * src/pam_ecryptfs/pam_ecryptfs.c: 
     - check if this file exists and ask the user for the wrapping passphrase
       if it does
+    - eliminate both ecryptfs_pam_wrapping_independent_set() and
+      ecryptfs_pam_automount_set() and replace with a reusable
+      file_exists_dotecryptfs() function
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Sat, 05 Feb 2011 19:37:46 -0700
 
