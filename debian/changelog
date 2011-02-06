@@ -1,6 +1,9 @@
 ecryptfs-utils (86) UNRELEASED; urgency=low
 
-  * 
+  [ Jakob Unterwurzacher ]
+  * src/pam_ecryptfs/pam_ecryptfs.c: 
+    - check if this file exists and ask the user for the wrapping passphrase
+      if it does
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Sat, 05 Feb 2011 19:37:46 -0700
 

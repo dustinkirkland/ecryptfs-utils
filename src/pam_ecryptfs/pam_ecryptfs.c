@@ -87,6 +87,25 @@ out:
 	return rc;
 }
 
+/* returns: 0 for independent wrapping passphrase not set, 1 for set, <0 for error */
+static int ecryptfs_pam_wrapping_independent_set(const char *homedir)
+{
+	char *file_path;
+	int rc = 0;
+	struct stat s;
+	if (asprintf(&file_path, "%s/.ecryptfs/wrapping-independent", homedir) == -1)
+		return -ENOMEM;
+	if (stat(file_path, &s) != 0) {
+		if (errno != ENOENT)
+			rc = -errno;
+		goto out;
+	}
+	rc = 1;
+out:
+	free(file_path);
+	return rc;
+}
+
 static int wrap_passphrase_if_necessary(char *username, uid_t uid, char *wrapped_pw_filename, char *passphrase, char *salt)
 {
 	char *unwrapped_pw_filename = NULL;
@@ -165,7 +184,10 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags, int argc,
 		syslog(LOG_WARNING, "Can't check if kernel supports ecryptfs\n");
 	saved_uid = geteuid();
 	seteuid(uid);
-	rc = pam_get_item(pamh, PAM_AUTHTOK, (const void **)&passphrase);
+	if(ecryptfs_pam_wrapping_independent_set(homedir) == 1)
+		rc = pam_prompt(pamh, PAM_PROMPT_ECHO_OFF, &passphrase, "Encryption passphrase: ");
+	else
+		rc = pam_get_item(pamh, PAM_AUTHTOK, (const void **)&passphrase);
 	seteuid(saved_uid);
 	if (rc != PAM_SUCCESS) {
 		syslog(LOG_ERR, "Error retrieving passphrase; rc = [%ld]\n",
