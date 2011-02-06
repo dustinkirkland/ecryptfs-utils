@@ -1,4 +1,10 @@
-ecryptfs-utils (85) UNRELEASED; urgency=low
+ecryptfs-utils (86) UNRELEASED; urgency=low
+
+  * 
+
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Sat, 05 Feb 2011 19:37:46 -0700
+
+ecryptfs-utils (85) released; urgency=low
 
   [ Dustin Kirkland ]
   * src/utils/ecryptfs-recover-private: clean sigs of invalid characters
@@ -12,7 +18,7 @@ ecryptfs-utils (85) UNRELEASED; urgency=low
   * src/utils/ecryptfs-migrate-home:
     - support user databases outside of /etc/passwd, LP: #627506
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Sun, 19 Dec 2010 10:50:52 -0600
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Sat, 05 Feb 2011 19:37:32 -0700
 
 ecryptfs-utils (84) released; urgency=low
 
