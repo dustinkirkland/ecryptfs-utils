@@ -8,6 +8,22 @@ ecryptfs-utils (86) UNRELEASED; urgency=low
       ecryptfs_pam_automount_set() and replace with a reusable
       file_exists_dotecryptfs() function
 
+  [ Serge Hallyn and Dustin Kirkland ]
+  * src/utils/mount.ecryptfs_private.c:
+    - support multiple, user configurable private directories by way of
+      a command line "alias" argument
+    - this "alias" references a configuration file by the name of:
+      $HOME/.ecryptfs/alias.conf, which is in an fstab(5) format,
+      as well as $HOME/.ecryptfs/alias.sig, in the same format as
+      Private.sig
+    - if no argument specified, the utility operates in legacy mode,
+      defaulting to "Private"
+    - rename variables, s/dev/src/ and s/mnt/dest/
+    - add a read_config() function
+    - add an alias char* to replace the #defined ECRYPTFS_PRIVATE_DIR
+    - this is half of the fix to LP: #615657
+  * doc/manpage/mount.ecryptfs_private.1: document these changes
+
  -- Dustin Kirkland <kirkland@ubuntu.com>  Sat, 05 Feb 2011 19:37:46 -0700
 
 ecryptfs-utils (85) released; urgency=low

@@ -3,26 +3,36 @@
 mount.ecryptfs_private \- eCryptfs private mount helper.
 
 .SH SYNOPSIS
-\fBmount.ecryptfs_private\fP
+\fBmount.ecryptfs_private [ALIAS]\fP
 
 \fBNOTE:\fP This program will \fBnot\fP dynamically load the relevant keys.  For this reason, it is recommended that users use \fBecryptfs-mount-private\fP(1) instead!
 
 .SH DESCRIPTION
-\fBmount.ecryptfs_private\fP is a mount helper utility for non-root users, who are members of \fBecryptfs\fP group, to cryptographically mount a private directory, ~/Private.
+\fBmount.ecryptfs_private\fP is a mount helper utility for non-root users, who are members of \fBecryptfs\fP group, to cryptographically mount a private directory, ~/Private by default.
 
-If, and only if:
-  - the private mount passphrase is in their kernel keyring, and
-  - the current user owns both ~/.Private and ~/Private, and
-  - ~/Private is not already mounted, then
+This program optionally takes one argument, ALIAS.  If ALIAS is omitted, the program will default to using "Private" using:
+ - $HOME/.Private as the SOURCE
+ - $HOME/Private as the DESTINATION
+ - $HOME/.ecryptfs/Private.sig for the key signatures.
+
+If ALIAS is specified, then the program will look for an \fBfstab\fP(5) style configuration in:
+ - $HOME/.ecryptfs/ALIAS.conf
+and for key signature(s) in:
+ - $HOME/.ecryptfs/ALIAS.sig
+
+The mounting will proceed if, and only if:
+  - the required passphrase is in their kernel keyring, and
+  - the current user owns both the SOURCE and DESTINATION mount points
+  - the DESTINATION is not already mounted
 
 This program will:
-  - mount ~/.Private onto ~/Private
+  - mount SOURCE onto DESTINATION
   - as an ecryptfs filesystem
   - using the AES cipher
   - with a key length of 16 bytes
   - using the passphrase whose signature is in ~/.ecryptfs/Private.sig
 
-The only setuid operation in this program is the call to \fBmount\fP(8).
+The only setuid operation in this program is the call to \fBmount\fP(8) or \fBumount\fP(8).
 
 The \fBecryptfs-setup-private\fP(1) utility will create the ~/.Private and ~/Private directories, generate a mount passphrase, wrap the passphrase, and write the ~/.ecryptfs/Private.sig.
 
@@ -40,7 +50,7 @@ The system administrator can add the pam_ecryptfs.so module to the PAM stack whi
 .SH SEE ALSO
 .PD 0
 .TP
-\fBecryptfs\fP(7), \fBecryptfs-rewrap-passphrase\fP(1), \fBecryptfs-setup-private\fP(1), \fBkeyctl\fP(1), \fBmount\fP(8), \fBumount.ecryptfs_private\fP(1), \fBpam_ecryptfs\fP(8)
+\fBecryptfs\fP(7), \fBecryptfs-rewrap-passphrase\fP(1), \fBecryptfs-setup-private\fP(1), \fBkeyctl\fP(1), \fBmount\fP(8), \fBumount.ecryptfs_private\fP(1), \fBpam_ecryptfs\fP(8), \fBfstab\fP(5)
 
 .TP
 \fI/usr/share/doc/ecryptfs-utils/ecryptfs-faq.html\fP

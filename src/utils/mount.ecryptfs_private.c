@@ -5,6 +5,7 @@
  * Copyright (C) 2008 Canonical Ltd.
  *
  * This code was originally written by Dustin Kirkland <kirkland@ubuntu.com>.
+ * Enhanced by Serge Hallyn <hallyn@ubuntu.com>.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -52,6 +53,49 @@
 #define FSTYPE "ecryptfs"
 #define TMP "/dev/shm"
 
+int read_config(char *pw_dir, int uid, char *alias, char **s, char **d, char **o) {
+/* Read an fstab(5) style config file */
+	char *fnam;
+	struct stat mstat;
+	struct mntent *e;
+	FILE *fin;
+	if (asprintf(&fnam, "%s/.ecryptfs/%s.conf", pw_dir, alias) < 0) {
+		perror("asprintf");
+		return -1;
+	}
+	if (stat(fnam, &mstat)!=0 || (!S_ISREG(mstat.st_mode) || mstat.st_uid!=uid)) {
+		fputs("Bad file\n", stderr);
+		free(fnam);
+		return -1;
+	}
+	fin = fopen(fnam, "r");
+	free(fnam);
+	if (!fin) {
+		perror("fopen");
+		return -1;
+	}
+	e = getmntent(fin);
+	fclose(fin);
+	if (!e) {
+		perror("getmntent");
+		return -1;
+	}
+	if (strcmp(e->mnt_type, "ecryptfs") != 0) {
+		fputs("Bad fs type\n", stderr);
+		return -1;
+	}
+	*o = strdup(e->mnt_opts);
+	if (!*o)
+		return -2;
+	*d = strdup(e->mnt_dir);
+	if (!*d)
+		return -2;
+	*s = strdup(e->mnt_fsname);
+	if (!*s)
+		return -2;
+out:
+	return 0;
+}
 
 int check_username(char *u) {
 /* We follow the username guidelines used by the adduser program.  Quoting its
@@ -85,7 +129,7 @@ int check_username(char *u) {
 }
 
 
-char *fetch_sig(char *pw_dir, int entry) {
+char *fetch_sig(char *pw_dir, int entry, char *alias) {
 /* Read ecryptfs signature from file and validate
  * Return signature as a string, or NULL on failure
  */
@@ -96,7 +140,7 @@ char *fetch_sig(char *pw_dir, int entry) {
 	/* Construct sig file name */
 	if (
 	    asprintf(&sig_file, "%s/.ecryptfs/%s.sig", pw_dir,
-		     ECRYPTFS_PRIVATE_DIR) < 0
+		     alias) < 0
 	   ) {
 		perror("asprintf");
 		return NULL;
@@ -205,7 +249,7 @@ int update_mtab(char *dev, char *mnt, char *opt) {
 	return 0;
 }
 
-FILE *lock_counter(char *u, int uid) {
+FILE *lock_counter(char *u, int uid, char *alias) {
 	char *f;
 	int fd;
 	FILE *fh;
@@ -213,7 +257,7 @@ FILE *lock_counter(char *u, int uid) {
 	int i = 1;
 	/* We expect TMP to exist, be writeable by the user,
 	 * and to be cleared on boot */
-	if (asprintf(&f, "%s/%s-%s-%s", TMP, FSTYPE, u, ECRYPTFS_PRIVATE_DIR) < 0) {
+	if (asprintf(&f, "%s/%s-%s-%s", TMP, FSTYPE, u, alias) < 0) {
 		perror("asprintf");
 		return NULL;
 	}
@@ -225,7 +269,7 @@ FILE *lock_counter(char *u, int uid) {
 		if (stat(f, &s)==0 && (!S_ISREG(s.st_mode) || s.st_uid!=uid)) {
 			free(f);
 			if (asprintf(&f, "%s/%s-%s-%s-%d", TMP, FSTYPE, u,
-			    ECRYPTFS_PRIVATE_DIR, i++) < 0) {
+			    alias, i++) < 0) {
 				perror("asprintf");
 				return NULL;
 			}
@@ -341,7 +385,7 @@ int main(int argc, char *argv[]) {
 	int force = 0;
 	int fnek = 1;
 	struct passwd *pwd;
-	char *dev, *mnt, *opt;
+	char *alias, *src, *dest, *opt, *opts2;
 	char *sig, *sig_fnek;
 	FILE *fh_counter = NULL;
 
@@ -359,8 +403,39 @@ int main(int argc, char *argv[]) {
 		goto fail;
 	}
 
+	/* If no arguments, default to private dir; but accept at most one
+	   argument, an alias for the configuration to read and use.
+	 */
+	if (argc == 1) {
+		/* Use default source and destination dirs */
+		alias = ECRYPTFS_PRIVATE_DIR;
+		if ((asprintf(&src, "%s/.%s", pwd->pw_dir, alias) < 0) || src == NULL) {
+			perror("asprintf (src)");
+			goto fail;
+		}
+		dest = ecryptfs_fetch_private_mnt(pwd->pw_dir);
+		if (dest == NULL) {
+			perror("asprintf (dest)");
+			goto fail;
+		}
+	} else if (argc == 2) {
+		alias = argv[1];
+		/* Read the source and destination dirs from .conf file */
+		if (read_config(pwd->pw_dir, uid, alias, &src, &dest, &opts2) < 0) {
+			fputs("Error reading configuration file", stderr);
+			exit(1);
+		}
+		if (opts2 != NULL && strlen(opts2) != 0 && strcmp(opts2, "none") != 0) {
+			fputs("Mount options are not supported here", stderr);
+			exit(1);
+		}
+	} else {
+		fputs("Too many arguments", stderr);
+		exit(1);
+	}
+
 	/* Lock the counter through the rest of the program */
-	fh_counter = lock_counter(pwd->pw_name, uid);
+	fh_counter = lock_counter(pwd->pw_name, uid, alias);
 	if (fh_counter == NULL) {
 		fputs("Error locking counter", stderr);
 		goto fail;
@@ -388,30 +463,18 @@ int main(int argc, char *argv[]) {
 
 	/* Fetch signatures from file */
 	/* First line is the file content encryption key signature */
-	sig = fetch_sig(pwd->pw_dir, 0);
+	sig = fetch_sig(pwd->pw_dir, 0, alias);
 	if (sig == NULL) {
 		goto fail;
 	}
 	/* Second line, if present, is the filename encryption key signature */
-	sig_fnek = fetch_sig(pwd->pw_dir, 1);
+	sig_fnek = fetch_sig(pwd->pw_dir, 1, alias);
 	if (sig_fnek == NULL) {
 		fnek = 0;
 	} else {
 		fnek = 1;
 	}
 
-	/* Construct device, mount point, and mount options */
-	if (
-	    (asprintf(&dev, "%s/.%s", pwd->pw_dir, ECRYPTFS_PRIVATE_DIR) < 0) ||
-	    dev == NULL) {
-		perror("asprintf (dev)");
-		goto fail;
-	}
-	mnt = ecryptfs_fetch_private_mnt(pwd->pw_dir);
-	if (mnt == NULL) {
-		perror("asprintf (mnt)");
-		goto fail;
-	}
 	if (fnek == 1) {
 		/* Filename encryption is on, so specific the fnek sig */
 		if ((asprintf(&opt,
@@ -432,8 +495,8 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	/* Check ownership of mnt */
-	if (check_ownerships(uid, mnt) != 0) {
+	/* Check ownership of dest */
+	if (check_ownerships(uid, dest) != 0) {
 		goto fail;
 	}
 
@@ -443,13 +506,13 @@ int main(int argc, char *argv[]) {
 			fputs("Error incrementing mount counter\n", stderr);
 		}
 		/* Mounting, so exit if already mounted */
-		if (ecryptfs_private_is_mounted(dev, mnt, sig, mounting) == 1) {
+		if (ecryptfs_private_is_mounted(src, dest, sig, mounting) == 1) {
 			goto success;
 		}
-		/* Check ownership of dev, if mounting;
-		 * note, umount only operates on mnt
+		/* Check ownership of src, if mounting;
+		 * note, umount only operates on dest
 		 */
-		if (check_ownerships(uid, dev) != 0) {
+		if (check_ownerships(uid, src) != 0) {
 			goto fail;
 		}
 		/* We must maintain our real uid as the user who called this
@@ -463,8 +526,8 @@ int main(int argc, char *argv[]) {
 		 */
 		setreuid(-1, 0);
 		/* Perform mount */
-		if (mount(dev, mnt, FSTYPE, 0, opt) == 0) {
-			if (update_mtab(dev, mnt, opt) != 0) {
+		if (mount(src, dest, FSTYPE, 0, opt) == 0) {
+			if (update_mtab(src, dest, opt) != 0) {
 				goto fail;
 			}
 		} else {
@@ -499,7 +562,7 @@ int main(int argc, char *argv[]) {
 				fputs("Could not remove key from keyring, try 'ecryptfs-umount-private'\n", stderr);
 		}
 		/* Unmounting, so exit if not mounted */
-		if (ecryptfs_private_is_mounted(dev, mnt, sig, mounting) == 0) {
+		if (ecryptfs_private_is_mounted(src, dest, sig, mounting) == 0) {
 			goto fail;
 		}
 		/* The key is not needed for unmounting, so we set res=0.
@@ -508,7 +571,7 @@ int main(int argc, char *argv[]) {
 		 * Do not use the umount.ecryptfs helper (-i).
  		 */
 		setresuid(0,0,0);
-		execl("/bin/umount", "umount", "-i", "-l", mnt, NULL);
+		execl("/bin/umount", "umount", "-i", "-l", dest, NULL);
 		perror("execl unmount failed");
 		goto fail;
 	}
