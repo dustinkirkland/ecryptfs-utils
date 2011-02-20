@@ -1,3 +1,11 @@
+ecryptfs-utils (87) UNRELEASED; urgency=low
+
+  * [Serge Hallyn]
+    - allow umount.ecryptfs_private to succeed when the key is no
+      longer in user keyring.
+
+ -- Serge Hallyn <serge.hallyn@ubuntu.com>  Sat, 19 Feb 2011 23:14:03 -0600
+
 ecryptfs-utils (86) UNRELEASED; urgency=low
 
   [ Jakob Unterwurzacher ]

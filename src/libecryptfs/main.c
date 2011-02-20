@@ -144,7 +144,7 @@ int ecryptfs_private_is_mounted(char *dev, char *mnt, char *sig, int mounting) {
 	struct mntent *m = NULL;
 	char *opt = NULL;
 	int mounted;
-	if (asprintf(&opt, "ecryptfs_sig=%s", sig) < 0) {
+	if (sig && asprintf(&opt, "ecryptfs_sig=%s", sig) < 0) {
 		perror("asprintf");
 		return 0;
 	}
@@ -181,7 +181,7 @@ int ecryptfs_private_is_mounted(char *dev, char *mnt, char *sig, int mounting) {
 			if (
 			    strcmp(m->mnt_fsname, dev) == 0 &&
 			    strcmp(m->mnt_dir, mnt) == 0 &&
-			    hasmntopt(m, opt) != NULL
+			    (!opt || hasmntopt(m, opt) != NULL)
 			) {
 				mounted = 1;
 				break;

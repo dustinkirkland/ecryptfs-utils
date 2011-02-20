@@ -128,6 +128,7 @@ int check_username(char *u) {
 	return 0;
 }
 
+int saved_errno;
 
 char *fetch_sig(char *pw_dir, int entry, char *alias) {
 /* Read ecryptfs signature from file and validate
@@ -189,9 +190,7 @@ char *fetch_sig(char *pw_dir, int entry, char *alias) {
 	 * compile with -lkeyutils
 	 */
 	if (keyctl_search(KEY_SPEC_USER_KEYRING, "user", sig, 0) < 0) {
-		perror("keyctl_search");
-		fputs("Perhaps try the interactive 'ecryptfs-mount-private'\n",
-			stderr);
+		saved_errno = errno;
 		return NULL;
 	}
 	return sig;
@@ -465,7 +464,14 @@ int main(int argc, char *argv[]) {
 	/* First line is the file content encryption key signature */
 	sig = fetch_sig(pwd->pw_dir, 0, alias);
 	if (sig == NULL) {
-		goto fail;
+		/* if umounting, no sig is ok */
+		if (mounting) {
+			errno = saved_errno;
+			perror("keyctl_search");
+			fputs("Perhaps try the interactive 'ecryptfs-mount-private'\n",
+				stderr);
+			goto fail;
+		}
 	}
 	/* Second line, if present, is the filename encryption key signature */
 	sig_fnek = fetch_sig(pwd->pw_dir, 1, alias);
@@ -478,8 +484,9 @@ int main(int argc, char *argv[]) {
 	if (fnek == 1) {
 		/* Filename encryption is on, so specific the fnek sig */
 		if ((asprintf(&opt,
-"ecryptfs_sig=%s,ecryptfs_fnek_sig=%s,ecryptfs_cipher=%s,ecryptfs_key_bytes=%d,ecryptfs_unlink_sigs",
-		 sig, sig_fnek, KEY_CIPHER, KEY_BYTES) < 0) ||
+"ecryptfs_fnek_sig=%s,ecryptfs_cipher=%s,ecryptfs_key_bytes=%d,ecryptfs_unlink_sigs%s%s",
+		 sig_fnek, KEY_CIPHER, KEY_BYTES, sig ? ",ecryptfs_sig=" : "",
+		 sig ? sig : "") < 0) ||
 		 opt == NULL) {
 			perror("asprintf (opt)");
 			goto fail;
@@ -487,9 +494,9 @@ int main(int argc, char *argv[]) {
 	} else {
 		/* Filename encryption is off; legacy support */
 		if ((asprintf(&opt,
-		 "ecryptfs_sig=%s,ecryptfs_cipher=%s,ecryptfs_key_bytes=%d,ecryptfs_unlink_sigs",
-		 sig, KEY_CIPHER, KEY_BYTES) < 0) ||
-		 opt == NULL) {
+		 "ecryptfs_cipher=%s,ecryptfs_key_bytes=%d,ecryptfs_unlink_sigs%s%s",
+		 KEY_CIPHER, KEY_BYTES, sig ? ",ecryptfs_sig=" : "", sig ? sig : "") < 0)
+		 || opt == NULL) {
 			perror("asprintf (opt)");
 			goto fail;
 		}
