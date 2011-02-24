@@ -23,6 +23,9 @@ ecryptfs-utils (86) UNRELEASED; urgency=low
     - add an alias char* to replace the #defined ECRYPTFS_PRIVATE_DIR
     - this is half of the fix to LP: #615657
   * doc/manpage/mount.ecryptfs_private.1: document these changes
+  * src/libecryptfs/main.c, src/utils/mount.ecryptfs_private.c:
+    - allow umount.ecryptfs_private to succeed when the key is no
+      longer in user keyring.
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Sat, 05 Feb 2011 19:37:46 -0700
 

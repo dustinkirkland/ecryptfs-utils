@@ -53,6 +53,8 @@
 #define FSTYPE "ecryptfs"
 #define TMP "/dev/shm"
 
+int saved_errno;
+
 int read_config(char *pw_dir, int uid, char *alias, char **s, char **d, char **o) {
 /* Read an fstab(5) style config file */
 	char *fnam;
@@ -128,7 +130,6 @@ int check_username(char *u) {
 	return 0;
 }
 
-
 char *fetch_sig(char *pw_dir, int entry, char *alias) {
 /* Read ecryptfs signature from file and validate
  * Return signature as a string, or NULL on failure
@@ -189,9 +190,7 @@ char *fetch_sig(char *pw_dir, int entry, char *alias) {
 	 * compile with -lkeyutils
 	 */
 	if (keyctl_search(KEY_SPEC_USER_KEYRING, "user", sig, 0) < 0) {
-		perror("keyctl_search");
-		fputs("Perhaps try the interactive 'ecryptfs-mount-private'\n",
-			stderr);
+		saved_errno = errno;
 		return NULL;
 	}
 	return sig;
@@ -371,9 +370,8 @@ int zero(FILE *fh) {
  *  - unmounts ~/.Private from ~/Private
  *    - using the signature defined in ~/.ecryptfs/Private.sig
  *    - ONLY IF the user
- *      - has the signature's key in his keyring
  *      - owns both ~/.Private and ~/Private
- *      - is currently mounted
+ *      - is currently ecryptfs mounted
  *
  * The only setuid operations in this program are:
  *  a) mounting
@@ -383,7 +381,6 @@ int zero(FILE *fh) {
 int main(int argc, char *argv[]) {
 	int uid, mounting;
 	int force = 0;
-	int fnek = 1;
 	struct passwd *pwd;
 	char *alias, *src, *dest, *opt, *opts2;
 	char *sig, *sig_fnek;
@@ -465,34 +462,32 @@ int main(int argc, char *argv[]) {
 	/* First line is the file content encryption key signature */
 	sig = fetch_sig(pwd->pw_dir, 0, alias);
 	if (sig == NULL) {
-		goto fail;
+		/* if umounting, no sig is ok */
+		if (mounting) {
+			errno = saved_errno;
+			perror("keyctl_search");
+			fputs("Perhaps try the interactive 'ecryptfs-mount-private'\n",
+				stderr);
+			goto fail;
+		}
 	}
 	/* Second line, if present, is the filename encryption key signature */
 	sig_fnek = fetch_sig(pwd->pw_dir, 1, alias);
-	if (sig_fnek == NULL) {
-		fnek = 0;
-	} else {
-		fnek = 1;
-	}
 
-	if (fnek == 1) {
-		/* Filename encryption is on, so specific the fnek sig */
-		if ((asprintf(&opt,
-"ecryptfs_sig=%s,ecryptfs_fnek_sig=%s,ecryptfs_cipher=%s,ecryptfs_key_bytes=%d,ecryptfs_unlink_sigs",
-		 sig, sig_fnek, KEY_CIPHER, KEY_BYTES) < 0) ||
-		 opt == NULL) {
-			perror("asprintf (opt)");
-			goto fail;
-		}
-	} else {
-		/* Filename encryption is off; legacy support */
-		if ((asprintf(&opt,
-		 "ecryptfs_sig=%s,ecryptfs_cipher=%s,ecryptfs_key_bytes=%d,ecryptfs_unlink_sigs",
-		 sig, KEY_CIPHER, KEY_BYTES) < 0) ||
-		 opt == NULL) {
-			perror("asprintf (opt)");
-			goto fail;
-		}
+	/* Build mount options */
+	if (
+	    (asprintf(&opt, "ecryptfs_cipher=%s,ecryptfs_key_bytes=%d,ecryptfs_unlink_sigs%s%s%s%s",
+		      KEY_CIPHER,
+		      KEY_BYTES,
+		      sig ? ",ecryptfs_sig=" : "",
+		      sig ? sig : "",
+		      sig_fnek ? ",ecryptfs_fnek_sig=" : "",
+		      sig_fnek ? sig_fnek : ""
+		     ) < 0
+	    ) || opt == NULL
+	   ) {
+		perror("asprintf (opt)");
+		goto fail;
 	}
 
 	/* Check ownership of dest */
