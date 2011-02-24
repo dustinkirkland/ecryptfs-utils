@@ -1,4 +1,4 @@
-ecryptfs-utils (86) UNRELEASED; urgency=low
+ecryptfs-utils (86) natty; urgency=low
 
   [ Jakob Unterwurzacher ]
   * src/pam_ecryptfs/pam_ecryptfs.c: 
@@ -27,7 +27,7 @@ ecryptfs-utils (86) UNRELEASED; urgency=low
     - allow umount.ecryptfs_private to succeed when the key is no
       longer in user keyring.
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Sat, 05 Feb 2011 19:37:46 -0700
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 24 Feb 2011 13:43:19 -0600
 
 ecryptfs-utils (85) released; urgency=low
 
