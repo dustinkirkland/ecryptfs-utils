@@ -1,3 +1,11 @@
+ecryptfs-utils (87) UNRELEASED; urgency=low
+
+  [ Paolo Bonzini <pbonzini@redhat.com> ]
+  * src/utils/ecryptfs-setup-private: update the Private.* selinux
+    contexts
+
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Wed, 02 Mar 2011 13:47:52 +0200
+
 ecryptfs-utils (86) natty; urgency=low
 
   [ Jakob Unterwurzacher ]

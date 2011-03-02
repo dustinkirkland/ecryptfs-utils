@@ -399,9 +399,11 @@ fi
 temp=`mktemp`
 echo "$sig" > "$temp" || error "$(gettext 'Could not create signature file')" "[$HOME/.ecryptfs/$PRIVATE_DIR.sig]"
 mv "$temp" "$HOME/.ecryptfs/$PRIVATE_DIR.sig"
+which restorecon 2>/dev/null && restorecon "$HOME/.ecryptfs/$PRIVATE_DIR.sig" > /dev/null 2>&1
 temp=`mktemp`
 echo "$MOUNTPOINT" > "$temp" || error "$(gettext 'Could not create mountpoint file')" "[$HOME/.ecryptfs/$PRIVATE_DIR.mnt]"
 mv "$temp" "$HOME/.ecryptfs/$PRIVATE_DIR.mnt"
+which restorecon 2>/dev/null && restorecon "$HOME/.ecryptfs/$PRIVATE_DIR.mnt" > /dev/null 2>&1
 
 echo
 echo "$(gettext 'Done configuring.')"
