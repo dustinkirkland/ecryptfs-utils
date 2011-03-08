@@ -217,7 +217,7 @@ if [ "$BOOTSTRAP" = "1" ]; then
 	MOUNTPOINT="$HOME"
 	CRYPTDIR="$ECRYPTFS_DIR/$USER/.$PRIVATE_DIR"
 else
-	mkdir -m 700 $HOME/.ecryptfs
+	mkdir -p -m 700 $HOME/.ecryptfs
 	MOUNTPOINT="$HOME/$PRIVATE_DIR"
 	CRYPTDIR="$HOME/.$PRIVATE_DIR"
 fi
