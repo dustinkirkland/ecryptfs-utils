@@ -5,8 +5,10 @@ ecryptfs-utils (87) UNRELEASED; urgency=low
     contexts
 
   [ Dustin Kirkland ]
-  * src/utils/ecryptfs-setup-private: add -p to mkdir, address noise
-    for a non-error
+  * src/utils/ecryptfs-setup-private:
+    - add -p to mkdir, address noise for a non-error
+    - must insert keys during testing phase, since we remove keys on
+      unmount now, LP: #725862
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Wed, 02 Mar 2011 13:47:52 +0200
 

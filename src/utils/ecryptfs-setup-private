@@ -437,12 +437,14 @@ fi
 
 # Now let's perform some basic mount/write/umount/read sanity testing...
 echo "$(gettext 'Testing mount/write/umount/read...')"
+printf "%s" "$MOUNTPASS" | ecryptfs-add-passphrase $FNEK -
 /sbin/mount.ecryptfs_private || error "$(gettext 'Could not mount private ecryptfs directory')"
 temp=`mktemp "$MOUNTPOINT/ecryptfs.test.XXXXXX"` || error_testing "$temp" "$(gettext 'Could not create empty file')"
 random_data=`head -c 16000 /dev/urandom | od -x` || error_testing "$temp" "$(gettext 'Could not generate random data')"
 echo "$random_data" > "$temp" || error_testing "$temp" "$(gettext 'Could not write encrypted file')"
 md5sum1=`md5sum "$temp"` || error_testing "$temp" "$(gettext 'Could not read encrypted file')"
 /sbin/umount.ecryptfs_private || error_testing "$temp" "$(gettext 'Could not unmount private ecryptfs directory')"
+printf "%s" "$MOUNTPASS" | ecryptfs-add-passphrase $FNEK -
 /sbin/mount.ecryptfs_private || error_testing "$temp" "$(gettext 'Could not mount private ecryptfs directory (2)')"
 md5sum2=`md5sum "$temp"` || error_testing "$temp" "$(gettext 'Could not read encrypted file (2)')"
 rm -f "$temp"
