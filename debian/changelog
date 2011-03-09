@@ -9,6 +9,8 @@ ecryptfs-utils (87) UNRELEASED; urgency=low
     - add -p to mkdir, address noise for a non-error
     - must insert keys during testing phase, since we remove keys on
       unmount now, LP: #725862
+  * src/utils/ecryptfs_rewrap_passphrase.c: confirm passphrases in
+    interactive mode, LP: #667331
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Wed, 02 Mar 2011 13:47:52 +0200
 

@@ -42,6 +42,7 @@ int main(int argc, char *argv[])
 	char passphrase[ECRYPTFS_MAX_PASSWORD_LENGTH + 1];
 	char *old_wrapping_passphrase;
 	char *new_wrapping_passphrase;
+	char *new_wrapping_passphrase2;
 	char salt[ECRYPTFS_SALT_SIZE];
 	char salt_hex[ECRYPTFS_SALT_SIZE_HEX];
 	int rc = 0;
@@ -52,6 +53,16 @@ int main(int argc, char *argv[])
 			ecryptfs_get_passphrase("Old wrapping passphrase");
 		new_wrapping_passphrase =
 			ecryptfs_get_passphrase("New wrapping passphrase");
+		new_wrapping_passphrase2 =
+			ecryptfs_get_passphrase("New wrapping passphrase (again)");
+		if (
+		    strlen(new_wrapping_passphrase) != strlen(new_wrapping_passphrase2) ||
+		    strncmp(new_wrapping_passphrase, new_wrapping_passphrase2, strlen(new_wrapping_passphrase))!=0
+		   ) {
+			fprintf(stderr, "New wrapping passphrases do not match\n");
+			rc = 1;
+			goto out;
+		}
 	} else if (argc == 3
 		   && strlen(argv[2]) == 1 && strncmp(argv[2], "-", 1) == 0) {
 		/* stdin mode */
