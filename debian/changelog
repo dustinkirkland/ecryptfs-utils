@@ -1,4 +1,10 @@
-ecryptfs-utils (87) UNRELEASED; urgency=low
+ecryptfs-utils (88) UNRELEASED; urgency=low
+
+  * 
+
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Mon, 14 Mar 2011 14:11:18 -0500
+
+ecryptfs-utils (87) natty; urgency=low
 
   [ Paolo Bonzini <pbonzini@redhat.com> ]
   * src/utils/ecryptfs-setup-private: update the Private.* selinux
