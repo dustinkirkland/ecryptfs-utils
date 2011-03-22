@@ -490,11 +490,6 @@ int main(int argc, char *argv[]) {
 		goto fail;
 	}
 
-	/* Check ownership of dest */
-	if (check_ownerships(uid, dest) != 0) {
-		goto fail;
-	}
-
 	if (mounting == 1) {
 		/* Increment mount counter, errors non-fatal */
 		if (increment(fh_counter) < 0) {
@@ -503,12 +498,6 @@ int main(int argc, char *argv[]) {
 		/* Mounting, so exit if already mounted */
 		if (ecryptfs_private_is_mounted(src, dest, sig, mounting) == 1) {
 			goto success;
-		}
-		/* Check ownership of src, if mounting;
-		 * note, umount only operates on dest
-		 */
-		if (check_ownerships(uid, src) != 0) {
-			goto fail;
 		}
 		/* We must maintain our real uid as the user who called this
  		 * program in order to have access to their kernel keyring.
@@ -520,8 +509,10 @@ int main(int argc, char *argv[]) {
 		 * And we need the effective uid to be root in order to mount.
 		 */
 		setreuid(-1, 0);
-		/* Perform mount */
-		if (mount(src, dest, FSTYPE, 0, opt) == 0) {
+		/* Check ownerships and perform mount */
+		if (check_ownerships(uid, src) == 0 &&
+		    check_ownerships(uid, dest) == 0 &&
+		    mount(src, dest, FSTYPE, 0, opt) == 0) {
 			if (update_mtab(src, dest, opt) != 0) {
 				goto fail;
 			}
@@ -565,6 +556,8 @@ int main(int argc, char *argv[]) {
  		 * update mtab for us, and replace the current process.
 		 * Do not use the umount.ecryptfs helper (-i).
  		 */
+		if (check_ownerships(uid, dest) != 0)
+			goto fail;
 		setresuid(0,0,0);
 		execl("/bin/umount", "umount", "-i", "-l", dest, NULL);
 		perror("execl unmount failed");
