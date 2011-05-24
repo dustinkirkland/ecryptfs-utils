@@ -1,4 +1,10 @@
-ecryptfs-utils (88) UNRELEASED; urgency=low
+ecryptfs-utils (89) UNRELEASED; urgency=low
+
+  * 
+
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Tue, 24 May 2011 09:50:11 -0500
+
+ecryptfs-utils (88) oneiric; urgency=low
 
   * src/utils/mount.ecryptfs_private.c:
     - reduce the window size for the TOCTOU race;
