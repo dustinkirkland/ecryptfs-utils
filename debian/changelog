@@ -5,6 +5,9 @@ ecryptfs-utils (88) UNRELEASED; urgency=low
       does not entirely solve LP: #732628, which is going to need to be
       fixed in the kernel with some heavy locking
   * debian/control: update urls
+  * src/utils/ecryptfs-mount-private: LP: #725862
+    - fix ecryptfs-mount-private to insert only the fek, if filename
+      encryption is disabled
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Mon, 14 Mar 2011 14:11:18 -0500
 

@@ -43,12 +43,23 @@ if [ -f "$WRAPPED_PASSPHRASE_FILE" -a -f "$MOUNT_PASSPHRASE_SIG_FILE" ]; then
 		LOGINPASS=`head -n1`
 		stty $stty_orig
 		echo
-		if printf "%s\0" "$LOGINPASS" | ecryptfs-insert-wrapped-passphrase-into-keyring "$WRAPPED_PASSPHRASE_FILE" - ; then
-			break
+		if [ $(wc -l < "$MOUNT_PASSPHRASE_SIG_FILE") = "1" ]; then
+			# No filename encryption; only insert fek
+			if printf "%s\0" "$LOGINPASS" | ecryptfs-unwrap-passphrase "$WRAPPED_PASSPHRASE_FILE" - | ecryptfs-add-passphrase -; then
+				break
+			else
+				echo `gettext "ERROR:"` `gettext "Your passphrase is incorrect"`
+				tries=$(($tries + 1))
+				continue
+			fi
 		else
-			echo `gettext "ERROR:"` `gettext "Your passphrase is incorrect"`
-			tries=$(($tries + 1))
-			continue
+			if printf "%s\0" "$LOGINPASS" | ecryptfs-insert-wrapped-passphrase-into-keyring "$WRAPPED_PASSPHRASE_FILE" - ; then
+				break
+			else
+				echo `gettext "ERROR:"` `gettext "Your passphrase is incorrect"`
+				tries=$(($tries + 1))
+				continue
+			fi
 		fi
 	done
 	if [ $tries -ge $PW_ATTEMPTS ]; then
