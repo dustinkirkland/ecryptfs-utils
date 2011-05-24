@@ -19,8 +19,8 @@ Build-Depends:
  swig
 Standards-Version: 3.8.3
 Homepage: https://launchpad.net/ecryptfs
-Vcs-Bzr: https://code.launchpad.net/~ecryptfs/ecryptfs/ecryptfs-utils
-Vcs-Browser: http://bazaar.launchpad.net/~ecryptfs/ecryptfs/ecryptfs-utils/files
+Vcs-Bzr: https://code.launchpad.net/~ecryptfs/ecryptfs/trunk
+Vcs-Browser: http://bazaar.launchpad.net/~ecryptfs/ecryptfs/trunk/files
 
 Package: ecryptfs-utils
 Section: misc
