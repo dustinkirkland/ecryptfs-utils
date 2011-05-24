@@ -1,6 +1,6 @@
 ecryptfs-utils (89) UNRELEASED; urgency=low
 
-  * 
+  * doc/manpage/ecryptfs-wrap-passphrase.1: fix minor error in manpage
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Tue, 24 May 2011 09:50:11 -0500
 
