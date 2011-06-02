@@ -1,3 +1,10 @@
+ecryptfs-utils (90) oneiric; urgency=low
+
+  * Fix from Christophe Dumez: mount.ecryptfs_private: Do not attempt to
+    update mtab if it is a symbolic link.  (LP: #789888) 
+
+ -- Serge Hallyn <serge.hallyn@ubuntu.com>  Thu, 02 Jun 2011 09:28:47 -0500
+
 ecryptfs-utils (89) UNRELEASED; urgency=low
 
   * doc/manpage/ecryptfs-wrap-passphrase.1: fix minor error in manpage
