@@ -1,9 +1,13 @@
 ecryptfs-utils (89) UNRELEASED; urgency=low
 
   * doc/manpage/ecryptfs-wrap-passphrase.1: fix minor error in manpage
-  * src/desktop/ecryptfs-find, src/desktop/Makefile.am:
+  * src/desktop/ecryptfs-find, src/desktop/Makefile.am: LP: #799157
     - add a tool, /usr/share/ecryptfs-utils/ecryptfs-find that can
       help find cleartext/encrypted filenames by inode number
+
+  [ Serge Hallyn ]
+  * Fix from Christophe Dumez: mount.ecryptfs_private: Do not attempt to
+    update mtab if it is a symbolic link.  (LP: #789888)
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Tue, 24 May 2011 09:50:11 -0500
 

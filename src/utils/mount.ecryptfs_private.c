@@ -218,9 +218,18 @@ int check_ownerships(int uid, char *path) {
 
 
 int update_mtab(char *dev, char *mnt, char *opt) {
-/* Update /etc/mtab with new mount entry.
+/* Update /etc/mtab with new mount entry unless it is a symbolic link
  * Return 0 on success, 1 on failure.
  */
+	char dummy;
+	int useMtab;
+	/* Check if mtab is a symlink */
+	useMtab = (readlink("/etc/mtab", &dummy, 1) < 0);
+	if (!useMtab) {
+		/* No need updating mtab */
+		return 0;
+	}
+
 	FILE *fh;
 	struct mntent m;
 	fh = setmntent("/etc/mtab", "a");
