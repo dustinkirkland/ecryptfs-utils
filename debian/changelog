@@ -1,9 +1,13 @@
 ecryptfs-utils (89) UNRELEASED; urgency=low
 
+  [ Dustin Kirkland ]
   * doc/manpage/ecryptfs-wrap-passphrase.1: fix minor error in manpage
   * src/desktop/ecryptfs-find, src/desktop/Makefile.am: LP: #799157
     - add a tool, /usr/share/ecryptfs-utils/ecryptfs-find that can
       help find cleartext/encrypted filenames by inode number
+  * src/libecryptfs/sysfs.c:
+    - fall back to using /sys as your sysfs mountpoint, if not found
+      in /etc/mtab (because of a bug in util-linux), LP: #802197
 
   [ Serge Hallyn ]
   * Fix from Christophe Dumez: mount.ecryptfs_private: Do not attempt to

@@ -50,8 +50,11 @@ static int get_sysfs_mountpoint(char *mnt, int *mnt_size)
 			fclose(fp);
 			goto out;
 		}
-	rc = -EINVAL;
 	fclose(fp);
+	/* Bad things happen if this function fails, so don't!
+	   Force to /sys, if we don't find a mountpoint in /etc/mtab */
+	strncpy(mnt, "/sys\0", 5);
+	rc = 0;
 out:
 	return rc;
 }
