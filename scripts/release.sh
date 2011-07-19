@@ -17,7 +17,7 @@ intltoolize --force
 ./configure --prefix=/usr
 make dist
 for i in `ls ecryptfs-utils-*.tar.gz`; do
-	ver=`echo $i | sed 's/^.*-//' | sed 's/\..*$//'`
+	VER=`echo $i | sed 's/^.*-//' | sed 's/\..*$//'`
 	mv $i ../ecryptfs-utils_$ver.orig.tar.gz
 	rm -f ecryptfs-utils-*.tar.bz2
 done
@@ -36,10 +36,13 @@ gpg --armor --sign --detach-sig ../ecryptfs-utils_*.orig.tar.gz
 echo
 echo "TO MAKE THE RELEASE OFFICIAL, UPLOAD:"
 echo -n "  "
-ls ../ecryptfs-utils*.orig.tar.gz
-echo "---->  https://launchpad.net/ecryptfs/trunk/+addrelease"
+echo "  lp-project-upload ecryptfs-utils $VER ../ecryptfs-utils_$VER.orig.tar.gz $VER" "$changelog" /dev/null
 echo
 echo " dch --release released"
 echo " debcommit --release"
+NEXT_VER=$((VER+1))
+sed -e "s/AC_INIT..ecryptfs-utils.,.$VER.)/AC_INIT([ecryptfs-utils],[$NEXT_VER])/" configure.ac
+dch -v "$NEXT_VER" "UNRELEASED"
+bzr commit -m "opening $NEXT_VER"
 echo " bzr push lp:ecryptfs"
 echo

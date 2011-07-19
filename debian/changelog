@@ -12,6 +12,8 @@ ecryptfs-utils (89) UNRELEASED; urgency=low
       search all ecryptfs mounts that user can read/traverse
   * debian/ecryptfs-utils.links:
     - add a symlink for Ubuntu
+  * scripts/release.sh:
+    - improve release script
 
   [ Serge Hallyn ]
   * Fix from Christophe Dumez: mount.ecryptfs_private: Do not attempt to
