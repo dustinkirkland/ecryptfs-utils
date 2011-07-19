@@ -1,4 +1,4 @@
-ecryptfs-utils (89) unreleased; urgency=low
+ecryptfs-utils (89) oneiric; urgency=low
 
   [ Dustin Kirkland ]
   * debian/control:
@@ -14,7 +14,6 @@ ecryptfs-utils (89) unreleased; urgency=low
     - add a symlink for Ubuntu
   * scripts/release.sh:
     - improve release script
-  * UNRELEASED
 
   [ Serge Hallyn ]
   * Fix from Christophe Dumez: mount.ecryptfs_private: Do not attempt to

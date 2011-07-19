@@ -18,31 +18,34 @@ intltoolize --force
 make dist
 for i in `ls ecryptfs-utils-*.tar.gz`; do
 	VER=`echo $i | sed 's/^.*-//' | sed 's/\..*$//'`
-	mv $i ../ecryptfs-utils_$ver.orig.tar.gz
+	mv $i ../ecryptfs-utils_$VER.orig.tar.gz
 	rm -f ecryptfs-utils-*.tar.bz2
 done
 
 [ "$1" = "--nosign" ] && exit 0
+gpg --armor --sign --detach-sig ../ecryptfs-utils_*.orig.tar.gz
 
 curver=`head -n1 debian/changelog | sed "s/^.*(//" | sed "s/).*$//"`
 bzr tag --delete $curver || true
 bzr tag $curver
-#ver=`expr $curver + 1`
-#dch -v "$ver" "UNRELEASED"
-#sed -i "s/$ver) jaunty;/$ver) unreleased;/" debian/changelog
 
+cd ..
+tar zxvf ecryptfs-utils_*.orig.tar.gz
+cd ecryptfs-utils-*
+cp -a ../ecryptfs/debian .
+dch -v "$curver" "oneiric"
+debuild -S
 
-gpg --armor --sign --detach-sig ../ecryptfs-utils_*.orig.tar.gz
 echo
 echo "TO MAKE THE RELEASE OFFICIAL, UPLOAD:"
 echo -n "  "
-echo "  lp-project-upload ecryptfs-utils $VER ../ecryptfs-utils_$VER.orig.tar.gz $VER" "$changelog" /dev/null
+echo "  lp-project-upload ecryptfs-utils $curver ../ecryptfs-utils_$curver.orig.tar.gz $curver" "$changelog" /dev/null
 echo
 echo " dch --release released"
 echo " debcommit --release"
-NEXT_VER=$((VER+1))
-echo " sed -i -e 's/AC_INIT..ecryptfs-utils.,.$VER.)/AC_INIT([ecryptfs-utils],[$NEXT_VER])/' configure.ac"
-echo " dch -v '$NEXT_VER' 'UNRELEASED'"
-echo " bzr commit -m 'opening $NEXT_VER'"
+nextver=$((curver+1))
+echo " sed -i -e 's/AC_INIT..ecryptfs-utils.,.$curver.)/AC_INIT([ecryptfs-utils],[$nextver])/' configure.ac"
+echo " dch -v '$nextver' 'UNRELEASED'"
+echo " bzr commit -m 'opening $nextver'"
 echo " bzr push lp:ecryptfs"
 echo
