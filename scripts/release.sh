@@ -41,8 +41,8 @@ echo
 echo " dch --release released"
 echo " debcommit --release"
 NEXT_VER=$((VER+1))
-sed -e "s/AC_INIT..ecryptfs-utils.,.$VER.)/AC_INIT([ecryptfs-utils],[$NEXT_VER])/" configure.ac
-dch -v "$NEXT_VER" "UNRELEASED"
-bzr commit -m "opening $NEXT_VER"
+echo " sed -i -e 's/AC_INIT..ecryptfs-utils.,.$VER.)/AC_INIT([ecryptfs-utils],[$NEXT_VER])/' configure.ac"
+echo " dch -v '$NEXT_VER' 'UNRELEASED'"
+echo " bzr commit -m 'opening $NEXT_VER'"
 echo " bzr push lp:ecryptfs"
 echo
