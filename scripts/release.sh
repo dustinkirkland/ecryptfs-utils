@@ -39,7 +39,7 @@ debuild -S
 echo
 echo "TO MAKE THE RELEASE OFFICIAL, UPLOAD:"
 echo -n "  "
-echo "  lp-project-upload ecryptfs-utils $curver ../ecryptfs-utils_$curver.orig.tar.gz $curver" "$changelog" /dev/null
+echo "  lp-project-upload ecryptfs $curver ../ecryptfs-utils_$curver.orig.tar.gz $curver" "$changelog" /dev/null
 echo
 echo " dch --release released"
 echo " debcommit --release"
