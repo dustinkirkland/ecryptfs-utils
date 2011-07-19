@@ -1,5 +1,8 @@
 ecryptfs-utils (89) UNRELEASED; urgency=low
 
+  [ Dustin Kirkland ]
+  * debian/control:
+    - add missing build dependency needed for release
   * doc/manpage/ecryptfs-wrap-passphrase.1: fix minor error in manpage
   * src/desktop/ecryptfs-find, src/desktop/Makefile.am: LP: #799157
     - add a tool, /usr/share/ecryptfs-utils/ecryptfs-find that can

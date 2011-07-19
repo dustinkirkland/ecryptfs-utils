@@ -11,6 +11,7 @@ Build-Depends:
  intltool,
  libtool,
  libgcrypt11-dev,
+ libglib2.0-dev,
  libkeyutils-dev,
  libnss3-dev,
  libpam0g-dev,
