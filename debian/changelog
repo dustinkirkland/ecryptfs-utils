@@ -1,4 +1,4 @@
-ecryptfs-utils (89) UNRELEASED; urgency=low
+ecryptfs-utils (90) UNRELEASED; urgency=low
 
   [ Dustin Kirkland ]
   * debian/control:
@@ -14,12 +14,13 @@ ecryptfs-utils (89) UNRELEASED; urgency=low
     - add a symlink for Ubuntu
   * scripts/release.sh:
     - improve release script
+  * UNRELEASED
 
   [ Serge Hallyn ]
   * Fix from Christophe Dumez: mount.ecryptfs_private: Do not attempt to
     update mtab if it is a symbolic link.  (LP: #789888)
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Tue, 24 May 2011 09:50:11 -0500
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Tue, 19 Jul 2011 14:58:23 -0500
 
 ecryptfs-utils (88) oneiric; urgency=low
 
