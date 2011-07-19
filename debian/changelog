@@ -7,6 +7,9 @@ ecryptfs-utils (89) UNRELEASED; urgency=low
   * src/desktop/ecryptfs-find, src/desktop/Makefile.am: LP: #799157
     - add a tool, /usr/share/ecryptfs-utils/ecryptfs-find that can
       help find cleartext/encrypted filenames by inode number
+  * src/desktop/ecryptfs-find:
+    - test file exists first; ditch the match;
+      search all ecryptfs mounts that user can read/traverse
 
   [ Serge Hallyn ]
   * Fix from Christophe Dumez: mount.ecryptfs_private: Do not attempt to

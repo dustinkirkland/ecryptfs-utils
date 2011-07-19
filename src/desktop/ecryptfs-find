@@ -19,6 +19,11 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+if [ ! -e "$1" ]; then
+	echo "ERROR: [$1] not found" 1>&2
+	exit 1
+fi
+
 # Use one utility for both directions; same method is used
 case "$1" in
 	*ECRYPTFS_FNEK_ENCRYPTED.*)
@@ -37,21 +42,15 @@ mounts=
 while read lower upper fstype opts dump pass; do
 	[ "$fstype" = "ecryptfs" ] || continue
 	if [ "$direction" = "encrypt" ]; then
-		match="$upper"
 		find="$lower"
 	else
-		match="$lower"
 		find="$upper"
 	fi
 	# Match against filesystem or mountpoint, build list of
 	# mounts to search
-	case "$1" in
-		$match/*)
-			if [ -r "$find" ] && [ -x "$find" ]; then
-				mounts="$mounts $find"
-			fi
-		;;
-	esac
+	if [ -r "$find" ] && [ -x "$find" ]; then
+		mounts="$mounts $find"
+	fi
 done < /proc/mounts
 
 # Do the search
