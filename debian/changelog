@@ -1,4 +1,4 @@
-ecryptfs-utils (90) UNRELEASED; urgency=low
+ecryptfs-utils (90) oneiric; urgency=low
 
   [ Marc Deslauriers ]
   * SECURITY UPDATE: privilege escalation via mountpoint race conditions
@@ -35,7 +35,7 @@ ecryptfs-utils (90) UNRELEASED; urgency=low
       src/utils/mount.ecryptfs_private.c.
     - CVE-2011-1837
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Tue, 19 Jul 2011 17:19:09 -0500
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Wed, 10 Aug 2011 08:37:57 -0500
 
 ecryptfs-utils (89) oneiric; urgency=low
 
