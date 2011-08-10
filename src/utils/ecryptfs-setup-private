@@ -380,7 +380,7 @@ if [ "$BOOTSTRAP" = "1" ]; then
 	# ramdisk, to keep it from leaking to the hard-drive.
 	temp=`mktemp /dev/shm/.ecryptfs-XXXXXX`
 	printf "%s" "$MOUNTPASS" > "$temp"
-	mv "$temp" "/dev/shm/.ecryptfs-$USER"
+	mv -f -T "$temp" "/dev/shm/.ecryptfs-$USER" || error "Could not create passphrase file"
 else
 	printf "%s\n%s" "$MOUNTPASS" "$LOGINPASS" | ecryptfs-wrap-passphrase "$HOME/.ecryptfs/wrapped-passphrase" - || error "$(gettext 'Could not wrap passphrase')"
 fi

@@ -196,6 +196,47 @@ char *fetch_sig(char *pw_dir, int entry, char *alias) {
 	return sig;
 }
 
+int check_ownership_mnt(int uid, char **mnt) {
+/* Check ownership of mount point, chdir into it, and
+ * canonicalize the path for use in mtab updating.
+ * Return 0 if everything is in order, 1 on error.
+ */
+	struct stat s;
+	char *cwd;
+
+	/* From here on, we'll refer to "." as our mountpoint, to avoid
+	 * races.
+	 */
+	if (chdir(*mnt) != 0) {
+		fputs("Cannot chdir into mountpoint.\n", stderr);
+		return 1;
+	}
+	if (stat(".", &s) != 0) {
+		fputs("Cannot examine mountpoint.\n", stderr);
+		return 1;
+	}
+	if (!S_ISDIR(s.st_mode)) {
+		fputs("Mountpoint is not a directory.\n", stderr);
+		return 1;
+	}
+	if (s.st_uid != uid) {
+		fputs("You do not own that mountpoint.\n", stderr);
+		return 1;
+	}
+
+	/* Canonicalize our pathname based on the current directory to
+	 * avoid races.
+	 */
+	cwd = getcwd(NULL, 0);
+	if (!cwd) {
+		fputs("Failed to get current directory\n", stderr);
+		return 1;
+	}
+	*mnt = cwd;
+	return 0;
+}
+
+
 int check_ownerships(int uid, char *path) {
 /* Check ownership of device and mount point.
  * Return 0 if everything is in order, 1 on error.
@@ -230,31 +271,77 @@ int update_mtab(char *dev, char *mnt, char *opt) {
 		return 0;
 	}
 
-	FILE *fh;
-	struct mntent m;
-	fh = setmntent("/etc/mtab", "a");
-	if (fh == NULL) {
+	int fd;
+	FILE *old_mtab, *new_mtab;
+	struct mntent *old_ent, new_ent;
+
+	/* Make an attempt to play nice with other mount helpers
+	 * by creating an /etc/mtab~ lock file. Of course this
+	 * only works if those other helpers actually check for
+	 * this.
+	 */
+	fd = open("/etc/mtab~", O_RDONLY | O_CREAT | O_EXCL, 0644);
+	if (fd < 0) {
+		perror("open");
+		return 1;
+	}
+	close(fd);
+
+	old_mtab = setmntent("/etc/mtab", "r");
+	if (old_mtab == NULL) {
 		perror("setmntent");
-		/* Unmount if mtab cannot be updated */
-		umount(mnt);
 		return 1;
 	}
-	m.mnt_fsname = dev;
-	m.mnt_dir = mnt;
-	m.mnt_type = FSTYPE;
-	m.mnt_opts = opt;
-	m.mnt_freq = 0;
-	m.mnt_passno = 0;
-	flockfile(fh);
-	if (addmntent(fh, &m) != 0) {
+
+	new_mtab = setmntent("/etc/mtab.tmp", "w");
+	if (new_mtab == NULL) {
+		perror("setmntent");
+		goto fail_early;
+	}
+
+	while (old_ent = getmntent(old_mtab)) {
+		if (addmntent(new_mtab, old_ent) != 0) {
+			perror("addmntent");
+			goto fail;
+		}
+	}
+	endmntent(old_mtab);
+
+	new_ent.mnt_fsname = dev;
+	new_ent.mnt_dir = mnt;
+	new_ent.mnt_type = FSTYPE;
+	new_ent.mnt_opts = opt;
+	new_ent.mnt_freq = 0;
+	new_ent.mnt_passno = 0;
+
+	if (addmntent(new_mtab, &new_ent) != 0) {
 		perror("addmntent");
-		endmntent(fh);
-		/* Unmount if mtab cannot be updated */
-		umount(mnt);
-		return 1;
+		goto fail;
 	}
-	endmntent(fh);
+
+	if (fchmod(fileno(new_mtab), S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH) < 0) {
+		perror("fchmod");
+		goto fail;
+	}
+	endmntent(new_mtab);
+
+	if (rename("/etc/mtab.tmp", "/etc/mtab") < 0) {
+		perror("rename");
+		goto fail_late;
+	}
+
+	unlink("/etc/mtab~");
+
 	return 0;
+
+fail:
+	endmntent(new_mtab);
+fail_late:
+	unlink("/etc/mtab.tmp");
+fail_early:
+	endmntent(old_mtab);
+	unlink("/etc/mtab~");
+	return 1;
 }
 
 FILE *lock_counter(char *u, int uid, char *alias) {
@@ -273,26 +360,27 @@ FILE *lock_counter(char *u, int uid, char *alias) {
 	 * file, or it's not owned by the current user, append iterator
 	 * until we find a filename we can use.
 	 */
-	while (1) {
-		if (stat(f, &s)==0 && (!S_ISREG(s.st_mode) || s.st_uid!=uid)) {
+	while (i < 50) {
+		if (((fd = open(f, O_RDWR | O_CREAT | O_NOFOLLOW, 0600)) >= 0) &&
+		    (fstat(fd, &s)==0 && (S_ISREG(s.st_mode) && s.st_uid==uid))) {
+			break;
+		} else {
+			if (fd >= 0)
+				close(fd);
 			free(f);
 			if (asprintf(&f, "%s/%s-%s-%s-%d", TMP, FSTYPE, u,
 			    alias, i++) < 0) {
 				perror("asprintf");
 				return NULL;
 			}
-		} else {
-			break;
 		}
 	}
-	/* open file for reading and writing */
-	if ((fd = open(f, O_RDWR)) < 0) {
-		/* Could not open it, so try to safely create it */
-		if ((fd = open(f, O_RDWR | O_CREAT | O_EXCL, 0600)) < 0) {
-			perror("open");
-			return NULL;
-		}
+
+	if (fd < 0) {
+		perror("open");
+		return NULL;
 	}
+
 	flock(fd, LOCK_EX);
 	fh = fdopen(fd, "r+");
 	if (fh == NULL) {
@@ -485,7 +573,7 @@ int main(int argc, char *argv[]) {
 
 	/* Build mount options */
 	if (
-	    (asprintf(&opt, "ecryptfs_cipher=%s,ecryptfs_key_bytes=%d,ecryptfs_unlink_sigs%s%s%s%s",
+	    (asprintf(&opt, "ecryptfs_check_dev_ruid,ecryptfs_cipher=%s,ecryptfs_key_bytes=%d,ecryptfs_unlink_sigs%s%s%s%s",
 		      KEY_CIPHER,
 		      KEY_BYTES,
 		      sig ? ",ecryptfs_sig=" : "",
@@ -498,6 +586,12 @@ int main(int argc, char *argv[]) {
 		perror("asprintf (opt)");
 		goto fail;
 	}
+
+	/* Check ownership of the mountpoint. From here on, dest refers
+	 * to a canonicalized path, and the mountpoint is the cwd. */
+	if (check_ownership_mnt(uid, &dest) != 0) {
+ 		goto fail;
+ 	}
 
 	if (mounting == 1) {
 		/* Increment mount counter, errors non-fatal */
@@ -518,10 +612,8 @@ int main(int argc, char *argv[]) {
 		 * And we need the effective uid to be root in order to mount.
 		 */
 		setreuid(-1, 0);
-		/* Check ownerships and perform mount */
-		if (check_ownerships(uid, src) == 0 &&
-		    check_ownerships(uid, dest) == 0 &&
-		    mount(src, dest, FSTYPE, 0, opt) == 0) {
+ 		/* Perform mount */
+		if (mount(src, ".", FSTYPE, 0, opt) == 0) {
 			if (update_mtab(src, dest, opt) != 0) {
 				goto fail;
 			}
@@ -565,10 +657,13 @@ int main(int argc, char *argv[]) {
  		 * update mtab for us, and replace the current process.
 		 * Do not use the umount.ecryptfs helper (-i).
  		 */
-		if (check_ownerships(uid, dest) != 0)
-			goto fail;
 		setresuid(0,0,0);
-		execl("/bin/umount", "umount", "-i", "-l", dest, NULL);
+
+		/* Since we're doing a lazy unmount anyway, just unmount the current
+		 * directory. This avoids a lot of complexity in dealing with race
+		 * conditions, and guarantees that we're only unmounting a filesystem
+		 * that we own. */
+		execl("/bin/umount", "umount", "-i", "-l", ".", NULL);
 		perror("execl unmount failed");
 		goto fail;
 	}

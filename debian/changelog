@@ -1,6 +1,39 @@
 ecryptfs-utils (90) UNRELEASED; urgency=low
 
-  * UNRELEASED
+  [ Marc Deslauriers ]
+  * SECURITY UPDATE: privilege escalation via mountpoint race conditions
+    (LP: #732628)
+    - debian/patches/CVE-2011-1831,1832,1834.patch: chdir into mountpoint
+      before checking permissions in src/utils/mount.ecryptfs_private.c.
+    - CVE-2011-1831
+    - CVE-2011-1832
+  * SECURITY UPDATE: race condition when checking source during mount
+    (LP: #732628)
+    - debian/patches/CVE-2011-1833.patch: use new ecryptfs_check_dev_ruid
+      kernel option when mounting directory in
+      src/utils/mount.ecryptfs_private.c.
+    - CVE-2011-1833
+  * SECURITY UPDATE: mtab corruption via improper handling (LP: #732628)
+    - debian/patches/CVE-2011-1831,1832,1834.patch: modify mtab via a temp
+      file first and make sure it succeeds before replacing the real mtab
+      in src/utils/mount.ecryptfs_private.c.
+    - CVE-2011-1834
+  * SECURITY UPDATE: key poisoning via insecure temp directory handling
+    (LP: #732628)
+    - debian/patches/CVE-2011-1835.patch: make sure we don't copy into a
+      user controlled directory in src/utils/ecryptfs-setup-private.
+    - CVE-2011-1835
+  * SECURITY UPDATE: information disclosure via recovery mount in /tmp
+    (LP: #732628)
+    - debian/patches/CVE-2011-1836.patch: mount inside protected
+      subdirectory in src/utils/ecryptfs-recover-private.
+    - CVE-2011-1836
+  * SECURITY UPDATE: arbitrary file overwrite via lock counter race
+    condition (LP: #732628)
+    - debian/patches/CVE-2011-1837.patch: verify permissions with a file
+      descriptor, and don't follow symlinks in
+      src/utils/mount.ecryptfs_private.c.
+    - CVE-2011-1837
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Tue, 19 Jul 2011 17:19:09 -0500
 
