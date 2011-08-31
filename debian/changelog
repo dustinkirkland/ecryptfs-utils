@@ -1,4 +1,4 @@
-ecryptfs-utils (91) UNRELEASED; urgency=low
+ecryptfs-utils (91) oneiric; urgency=low
 
   [ Diego E. "Flameeyes" Pettenò ]
   * configure.ac:
@@ -11,7 +11,7 @@ ecryptfs-utils (91) UNRELEASED; urgency=low
       updating mtab in src/utils/mount.ecryptfs_private.c.
     - CVE-2011-3145
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Wed, 10 Aug 2011 08:38:07 -0500
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Wed, 31 Aug 2011 16:45:39 -0500
 
 ecryptfs-utils (90) oneiric; urgency=low
 
