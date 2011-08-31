@@ -228,16 +228,12 @@ else
 fi
 
 #Verify nss
-NSS_LIBS=`nss-config --libs`
-if test "x${NSS_LIBS}" != "x" ; then
-        NSS_CFLAGS=`nss-config --cflags`
-        NSPR_CFLAGS=`nspr-config --cflags`
-        NSS_CFLAGS="${NSS_CFLAGS} -DENABLE_NSS ${NSPR_CFLAGS}"
-        have_nss="yes"
-else
-        NSS_CFLAGS=""
-        have_nss="no"
-fi
+PKG_CHECK_MODULES(
+	[NSS],
+	[nss],
+        [have_nss="yes"
+	 NSS_CFLAGS="${NSS_CFLAGS} -DENABLE_NSS"],
+        [have_nss="no"])
 
 if test "${enable_nss}" = "detect" ; then
         if test "$have_nss" == "yes" ; then

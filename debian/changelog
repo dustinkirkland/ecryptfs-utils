@@ -1,6 +1,8 @@
 ecryptfs-utils (91) UNRELEASED; urgency=low
 
-  * UNRELEASED
+  [ Diego E. "Flameeyes" Pettenò ]
+  * configure.ac:
+    - fix reliance on nss-config, which hinders cross-compilation
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Wed, 10 Aug 2011 08:38:07 -0500
 
