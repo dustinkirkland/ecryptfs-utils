@@ -274,12 +274,14 @@ int update_mtab(char *dev, char *mnt, char *opt) {
 	int fd;
 	FILE *old_mtab, *new_mtab;
 	struct mntent *old_ent, new_ent;
+	mode_t old_umask;
 
 	/* Make an attempt to play nice with other mount helpers
 	 * by creating an /etc/mtab~ lock file. Of course this
 	 * only works if those other helpers actually check for
 	 * this.
 	 */
+	old_umask = umask(033);
 	fd = open("/etc/mtab~", O_RDONLY | O_CREAT | O_EXCL, 0644);
 	if (fd < 0) {
 		perror("open");
@@ -332,6 +334,8 @@ int update_mtab(char *dev, char *mnt, char *opt) {
 
 	unlink("/etc/mtab~");
 
+	umask(old_umask);
+
 	return 0;
 
 fail:
@@ -341,6 +345,7 @@ fail_late:
 fail_early:
 	endmntent(old_mtab);
 	unlink("/etc/mtab~");
+	umask(old_umask);
 	return 1;
 }
 
@@ -476,7 +481,7 @@ int zero(FILE *fh) {
  *  c) updating /etc/mtab
  */
 int main(int argc, char *argv[]) {
-	int uid, mounting;
+	int uid, gid, mounting;
 	int force = 0;
 	struct passwd *pwd;
 	char *alias, *src, *dest, *opt, *opts2;
@@ -484,6 +489,7 @@ int main(int argc, char *argv[]) {
 	FILE *fh_counter = NULL;
 
 	uid = getuid();
+	gid = getgid();
 	/* Non-privileged effective uid is sufficient for all but the code
  	 * that mounts, unmounts, and updates /etc/mtab.
 	 * Run at a lower privilege until we need it.
@@ -611,7 +617,14 @@ int main(int argc, char *argv[]) {
 		 * the real uid to be that of the user.
 		 * And we need the effective uid to be root in order to mount.
 		 */
-		setreuid(-1, 0);
+		if (setreuid(-1, 0) < 0) {
+			perror("setreuid");
+			goto fail;
+		}
+		if (setregid(-1, 0) < 0) {
+			perror("setregid");
+			goto fail;
+		}
  		/* Perform mount */
 		if (mount(src, ".", FSTYPE, 0, opt) == 0) {
 			if (update_mtab(src, dest, opt) != 0) {
@@ -622,6 +635,9 @@ int main(int argc, char *argv[]) {
 			/* Drop privileges since the mount did not succeed */
 			if (setreuid(uid, uid) < 0) {
 				perror("setreuid");
+			}
+			if (setregid(gid, gid) < 0) {
+				perror("setregid");
 			}
 			goto fail;
 		}
@@ -658,6 +674,7 @@ int main(int argc, char *argv[]) {
 		 * Do not use the umount.ecryptfs helper (-i).
  		 */
 		setresuid(0,0,0);
+		setresgid(0,0,0);
 
 		/* Since we're doing a lazy unmount anyway, just unmount the current
 		 * directory. This avoids a lot of complexity in dealing with race

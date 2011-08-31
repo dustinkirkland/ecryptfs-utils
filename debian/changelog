@@ -4,6 +4,13 @@ ecryptfs-utils (91) UNRELEASED; urgency=low
   * configure.ac:
     - fix reliance on nss-config, which hinders cross-compilation
 
+  [ Marc Deslauriers ]
+  * src/utils/mount.ecryptfs_private.c:
+  * SECURITY UPDATE: wrong mtab ownership and permissions (LP: #830850)
+    - debian/patches/CVE-2011-3145.patch: also set gid and umask before
+      updating mtab in src/utils/mount.ecryptfs_private.c.
+    - CVE-2011-3145
+
  -- Dustin Kirkland <kirkland@ubuntu.com>  Wed, 10 Aug 2011 08:38:07 -0500
 
 ecryptfs-utils (90) oneiric; urgency=low
