@@ -1,4 +1,4 @@
-ecryptfs-utils (92) UNRELEASED; urgency=low
+ecryptfs-utils (92) oneiric; urgency=low
 
   * src/libecryptfs/key_management.c: LP: #725862
     - fix nasty bug affecting users who do *not* encrypt filenames;
@@ -10,7 +10,7 @@ ecryptfs-utils (92) UNRELEASED; urgency=low
   * src/pam_ecryptfs/pam_ecryptfs.c: LP: #838471
     - rework syslogging to be less noisy and note pam_ecryptfs
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Wed, 31 Aug 2011 16:45:48 -0500
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 01 Sep 2011 16:25:03 -0500
 
 ecryptfs-utils (91) oneiric; urgency=low
 
