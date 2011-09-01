@@ -56,6 +56,7 @@ install: build
 	install -D -m 0644 debian/local/ecryptfs-utils.pam-auth-update debian/ecryptfs-utils/usr/share/pam-configs/ecryptfs-utils
 
 	chmod 4755 debian/tmp/sbin/mount.ecryptfs_private
+	chmod 755 debian/tmp/usr/share/ecryptfs-utils/ecryptfs-mount-private.desktop
 
 	find debian/tmp -name "*.pyc" | xargs rm -f
 

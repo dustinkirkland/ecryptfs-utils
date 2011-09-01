@@ -5,6 +5,8 @@ ecryptfs-utils (92) UNRELEASED; urgency=low
       the first login works, but on logout, only one key gets
       cleaned out; subsequent logins do not insert the necessary key
       due to an early "goto out"; this fix needs to be SRU'd
+  * debian/rules: LP: #586281
+    - fix perms on desktop mount file
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Wed, 31 Aug 2011 16:45:48 -0500
 
