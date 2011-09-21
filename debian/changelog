@@ -1,6 +1,7 @@
 ecryptfs-utils (93) UNRELEASED; urgency=low
 
-  * UNRELEASED
+  * src/utils/ecryptfs-verify, src/utils/Makefile.am:
+    - add an ecryptfs-verify utility, LP: #845738
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 01 Sep 2011 16:25:14 -0500
 
