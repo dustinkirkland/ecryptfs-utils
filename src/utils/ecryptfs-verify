@@ -206,6 +206,10 @@ while [ ! -z "$1" ]; do
 	esac
 done
 
+if [ -z "$checks" ]; then
+	error "No checks given"
+fi
+
 for i in $checks; do
 	case "$i" in
 		check_home)
