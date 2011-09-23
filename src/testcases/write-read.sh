@@ -50,7 +50,7 @@ while mount | grep -qs $DIR; do
 	ecryptfs-umount-private
 done
 ecryptfs-mount-private
-cd "$DIR"
+cd "$TMPDIR2"
 md5sum -c $md5sums || error "Incorrect results"
 
 # Clean up
