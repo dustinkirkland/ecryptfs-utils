@@ -8,12 +8,14 @@ DIR=$(cat $HOME/.ecryptfs/Private.mnt)
 [ -d "$DIR" ] || error "Bad private directory"
 
 md5sums=$(mktemp /tmp/ecryptfs_test_md5sums.XXXXXXXXXXXX)
+TMPDIR1=$(mktemp -D /tmp/ecryptfs_test.XXXXXXXXXXXX)
+TMPDIR2=$(mktemp -D $DIR/ecryptfs_test.XXXXXXXXXXXX)
 
 # Generate a file of a specified size from urandom;
 # Append the md5sum to a master list
 random_file_of_size() {
 	local bytes="$1"
-	local f=$(mktemp /tmp/ecryptfs_test.XXXXXXXXXXXX)
+	local f=$(mktemp $TMPDIR1/ecryptfs_test.XXXXXXXXXXXX)
 	dd if=/dev/urandom of=$f bs=1 count=$bytes >/dev/null 2>&1
 	md5sum $f >> $md5sums
 	_RET=$f
@@ -38,11 +40,11 @@ for i in $(seq 1 $n); do
 		size=$((base+fuzz))
 		#echo -n "$base[$j] - [$fuzz]: "
 		random_file_of_size $size
-		mv "$_RET" "$DIR"
+		mv "$_RET" $TMPDIR2/
 	done
 	base=$((base*10))
 done
-sed -i "s:/tmp/::" $md5sums
+sed -i "s:/tmp/.*/::" $md5sums
 sync
 while mount | grep -qs $DIR; do
 	ecryptfs-umount-private
