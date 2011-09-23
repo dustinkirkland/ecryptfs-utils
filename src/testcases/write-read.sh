@@ -54,5 +54,4 @@ cd "$DIR"
 md5sum -c $md5sums || error "Incorrect results"
 
 # Clean up
-awk '{print $2}' $md5sums | xargs -i rm -f "$DIR"/{}
-rm -f $md5sums
+rm -rf $TMPDIR1 $TMPDIR2 $md5sums
