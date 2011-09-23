@@ -7,13 +7,13 @@ error() {
 DIR=$(cat $HOME/.ecryptfs/Private.mnt)
 [ -d "$DIR" ] || error "Bad private directory"
 
-md5sums=$(mktemp /tmp/ecryptfs_test_md5sums.XXXXXXXX)
+md5sums=$(mktemp /tmp/ecryptfs_test_md5sums.XXXXXXXXXXXX)
 
 # Generate a file of a specified size from urandom;
 # Append the md5sum to a master list
 random_file_of_size() {
 	local bytes="$1"
-	local f=$(mktemp /tmp/ecryptfs_test.XXXXXXXX)
+	local f=$(mktemp /tmp/ecryptfs_test.XXXXXXXXXXXX)
 	dd if=/dev/urandom of=$f bs=1 count=$bytes >/dev/null 2>&1
 	md5sum $f >> $md5sums
 	_RET=$f
