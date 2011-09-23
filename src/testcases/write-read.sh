@@ -6,6 +6,7 @@ error() {
 
 DIR=$(cat $HOME/.ecryptfs/Private.mnt)
 [ -d "$DIR" ] || error "Bad private directory"
+ecryptfs-mount-private || error "Cannot mount private directory"
 
 md5sums=$(mktemp /tmp/ecryptfs_test_md5sums.XXXXXXXXXXXX)
 TMPDIR1=$(mktemp -d /tmp/ecryptfs_test.XXXXXXXXXXXX)
@@ -21,7 +22,6 @@ random_file_of_size() {
 	_RET=$f
 }
 
-ecryptfs-mount-private
 base=1
 n=7
 count=10
