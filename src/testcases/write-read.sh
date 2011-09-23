@@ -8,8 +8,8 @@ DIR=$(cat $HOME/.ecryptfs/Private.mnt)
 [ -d "$DIR" ] || error "Bad private directory"
 
 md5sums=$(mktemp /tmp/ecryptfs_test_md5sums.XXXXXXXXXXXX)
-TMPDIR1=$(mktemp -D /tmp/ecryptfs_test.XXXXXXXXXXXX)
-TMPDIR2=$(mktemp -D $DIR/ecryptfs_test.XXXXXXXXXXXX)
+TMPDIR1=$(mktemp -d /tmp/ecryptfs_test.XXXXXXXXXXXX)
+TMPDIR2=$(mktemp -d $DIR/ecryptfs_test.XXXXXXXXXXXX)
 
 # Generate a file of a specified size from urandom;
 # Append the md5sum to a master list
