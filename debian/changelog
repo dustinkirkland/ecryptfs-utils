@@ -9,6 +9,8 @@ ecryptfs-utils (93) UNRELEASED; urgency=low
     doc/manpage/umount.ecryptfs_private.1: LP: #882267
     - remove inaccurate documentation about being a member of the ecryptfs
       group
+  * src/utils/ecryptfs-setup-private:
+    - fix preseeded encrypted home Ubuntu installations (thanks Timo!)
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 01 Sep 2011 16:25:14 -0500
 

@@ -373,7 +373,7 @@ done
 # Setup wrapped-passphrase file
 u=`umask`
 umask 377
-if [ "$BOOTSTRAP" = "1" ]; then
+if [ -z "$LOGINPASS" ] && [ "$BOOTSTRAP" = "1" ]; then
 	# This will be wrapped by pam_ecryptfs's chauthtok as soon as the user
 	# chooses a password.  Until that happens (hopefully soon), standard
 	# file permissions (600) are all that's protecting it.  Write it to
