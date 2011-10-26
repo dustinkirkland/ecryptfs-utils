@@ -8,7 +8,7 @@ mount.ecryptfs_private \- eCryptfs private mount helper.
 \fBNOTE:\fP This program will \fBnot\fP dynamically load the relevant keys.  For this reason, it is recommended that users use \fBecryptfs-mount-private\fP(1) instead!
 
 .SH DESCRIPTION
-\fBmount.ecryptfs_private\fP is a mount helper utility for non-root users, who are members of \fBecryptfs\fP group, to cryptographically mount a private directory, ~/Private by default.
+\fBmount.ecryptfs_private\fP is a mount helper utility for non-root users to cryptographically mount a private directory, ~/Private by default.
 
 This program optionally takes one argument, ALIAS.  If ALIAS is omitted, the program will default to using "Private" using:
  - $HOME/.Private as the SOURCE

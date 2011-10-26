@@ -4,6 +4,11 @@ ecryptfs-utils (93) UNRELEASED; urgency=low
     - add an ecryptfs-verify utility, LP: #845738
   * src/testcases/write-read.sh:
     - added a write/read test utility
+  * doc/manpage/ecryptfs-mount-private.1, doc/manpage/ecryptfs-setup-
+    private.1, doc/manpage/mount.ecryptfs_private.1,
+    doc/manpage/umount.ecryptfs_private.1: LP: #882267
+    - remove inaccurate documentation about being a member of the ecryptfs
+      group
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 01 Sep 2011 16:25:14 -0500
 
