@@ -1,4 +1,4 @@
-ecryptfs-utils (93) UNRELEASED; urgency=low
+ecryptfs-utils (93) oneiric; urgency=low
 
   * src/utils/ecryptfs-verify, src/utils/Makefile.am:
     - add an ecryptfs-verify utility, LP: #845738
@@ -12,7 +12,7 @@ ecryptfs-utils (93) UNRELEASED; urgency=low
   * src/utils/ecryptfs-setup-private: LP: #882314
     - fix preseeded encrypted home Ubuntu installations (thanks Timo!)
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 01 Sep 2011 16:25:14 -0500
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 27 Oct 2011 10:58:36 -0500
 
 ecryptfs-utils (92) oneiric; urgency=low
 
