@@ -35,15 +35,15 @@ cd ecryptfs-utils-*
 cp -a ../ecryptfs/debian .
 dch -v "$curver" "oneiric"
 debuild -S
+nextver=$((curver+1))
 
 echo
 echo "TO MAKE THE RELEASE OFFICIAL, UPLOAD:"
 echo -n "  "
-echo "  lp-project-upload ecryptfs $curver ../ecryptfs-utils_$curver.orig.tar.gz $curver" "$changelog" /dev/null
+echo "  lp-project-upload ecryptfs $curver ../ecryptfs-utils_$curver.orig.tar.gz $nextver" "$changelog" /dev/null
 echo
 echo " dch --release released"
 echo " debcommit --release"
-nextver=$((curver+1))
 echo " sed -i -e 's/AC_INIT..ecryptfs-utils.,.$curver.)/AC_INIT([ecryptfs-utils],[$nextver])/' configure.ac"
 echo " dch -v '$nextver' 'UNRELEASED'"
 echo " bzr commit -m 'opening $nextver'"

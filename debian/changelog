@@ -1,6 +1,7 @@
 ecryptfs-utils (94) UNRELEASED; urgency=low
 
-  * UNRELEASED
+  * scripts/release.sh:
+    - fix release script
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 27 Oct 2011 10:58:47 -0500
 
