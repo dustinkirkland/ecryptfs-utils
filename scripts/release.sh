@@ -33,7 +33,7 @@ cd ..
 tar zxvf ecryptfs-utils_*.orig.tar.gz
 cd ecryptfs-utils-*
 cp -a ../ecryptfs/debian .
-dch -v "$curver" "oneiric"
+dch -v "$curver-0ubuntu1" "precise"
 debuild -S
 nextver=$((curver+1))
 
