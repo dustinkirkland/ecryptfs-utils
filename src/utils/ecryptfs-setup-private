@@ -432,6 +432,9 @@ if [ "$BOOTSTRAP" = "1" ]; then
 	ln -sf $ECRYPTFS_DIR/$USER/.$PRIVATE_DIR $MOUNTPOINT/.$PRIVATE_DIR
 	chown -R $USER:$GROUP $ECRYPTFS_DIR/$USER
 	chown -R $USER:$GROUP $MOUNTPOINT
+	# If we're in debian-installer, move the temporary password to /var/tmp
+	# to preserve across the first reboot.
+	[ -z "$DEBIAN_FRONTEND" ] || mv -f -T /dev/shm/.ecryptfs-$USER /var/tmp/.ecryptfs-$USER
 	exit 0
 fi
 
