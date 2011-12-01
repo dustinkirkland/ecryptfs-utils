@@ -3,6 +3,10 @@ ecryptfs-utils (94) UNRELEASED; urgency=low
   * scripts/release.sh:
     - fix release script
     - bump ubuntu release
+  * doc/manpage/ecryptfs-recover-private.1, src/utils/ecryptfs-migrate-
+    home (properties changed: -x to +x), src/utils/ecryptfs-recover-
+    private:
+    - add a --rw option for ecryptfs-recover-private
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 27 Oct 2011 10:58:47 -0500
 

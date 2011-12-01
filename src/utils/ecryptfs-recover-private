@@ -30,6 +30,7 @@ info() {
 [ "$(id -u)" = "0" ] || error "This program must be run as root."
 
 # Handle parameters
+opts="ro"
 if [ -d "$1" ]; then
 	# Allow for target directories on the command line
 	dirs="$@"
@@ -41,6 +42,7 @@ else
 		info "Hint: click 'Places' and select your hard disk, then run this again."
 		error "No private directories found; make sure that your root filesystem is mounted."
 	fi
+	[ "$1" = "--rw" ] && opts="rw"
 fi
 
 # Examine directories
@@ -81,12 +83,12 @@ for d in $dirs; do
 		1)
 			mount_sig=$(echo "$sigs" | head -n1)
 			fnek_sig=
-			mount_opts="ro,ecryptfs_sig=$mount_sig,ecryptfs_cipher=aes,ecryptfs_key_bytes=16"
+			mount_opts="$opts,ecryptfs_sig=$mount_sig,ecryptfs_cipher=aes,ecryptfs_key_bytes=16"
 		;;
 		2)
 			mount_sig=$(echo "$sigs" | head -n1)
 			fnek_sig=$(echo "$sigs" | tail -n1)
-			mount_opts="ro,ecryptfs_sig=$mount_sig,ecryptfs_fnek_sig=$fnek_sig,ecryptfs_cipher=aes,ecryptfs_key_bytes=16"
+			mount_opts="$opts,ecryptfs_sig=$mount_sig,ecryptfs_fnek_sig=$fnek_sig,ecryptfs_cipher=aes,ecryptfs_key_bytes=16"
 		;;
 		*)
 			continue

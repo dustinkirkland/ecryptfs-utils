@@ -3,7 +3,7 @@
 \fBecryptfs-recover-private\fP \- find and mount any encrypted private directories
 
 .SH SYNOPSIS
-\fBecryptfs-recover-private\fP [encrypted private dir]
+\fBecryptfs-recover-private\fP [--rw] [encrypted private dir]
 
 .SH DESCRIPTION
 This utility is intended to help eCryptfs recover data from their encrypted home or encrypted private partitions.  It is useful to run this from a LiveISO or a recovery image.  It must run under \fBsudo\fP(8) or with root permission, in order to search the filesystem and perform the mounts.
@@ -12,9 +12,11 @@ The program can take a target encrypted directory on the command line.  If unspe
 
 If an encrypted directory and a \fIwrapped-passphrase\fP file are found, the user is prompted for the login (wrapping) passphrase, the keys are inserted into the keyring, and the data is decrypted and mounted.
 
-If no \fIwrapped-passphrase\fP file is found, the user will be prompted for their mount passphrase.  This passphrase is typically 32 characters of [0-9a-f].  All users are prompted to urgently record this randomly generated passphrase when they first setup their encrypted private directory. 
+If no \fIwrapped-passphrase\fP file is found, the user will be prompted for their mount passphrase.  This passphrase is typically 32 characters of [0-9a-f].  All users are prompted to urgently record this randomly generated passphrase when they first setup their encrypted private directory.
 
 The destination mount of the decrypted data is a temporary directory, in the form of \fI/tmp/ecryptfs.XXXXXXXX\fP.
+
+By default, the mount will be read-only.  To mount with read and write permission, add the --rw parameter.
 
 .SH SEE ALSO
 \fBecryptfs-setup-private\fP(1), \fBsudo\fP(8)
