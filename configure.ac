@@ -19,9 +19,6 @@ AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
 
 AC_DISABLE_STATIC
-AM_PATH_PYTHON(2.5, [have_python="yes"], [have_python="no"])
-AC_PROG_SWIG(1.3.31)
-SWIG_PYTHON
 
 LIBECRYPTFS_LT_CURRENT="0"
 LIBECRYPTFS_LT_REVISION="0"
@@ -247,6 +244,12 @@ OLD_CFLAGS="${CFLAGS}"
 CFLAGS="${CFLAGS} ${OPENSSL_CFLAGS}"
 AC_CHECK_HEADER([openssl/rsa.h],, [have_openssl="no"])
 CFLAGS="${OLD_CFLAGS}"
+
+if test "${enable_pywrap}" != "no" ; then
+	AM_PATH_PYTHON(2.5, [have_python="yes"], [have_python="no"])
+	AC_PROG_SWIG(1.3.31)
+	SWIG_PYTHON
+fi
 
 if test "x${SWIG}" != "x" ; then
    have_swig="yes"

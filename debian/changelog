@@ -1,5 +1,6 @@
 ecryptfs-utils (94) UNRELEASED; urgency=low
 
+  [ Dustin Kirkland ]
   * scripts/release.sh:
     - fix release script
     - bump ubuntu release
@@ -7,6 +8,10 @@ ecryptfs-utils (94) UNRELEASED; urgency=low
     home (properties changed: -x to +x), src/utils/ecryptfs-recover-
     private:
     - add a --rw option for ecryptfs-recover-private
+
+  [ Arfrever Frehtes Taifersar Arahesis ]
+  * configure.ac: LP: #893327
+    - no need to check for python, if --disable-pywrap is passed
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 27 Oct 2011 10:58:47 -0500
 
