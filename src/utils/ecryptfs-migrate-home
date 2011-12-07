@@ -151,7 +151,8 @@ encrypt_dir () {
 		exit 1
 	fi
 	info "Encrypted home has been set up, encrypting files now...this may take a while."
-	rsync -a "$orig/" "$USER_HOME/"
+	# Show progress, but on stderr, in case the user wants to filter that out
+	rsync -aP "$orig/" "$USER_HOME/" 1>&2
 	umount "$USER_HOME/"
 	echo
 	echo "========================================================================"

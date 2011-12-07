@@ -8,6 +8,8 @@ ecryptfs-utils (94) UNRELEASED; urgency=low
     home (properties changed: -x to +x), src/utils/ecryptfs-recover-
     private:
     - add a --rw option for ecryptfs-recover-private
+  * src/utils/ecryptfs-migrate-home: LP: #820416
+    - show progress on rsync
 
   [ Arfrever Frehtes Taifersar Arahesis ]
   * configure.ac: LP: #893327
