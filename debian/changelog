@@ -10,6 +10,13 @@ ecryptfs-utils (94) UNRELEASED; urgency=low
     - add a --rw option for ecryptfs-recover-private
   * src/utils/ecryptfs-migrate-home: LP: #820416
     - show progress on rsync
+  * debian/ecryptfs-utils.ecryptfs-utils-restore.upstart,
+    debian/ecryptfs-utils.ecryptfs-utils-save.upstart,
+    src/utils/ecryptfs-migrate-home,
+    src/utils/ecryptfs-setup-private: LP: #883238
+    - remove 2 upstart scripts, which attempted to "save" users who didn't
+      login after migrating their home; instead, we now require the root
+      user to enter user passwords at migration time
   * debian/copyright, debian/ecryptfs-utils.ecryptfs-utils-
     restore.upstart, debian/ecryptfs-utils.ecryptfs-utils-save.upstart,
     doc/manpage/ecryptfs.7, doc/manpage/ecryptfs-add-passphrase.1,

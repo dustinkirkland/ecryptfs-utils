@@ -144,6 +144,7 @@ encrypt_dir () {
 	if [ -n "$MOUNTPASS" ]; then
 		ECRYPTFS_SETUP_PRIVATE_ARGS="$ECRYPTFS_SETUP_PRIVATE_ARGS -m $MOUNTPASS"
 	fi
+	export ECRYPTFS_MIGRATE="1"
 	if ! ecryptfs-setup-private -u "$USER_NAME" -b $ECRYPTFS_SETUP_PRIVATE_ARGS; then
 		# too bad, something went wrong, we'll try to recover
 		rm -rf "$USER_HOME"
