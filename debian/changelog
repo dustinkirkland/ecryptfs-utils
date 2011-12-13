@@ -15,7 +15,7 @@ ecryptfs-utils (94) UNRELEASED; urgency=low
   * configure.ac: LP: #893327
     - no need to check for python, if --disable-pywrap is passed
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 27 Oct 2011 10:58:47 -0500
+ -- Dustin Kirkland <dustin.kirkland@gazzang.com>  Thu, 27 Oct 2011 10:58:47 -0500
 
 ecryptfs-utils (93) oneiric; urgency=low
 

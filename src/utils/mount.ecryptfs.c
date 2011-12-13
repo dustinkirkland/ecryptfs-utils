@@ -640,7 +640,7 @@ int main(int argc, char **argv)
 		} else
 			printf("Mounted eCryptfs\n");
 	} else {
-		fprintf(stderr, "When are remounting eCryptfs, you need "
+		fprintf(stderr, "When remounting eCryptfs, you need "
 			"to pass the mount utility the -i parameter to avoid "
 			"calling the mount helper\n");
 		rc = -EINVAL;
