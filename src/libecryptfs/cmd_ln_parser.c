@@ -21,6 +21,7 @@
 
 #include "config.h"
 #ifndef S_SPLINT_S
+#include <sys/ioctl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #endif /* S_SPLINT_S */
@@ -372,9 +373,8 @@ int ecryptfs_parse_options(char *opts, struct ecryptfs_name_val_pair *head)
 int parse_options_file(int fd, struct ecryptfs_name_val_pair *head)
 {
 	int rc = 0;
-	int pagesize;
 	char *data;
-	off_t file_size;
+	off_t buf_size, pos;
 	struct stat filestat;
 
 	rc = fstat(fd, &filestat);
@@ -387,26 +387,36 @@ int parse_options_file(int fd, struct ecryptfs_name_val_pair *head)
 		rc = -EISDIR;
 		goto out;
 	}
-	pagesize = getpagesize();
-	file_size = filestat.st_size;
-	if (file_size > MAX_FILE_SIZE) {
+	if (S_ISFIFO(filestat.st_mode)) {
+		buf_size = 1024;
+	} else {
+		buf_size = filestat.st_size;
+	}
+	if (buf_size > MAX_FILE_SIZE) {
 		syslog(LOG_ERR, "File size too large\n");
 		rc = -EFBIG;
 		goto out;
 	}
-	if (file_size % pagesize) {
-		file_size -= file_size % pagesize;
-		file_size += pagesize;
-	}
-	data = mmap((caddr_t)0, file_size, PROT_READ, MAP_PRIVATE, fd, 0);
-	if (data == MAP_FAILED)	{
-		rc = -errno;
-		syslog(LOG_ERR, "%s: mmap failed on fd [%d]; rc = [%d]\n",
-		       __FUNCTION__, fd, rc);
-		goto out;
+	buf_size += 1;
+	data = (char *) malloc(buf_size);
+	pos = 0;
+	while (1) {
+		rc = read(fd, data + pos, buf_size - pos);
+		if (rc == 0) break;
+		if (rc == -1) {
+			rc = -errno;
+			syslog(LOG_ERR, "%s: read failed on fd [%d]; rc = [%d]\n",
+		       		__FUNCTION__, fd, rc);
+			goto out;
+		}
+		pos += rc;
+		if (pos >= buf_size) {
+			buf_size *= 2;
+			data = (char *) realloc(data, buf_size);
+		}
 	}
 	rc = generate_nv_list(head, data);
-	munmap(data, file_size);
+	free(data);
 out:
 	return rc;
 }

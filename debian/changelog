@@ -50,6 +50,10 @@ ecryptfs-utils (94) UNRELEASED; urgency=low
     - if we're trying to add a key to the keyring, and it's already there,
       treat that as "success"
 
+  [ Stephan Ritscher ]
+  * src/libecryptfs/cmd_ln_parser.c: LP: #683535
+    - fix passphrase_passwd_fd for pipes
+
   [ Arfrever Frehtes Taifersar Arahesis ]
   * configure.ac: LP: #893327
     - no need to check for python, if --disable-pywrap is passed
