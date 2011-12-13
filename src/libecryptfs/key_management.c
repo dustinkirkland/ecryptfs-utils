@@ -1,6 +1,8 @@
 /**
  * Copyright (C) 2006 International Business Machines
+ * Copyright (C) 2011 Gazzang, Inc
  * Author(s): Michael C. Thompson <mcthomps@us.ibm.com>
+ *            Dustin Kirkland <dustin.kirkland@gazzang.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
