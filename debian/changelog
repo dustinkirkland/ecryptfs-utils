@@ -44,6 +44,11 @@ ecryptfs-utils (94) UNRELEASED; urgency=low
     src/utils/ecryptfs_wrap_passphrase.c:
     - update some email addresses, moving kirkland@canonical.com ->
       kirkland@ubuntu.com (which I can still read)
+  * src/libecryptfs/key_management.c: LP: #715066
+    - fix 2 places where we were handling
+      ecryptfs_add_passphrase_key_to_keyring() inconsistently
+    - if we're trying to add a key to the keyring, and it's already there,
+      treat that as "success"
 
   [ Arfrever Frehtes Taifersar Arahesis ]
   * configure.ac: LP: #893327
