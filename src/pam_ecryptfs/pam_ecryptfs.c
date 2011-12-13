@@ -5,7 +5,7 @@
  *
  * Copyright (C) 2007 International Business Machines
  * Author(s): Michael Halcrow <mhalcrow@us.ibm.com>
- *            Dustin Kirkland <kirkland@canonical.com>
+ *            Dustin Kirkland <kirkland@ubuntu.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as

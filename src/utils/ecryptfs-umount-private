@@ -3,7 +3,7 @@
 # and clears the kernel keyring of the relevant keys
 #
 # Original by Michael Halcrow, IBM
-# Extracted to a stand-alone script by Dustin Kirkland <kirkland@canonical.com>
+# Extracted to a stand-alone script by Dustin Kirkland <kirkland@ubuntu.com>
 
 TEXTDOMAIN="ecryptfs-utils"
 

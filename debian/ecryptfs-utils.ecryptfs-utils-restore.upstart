@@ -1,6 +1,6 @@
 # eCryptfs restore
 description "eCryptfs"
-author "Dustin Kirkland <kirkland@canonical.com>"
+author "Dustin Kirkland <kirkland@ubuntu.com>"
 
 start on runlevel [2345]
 task

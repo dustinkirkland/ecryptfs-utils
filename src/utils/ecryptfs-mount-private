@@ -2,7 +2,7 @@
 # This script mounts a user's confidential private folder
 #
 # Original by Michael Halcrow, IBM
-# Extracted to a stand-alone script by Dustin Kirkland <kirkland@canonical.com>
+# Extracted to a stand-alone script by Dustin Kirkland <kirkland@ubuntu.com>
 #
 # This script:
 #  * interactively prompts for a user's wrapping passphrase (defaults to their

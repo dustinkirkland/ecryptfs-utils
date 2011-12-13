@@ -3,7 +3,7 @@
 #
 # Originally ecryptfs-setup-pam-wrapped.sh by Michael Halcrow, IBM
 #
-# Ported for use on Ubuntu by Dustin Kirkland <kirkland@canonical.com>
+# Ported for use on Ubuntu by Dustin Kirkland <kirkland@ubuntu.com>
 # Copyright (C) 2008 Canonical Ltd.
 # Copyright (C) 2007-2008 International Business Machines
 PRIVATE_DIR="Private"

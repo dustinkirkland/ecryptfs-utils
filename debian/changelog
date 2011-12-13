@@ -10,6 +10,40 @@ ecryptfs-utils (94) UNRELEASED; urgency=low
     - add a --rw option for ecryptfs-recover-private
   * src/utils/ecryptfs-migrate-home: LP: #820416
     - show progress on rsync
+  * debian/copyright, debian/ecryptfs-utils.ecryptfs-utils-
+    restore.upstart, debian/ecryptfs-utils.ecryptfs-utils-save.upstart,
+    doc/manpage/ecryptfs.7, doc/manpage/ecryptfs-add-passphrase.1,
+    doc/manpage/ecryptfs-generate-tpm-key.1, doc/manpage/ecryptfs-
+    insert-wrapped-passphrase-into-keyring.1, doc/manpage/ecryptfs-
+    mount-private.1, doc/manpage/ecryptfs-recover-private.1,
+    doc/manpage/ecryptfs-rewrap-passphrase.1, doc/manpage/ecryptfs-
+    rewrite-file.1, doc/manpage/ecryptfs-setup-private.1,
+    doc/manpage/ecryptfs-setup-swap.1, doc/manpage/ecryptfs-stat.1,
+    doc/manpage/ecryptfs-umount-private.1, doc/manpage/ecryptfs-unwrap-
+    passphrase.1, doc/manpage/ecryptfs-wrap-passphrase.1,
+    doc/manpage/fr/ecryptfs-add-passphrase.1, doc/manpage/fr/ecryptfs-
+    generate-tpm-key.1, doc/manpage/fr/ecryptfs-insert-wrapped-
+    passphrase-into-keyring.1, doc/manpage/fr/ecryptfs-mount-private.1,
+    doc/manpage/fr/ecryptfs-rewrap-passphrase.1,
+    doc/manpage/fr/ecryptfs-setup-private.1, doc/manpage/fr/ecryptfs-
+    umount-private.1, doc/manpage/fr/ecryptfs-unwrap-passphrase.1,
+    doc/manpage/fr/ecryptfs-wrap-passphrase.1, doc/manpage/fr/ecryptfs-
+    zombie-kill.1, doc/manpage/fr/ecryptfs-zombie-list.1,
+    doc/manpage/mount.ecryptfs_private.1, doc/manpage/pam_ecryptfs.8,
+    doc/manpage/umount.ecryptfs.8,
+    doc/manpage/umount.ecryptfs_private.1,
+    src/pam_ecryptfs/pam_ecryptfs.c,
+    src/utils/ecryptfs_add_passphrase.c,
+    src/utils/ecryptfs_insert_wrapped_passphrase_into_keyring.c,
+    src/utils/ecryptfs-migrate-home, src/utils/ecryptfs-mount-private,
+    src/utils/ecryptfs-recover-private,
+    src/utils/ecryptfs_rewrap_passphrase.c, src/utils/ecryptfs-rewrite-
+    file, src/utils/ecryptfs-setup-private, src/utils/ecryptfs-setup-
+    swap, src/utils/ecryptfs-umount-private,
+    src/utils/ecryptfs_unwrap_passphrase.c,
+    src/utils/ecryptfs_wrap_passphrase.c:
+    - update some email addresses, moving kirkland@canonical.com ->
+      kirkland@ubuntu.com (which I can still read)
 
   [ Arfrever Frehtes Taifersar Arahesis ]
   * configure.ac: LP: #893327
