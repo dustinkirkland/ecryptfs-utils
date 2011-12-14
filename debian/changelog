@@ -1,6 +1,8 @@
 ecryptfs-utils (95) UNRELEASED; urgency=low
 
-  * 
+  [ Serge Hallyn ]
+  * fix infinite loop on arm: fgetc returns an int, and -1 at end of
+    options.  Arm makes char unsigned. (LP: #884407)
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Wed, 14 Dec 2011 11:50:59 -0600
 
