@@ -398,24 +398,37 @@ int parse_options_file(int fd, struct ecryptfs_name_val_pair *head)
 		goto out;
 	}
 	buf_size += 1;
-	data = (char *) malloc(buf_size);
+	data = (char *)malloc(buf_size);
+	if (!data) {
+		rc = -ENOMEM;
+		goto out;
+	}
 	pos = 0;
 	while (1) {
 		rc = read(fd, data + pos, buf_size - pos);
-		if (rc == 0) break;
+		if (rc == 0)
+			break;
 		if (rc == -1) {
 			rc = -errno;
 			syslog(LOG_ERR, "%s: read failed on fd [%d]; rc = [%d]\n",
 		       		__FUNCTION__, fd, rc);
-			goto out;
+			goto out_free;
 		}
 		pos += rc;
 		if (pos >= buf_size) {
+			char *more_data;
+
 			buf_size *= 2;
-			data = (char *) realloc(data, buf_size);
+			more_data = (char *)realloc(data, buf_size);
+			if (!more_data) {
+				rc = -ENOMEM;
+				goto out_free;
+			}
+			data = more_data;
 		}
 	}
 	rc = generate_nv_list(head, data);
+out_free:
 	free(data);
 out:
 	return rc;
