@@ -134,7 +134,8 @@ char *fetch_sig(char *pw_dir, int entry, char *alias) {
 /* Read ecryptfs signature from file and validate
  * Return signature as a string, or NULL on failure
  */
-	char *sig_file, c;
+	char *sig_file;
+	int c;
 	FILE *fh;
 	char *sig;
 	int i;
@@ -168,7 +169,7 @@ char *fetch_sig(char *pw_dir, int entry, char *alias) {
 	while ((c = fgetc(fh)) != EOF && i < KEY_BYTES) {
 		if ((c>='0' && c<='9') || (c>='a' && c<='f') ||
 		    (c>='A' && c<='F')) {
-			sig[i] = c;
+			sig[i] = (char)c;
 			i++;
 		} else {
 			fputs("Invalid hex signature\n", stderr);
