@@ -1,7 +1,7 @@
 Source: ecryptfs-utils
 Section: misc
 Priority: optional
-Maintainer: Dustin Kirkland <dustin.kirkland@gazzang.net>
+Maintainer: Dustin Kirkland <kirkland@ubuntu.com>
 XSBC-Original-Maintainer: Daniel Baumann <daniel@debian.org>
 Build-Depends:
  debhelper (>= 8),
