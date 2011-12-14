@@ -57,9 +57,11 @@ ecryptfs-utils (94) UNRELEASED; urgency=low
     - if we're trying to add a key to the keyring, and it's already there,
       treat that as "success"
 
-  [ Stephan Ritscher ]
+  [ Stephan Ritscher and Tyler Hicks ]
   * src/libecryptfs/cmd_ln_parser.c: LP: #683535
     - fix passphrase_passwd_fd for pipes
+    - handle memory allocation failures
+    - free memory in error paths
 
   [ Arfrever Frehtes Taifersar Arahesis ]
   * configure.ac: LP: #893327
