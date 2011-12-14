@@ -34,10 +34,10 @@ Depends:
  libpam-runtime (>= 1.0.1-6),
  gettext-base
 Recommends:
+ cryptsetup,
  lsof,
  rsync
 Suggests:
- cryptsetup,
  opencryptoki
 Description: ecryptfs cryptographic filesystem (utilities)
  eCryptfs is a POSIX-compliant enterprise-class stacked cryptographic filesystem

@@ -56,6 +56,9 @@ ecryptfs-utils (94) UNRELEASED; urgency=low
       ecryptfs_add_passphrase_key_to_keyring() inconsistently
     - if we're trying to add a key to the keyring, and it's already there,
       treat that as "success"
+  * debian/control:
+    - ecryptfs-setup-swap is strongly recommended, which depends on
+      cryptsetup; so promote cryptsetup from suggests -> recommends
 
   [ Stephan Ritscher ]
   * src/libecryptfs/cmd_ln_parser.c: LP: #683535
