@@ -6,4 +6,3 @@
 /usr/share/ecryptfs-utils
 /usr/share/locale
 /usr/share/man
-../../debian/lintian/ecryptfs-utils usr/share/lintian/overrides

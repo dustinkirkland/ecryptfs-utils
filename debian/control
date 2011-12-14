@@ -1,10 +1,10 @@
 Source: ecryptfs-utils
 Section: misc
 Priority: optional
-Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Maintainer: Dustin Kirkland <dustin.kirkland@gazzang.net>
 XSBC-Original-Maintainer: Daniel Baumann <daniel@debian.org>
 Build-Depends:
- debhelper (>= 7),
+ debhelper (>= 8),
  autotools-dev,
  autoconf,
  automake,
@@ -18,7 +18,7 @@ Build-Depends:
  pkg-config,
  python-dev,
  swig
-Standards-Version: 3.8.3
+Standards-Version: 3.9.2
 Homepage: https://launchpad.net/ecryptfs
 Vcs-Bzr: https://code.launchpad.net/~ecryptfs/ecryptfs/trunk
 Vcs-Browser: http://bazaar.launchpad.net/~ecryptfs/ecryptfs/trunk/files
@@ -29,10 +29,10 @@ Architecture: any
 Depends:
  ${misc:Depends},
  ${shlibs:Depends},
+ gettext-base,
  keyutils,
  libnss3-1d,
- libpam-runtime (>= 1.0.1-6),
- gettext-base
+ libpam-runtime (>= 1.0.1-6)
 Recommends:
  cryptsetup,
  lsof,
@@ -54,6 +54,19 @@ Description: ecryptfs cryptographic filesystem (utilities)
  is part of the Linux kernel since 2.6.19.
  .
  This package contains the userland utilities.
+
+Package: ecryptfs-utils-dbg
+Section: debug
+Priority: extra
+Architecture: any
+Depends:
+ ${misc:Depends}, ecryptfs-utils (= ${binary:Version}),
+ libecryptfs0 (= ${binary:Version}), libecryptfs-dev (= ${binary:Version})
+Description: ecryptfs cryptographic filesystem (utilities; debug)
+ eCryptfs is a POSIX-compliant enterprise-class stacked cryptographic filesystem
+ for Linux.
+ .
+ This package contains the debugging symbols.
 
 Package: libecryptfs0
 Section: libs
@@ -86,3 +99,15 @@ Description: ecryptfs cryptographic filesystem (development)
  for Linux.
  .
  This package contains the development files.
+
+Package: python-ecryptfs
+Section: python
+Architecture: linux-any
+Depends: ${misc:Depends}, ${shlibs:Depends}, ${python:Depends}
+Breaks: ecryptfs-utils (<< 87-1~)
+Replaces: ecryptfs-utils (<< 87-1~)
+Description: ecryptfs cryptographic filesystem (python)
+ eCryptfs is a POSIX-compliant enterprise-class stacked cryptographic filesystem
+ for Linux.
+ .
+ This package contains the python module.

@@ -3,7 +3,7 @@
 ecryptfs-setup-private \- setup an eCryptfs private directory.
 
 .SH SYNOPSIS
-.BI "ecryptfs-setup-private [\-f|\-\-force] [\-w|\-\-wrapping] [\-a|\-\-all\-home] [\-n|\-\-no-fnek] [\-\-nopwcheck] [\-u|\-\-username USER] [\-l|\-\-loginpass LOGINPASS] [\-m|\-\-mountpass MOUNTPASS]"
+.BI "ecryptfs-setup-private [\-f|\-\-force] [\-w|\-\-wrapping] [\-b|\-\-bootstrap] [\-n|\-\-no-fnek] [\-\-nopwcheck] [\-u|\-\-username USER] [\-l|\-\-loginpass LOGINPASS] [\-m|\-\-mountpass MOUNTPASS]"
 
 .SH OPTIONS
 Options available for the \fBecryptfs-setup-private\fP command:
@@ -23,8 +23,8 @@ System passphrase for USER, used to wrap MOUNTPASS, will interactively prompt if
 .B \-m, \-\-mountpass MOUNTPASS
 Passphrase for mounting the ecryptfs directory, default is 16 bytes from /dev/urandom if omitted
 .TP
-.B \-a, \-\-all\-home
-Generate a setup for encrypting the user's entire home directory
+.B \-b, \-\-bootstrap
+Bootstrap a new user's entire home directory
 .TP
 .B \-\-undo
 Display instructions on how to undo an encrypted private setup

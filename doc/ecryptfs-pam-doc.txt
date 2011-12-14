@@ -37,7 +37,7 @@ Setup Overview
 
 In order for these operations to complete successfully, the eCryptfs
 PAM module needs to be inserted into the PAM stack in
-/etc/pam.d/system-auth, an entry needs to be in /etc/fstab for the
+/etc/pam.d/common-auth, an entry needs to be in /etc/fstab for the
 user's ~/Private/ directory, the ~/.ecryptfs/auto-mount and
 ~/.ecryptfs/wrapped-passphrase files need to exist, and the mount code
 needs to be in the user's ~/.bash_profile script.
@@ -61,13 +61,13 @@ Setup Details
 These instructions detail how to carry out the manual steps that the
 ecryptfs-setup-pam-wrapped.sh tries to do for you automatically.
 
-The following line needs to be added to /etc/pam.d/system-auth,
+The following line needs to be added to /etc/pam.d/common-auth,
 immediately below the line referencing the pam_unix.so module in the
 auth context:
 
 auth       required     pam_ecryptfs.so unwrap
 
-The following line needs to be added to /etc/pam.d/system-auth,
+The following line needs to be added to /etc/pam.d/common-auth,
 immediately above the line referencing the pam_unix.so module in the
 password context:
 

@@ -1,0 +1,4 @@
+ecryptfs-utils: setuid-binary sbin/mount.ecryptfs_private 4755 root/root
+ecryptfs-utils: executable-not-elf-or-script ./usr/share/ecryptfs-utils/ecryptfs-mount-private.desktop
+ecryptfs-utils: executable-not-elf-or-script ./usr/share/ecryptfs-utils/ecryptfs-setup-private.desktop
+ecryptfs-utils: executable-not-elf-or-script ./usr/share/ecryptfs-utils/ecryptfs-record-passphrase

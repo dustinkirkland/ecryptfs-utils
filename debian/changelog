@@ -4,6 +4,16 @@ ecryptfs-utils (95) UNRELEASED; urgency=low
   * fix infinite loop on arm: fgetc returns an int, and -1 at end of
     options.  Arm makes char unsigned. (LP: #884407)
 
+  [ Dustin Kirkland ]
+  * debian/compat, debian/control, debian/ecryptfs-utils.install,
+    debian/ecryptfs-utils.lintian-overrides,
+    debian/libecryptfs0.install, debian/libecryptfs-dev.install,
+    debian/lintian/ecryptfs-utils, debian/python-ecryptfs.install,
+    debian/rules, debian/source/options, doc/ecryptfs-pam-doc.txt,
+    doc/manpage/ecryptfs-setup-private.1, lintian/ecryptfs-utils, ===
+    removed directory debian/lintian:
+    - merge a bunch of packaging changes from Debian's Daniel Baumann
+
  -- Dustin Kirkland <kirkland@ubuntu.com>  Wed, 14 Dec 2011 11:50:59 -0600
 
 ecryptfs-utils (94) released; urgency=low
