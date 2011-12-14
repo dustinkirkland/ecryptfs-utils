@@ -1,4 +1,4 @@
-ecryptfs-utils (95) UNRELEASED; urgency=low
+ecryptfs-utils (95) oneiric; urgency=low
 
   [ Serge Hallyn ]
   * fix infinite loop on arm: fgetc returns an int, and -1 at end of
@@ -16,7 +16,7 @@ ecryptfs-utils (95) UNRELEASED; urgency=low
   * scripts/release.sh:
     - minor release fixes
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Wed, 14 Dec 2011 11:50:59 -0600
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Wed, 14 Dec 2011 14:21:34 -0600
 
 ecryptfs-utils (94) released; urgency=low
 
