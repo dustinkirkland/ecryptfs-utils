@@ -13,6 +13,8 @@ ecryptfs-utils (95) UNRELEASED; urgency=low
     doc/manpage/ecryptfs-setup-private.1, lintian/ecryptfs-utils, ===
     removed directory debian/lintian:
     - merge a bunch of packaging changes from Debian's Daniel Baumann
+  * scripts/release.sh:
+    - minor release fixes
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Wed, 14 Dec 2011 11:50:59 -0600
 

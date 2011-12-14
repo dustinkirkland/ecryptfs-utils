@@ -9,9 +9,9 @@ error() {
 }
 
 head -n1 debian/changelog | grep -i "unreleased" || error "This version must be 'unreleased'"
+curver=`head -n1 debian/changelog | sed "s/^.*(//" | sed "s/).*$//"`
 
-
-rm -f ./ecryptfs-utils*.tar.*
+rm -f ./ecryptfs-utils_$curver.orig.tar.gz
 autoreconf -i -v -f
 intltoolize --force
 ./configure --prefix=/usr
@@ -23,15 +23,14 @@ for i in `ls ecryptfs-utils-*.tar.gz`; do
 done
 
 [ "$1" = "--nosign" ] && exit 0
-gpg --armor --sign --detach-sig ../ecryptfs-utils_*.orig.tar.gz
+gpg --armor --sign --detach-sig ../ecryptfs-utils_$curver.orig.tar.gz
 
-curver=`head -n1 debian/changelog | sed "s/^.*(//" | sed "s/).*$//"`
 bzr tag --delete $curver || true
 bzr tag $curver
 
 cd ..
-tar zxvf ecryptfs-utils_*.orig.tar.gz
-cd ecryptfs-utils-*
+tar zxvf ecryptfs-utils_$curver.orig.tar.gz
+cd ecryptfs-utils-$curver
 cp -a ../ecryptfs/debian .
 dch -v "$curver-0ubuntu1" "precise"
 debuild -S
