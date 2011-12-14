@@ -1,3 +1,9 @@
+ecryptfs-utils (96) UNRELEASED; urgency=low
+
+  * UNRELEASED
+
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Wed, 14 Dec 2011 14:21:48 -0600
+
 ecryptfs-utils (95) oneiric; urgency=low
 
   [ Serge Hallyn ]
