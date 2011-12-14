@@ -1,4 +1,10 @@
-ecryptfs-utils (94) UNRELEASED; urgency=low
+ecryptfs-utils (95) UNRELEASED; urgency=low
+
+  * 
+
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Wed, 14 Dec 2011 11:50:59 -0600
+
+ecryptfs-utils (94) released; urgency=low
 
   [ Dustin Kirkland ]
   * scripts/release.sh:
