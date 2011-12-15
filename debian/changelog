@@ -1,6 +1,7 @@
 ecryptfs-utils (96) UNRELEASED; urgency=low
 
-  * UNRELEASED
+  * CONTRIBUTING:
+    - added a new file to describe how to contribute to ecryptfs
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Wed, 14 Dec 2011 14:21:48 -0600
 

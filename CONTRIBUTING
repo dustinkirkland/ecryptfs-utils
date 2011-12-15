@@ -1,0 +1,33 @@
+Thanks for your interest in contributing to eCryptfs!
+
+Here are a few instructions to help get started...
+
+To contribute to ecryptfs-utils (user space):
+ 1) Create and login to your account
+    - https://launchpad.net
+ 2) Ensure that you have published your public SSH
+    - https://launchpad.net/~/+editsshkeys
+ 3) Download, install, and configure 'bzr'
+    - http://wiki.bazaar.canonical.com/Download
+ 4) Branch the source code
+    - bzr branch lp:ecryptfs
+ 5) File a bug against eCryptfs
+    - https://bugs.launchpad.net/ecryptfs/+filebug
+ 6) Make your changes, and commit with an informative change log entry,
+    and mention the bug number in the form 'LP: #xxxxxx' in the commit
+    - bzr commit --fixes lp:xxxxxx
+ 7) Push your changes to your own branch
+    - bzr push lp:~/ecryptfs/xxxxxx
+ 8) When you're read, you can propose your branch for merging
+    - https://code.launchpad.net/~/ecryptfs/xxxxxx/+register-merge
+ 9) And we'll take it from there!
+
+To contribute to ecryptfs (kernel space):
+ 1) Branch the source code
+    - git clone git://git.kernel.org/pub/scm/linux/kernel/git/tyhicks/ecryptfs.git
+ 2) Make your changes, signoff, and commit, folling the guidelines in:
+    - http://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=blob_plain;f=Documentation/SubmittingPatches;hb=HEAD
+ 3) Create a proper patch using
+    - git format-patch
+ 4) Post your patch to ecryptfs@vger.kernel.org
+    - http://vger.kernel.org/vger-lists.html#ecryptfs
