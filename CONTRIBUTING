@@ -18,16 +18,26 @@ To contribute to ecryptfs-utils (user space):
     - bzr commit --fixes lp:xxxxxx
  7) Push your changes to your own branch
     - bzr push lp:~/ecryptfs/xxxxxx
- 8) When you're read, you can propose your branch for merging
+ 8) When you're ready, you can propose your branch for merging
     - https://code.launchpad.net/~/ecryptfs/xxxxxx/+register-merge
  9) And we'll take it from there!
 
 To contribute to ecryptfs (kernel space):
- 1) Branch the source code
-    - git clone git://git.kernel.org/pub/scm/linux/kernel/git/tyhicks/ecryptfs.git
- 2) Make your changes, signoff, and commit, folling the guidelines in:
+ 1) You can typically develop fixes against Linus' tree
+    - git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux-2.6.git
+    However, new features should be developed against linux-next
+    - git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git
+ 2) Make your changes, signoff, and commit, following the guidelines in:
     - http://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=blob_plain;f=Documentation/SubmittingPatches;hb=HEAD
  3) Create a proper patch using
     - git format-patch
- 4) Post your patch to ecryptfs@vger.kernel.org
-    - http://vger.kernel.org/vger-lists.html#ecryptfs
+ 4) As SubmittingPatches suggests, please do a style check with
+    scripts/checkpatch.pl, which can be found in the kernel source tree
+    - http://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=blob_plain;f=scripts/checkpatch.pl;hb=HEAD
+ 5) It is common for first time contributors to use a mail client that mangles
+    patches so you may want to verify that there are no known issues with the
+    client that you use
+    - http://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=blob_plain;f=Documentation/email-clients.txt;hb=HEAD
+ 6) Email your patch inline with, at least, the following headers:
+    To: tyhicks@canonical.com
+    Cc: ecryptfs@vger.kernel.org

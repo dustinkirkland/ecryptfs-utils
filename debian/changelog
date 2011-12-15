@@ -1,9 +1,14 @@
 ecryptfs-utils (96) UNRELEASED; urgency=low
 
+  [ Dustin Kirkland ]
   * CONTRIBUTING:
     - added a new file to describe how to contribute to ecryptfs
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Wed, 14 Dec 2011 14:21:48 -0600
+  [ Tyler Hicks ]
+  * CONTRIBUTING:
+    - clarified how to contribute to the ecryptfs kernel module
+
+ -- Tyler Hicks <tyhicks@canonical.com>  Thu, 15 Dec 2011 17:48:46 -0600
 
 ecryptfs-utils (95) oneiric; urgency=low
 
