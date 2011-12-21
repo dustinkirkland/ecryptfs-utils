@@ -70,3 +70,9 @@ License: GPL-2+
  .
  On Debian systems, the complete text of the GNU General Public License
  can be found in /usr/share/common-licenses/GPL-2 file.
+
+Files: img/*
+Copyright:
+ (C) 2011 Gazzang, Inc.
+License: CC-by-SA 3.0
+ See: http://creativecommons.org/licenses/by-sa/3.0/legalcode

@@ -6,10 +6,17 @@ ecryptfs-utils (96) UNRELEASED; urgency=low
   * === added directory img/old, img/old/ecryptfs_14.png,
     img/old/ecryptfs_192.png, img/old/ecryptfs_64.png:
     - saving the old logos/branding for posterity
+  * debian/copyright, img/COPYING:
+    - added CC-by-SA 3.0 license
 
   [ Tyler Hicks ]
   * CONTRIBUTING:
     - clarified how to contribute to the ecryptfs kernel module
+
+  [ Eddie Garcia ]
+  * img/*:
+    - contributing a new set of logos and branding under the CC-by-SA3.0
+      license
 
  -- Tyler Hicks <tyhicks@canonical.com>  Thu, 15 Dec 2011 17:48:46 -0600
 
