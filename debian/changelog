@@ -8,6 +8,7 @@ ecryptfs-utils (96) UNRELEASED; urgency=low
     - saving the old logos/branding for posterity
   * debian/copyright, img/COPYING:
     - added CC-by-SA 3.0 license
+    - use the text version
   * img/ecryptfs_14.png, img/ecryptfs_192.png, img/ecryptfs_64.png:
     - added scaled copies of images used for Launchpad.net branding
 
