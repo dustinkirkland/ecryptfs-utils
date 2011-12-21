@@ -17,7 +17,7 @@ ecryptfs-utils (96) UNRELEASED; urgency=low
     - clarified how to contribute to the ecryptfs kernel module
 
   [ Eddie Garcia ]
-  * img/*:
+  * img/*: LP: #907131
     - contributing a new set of logos and branding under the CC-by-SA3.0
       license
 
