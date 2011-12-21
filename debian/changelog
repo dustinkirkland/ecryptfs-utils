@@ -3,6 +3,9 @@ ecryptfs-utils (96) UNRELEASED; urgency=low
   [ Dustin Kirkland ]
   * CONTRIBUTING:
     - added a new file to describe how to contribute to ecryptfs
+  * === added directory img/old, img/old/ecryptfs_14.png,
+    img/old/ecryptfs_192.png, img/old/ecryptfs_64.png:
+    - saving the old logos/branding for posterity
 
   [ Tyler Hicks ]
   * CONTRIBUTING:
