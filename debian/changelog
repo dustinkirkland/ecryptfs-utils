@@ -11,6 +11,10 @@ ecryptfs-utils (96) UNRELEASED; urgency=low
     - use the text version
   * img/ecryptfs_14.png, img/ecryptfs_192.png, img/ecryptfs_64.png:
     - added scaled copies of images used for Launchpad.net branding
+  * src/utils/ecryptfs-recover-private: LP: #847505
+    - add an option to allow user to enter the mount passphrase,
+      in case they've recorded that, but forgotten their login
+      passphrase
 
   [ Tyler Hicks ]
   * CONTRIBUTING:

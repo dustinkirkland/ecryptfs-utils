@@ -58,14 +58,28 @@ for d in $dirs; do
 	# Determine if filename encryption is on
 	ls "$d/ECRYPTFS_FNEK_ENCRYPTED"* >/dev/null 2>&1 && fnek="--fnek" || fnek=
 	if [ -f "$d/../.ecryptfs/wrapped-passphrase" ]; then
-		# Use the wrapped-passphrase, if available
-		info "Enter your LOGIN passphrase..."
-		ecryptfs-insert-wrapped-passphrase-into-keyring "$d/../.ecryptfs/wrapped-passphrase"
-		sigs=$(sed -e "s/[^0-9a-f]//g" "$d/../.ecryptfs/Private.sig")
+		info "Found your wrapped-passphrase"
+		echo -n "Do you know your LOGIN passphrase? [Y/n] "
+		lpw=$(head -n1)
+		case "$lpw" in
+			y|Y|"")
+				# Use the wrapped-passphrase, if available
+				info "Enter your LOGIN passphrase..."
+				ecryptfs-insert-wrapped-passphrase-into-keyring "$d/../.ecryptfs/wrapped-passphrase"
+				sigs=$(sed -e "s/[^0-9a-f]//g" "$d/../.ecryptfs/Private.sig")
+				use_mount_passphrase=0
+			;;
+			*)
+				use_mount_passphrase=1
+			;;
+		esac
 	else
 		# Fall back to mount passphrase
-		echo
 		info "Could not find your wrapped passphrase file."
+		use_mount_passphrase=1
+	fi
+	if [ "$use_mount_passphrase" = "1" ]; then
+
 		info "To recover this directory, you MUST have your original MOUNT passphrase."
 		info "When you first setup your encrypted private directory, you were told to record"
 		info "your MOUNT passphrase."
