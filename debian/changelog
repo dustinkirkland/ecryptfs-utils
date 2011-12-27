@@ -20,6 +20,20 @@ ecryptfs-utils (96) UNRELEASED; urgency=low
     - it seems that reading /etc/mtab for this is outdated
     - ensure that ecryptfs works even if there is no sysfs entry
       in /etc/mtab
+  * debian/copyright,
+    src/key_mod/ecryptfs_key_mod_openssl.c,
+    src/key_mod/ecryptfs_key_mod_pkcs11_helper.c,
+    src/key_mod/ecryptfs_key_mod_tspi.c: LP: #741364
+    - explicitly note that this code is allowed (expected) to link
+      against OpenSSL
+    - the original authors wrote this code against #include <openssl/*>
+      and CLEARLY intended and implied for this code to be built against
+      OpenSSL libraries
+    - so state this explicitly, such that Debian, Ubuntu, and other
+      distributions can be comfortable building ecryptfs and linking
+      against OpenSSL
+    - followed the instructions at
+      http://people.gnome.org/~markmc/openssl-and-the-gpl.html
 
   [ Tyler Hicks ]
   * CONTRIBUTING:
