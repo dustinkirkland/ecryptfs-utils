@@ -34,6 +34,9 @@ ecryptfs-utils (96) UNRELEASED; urgency=low
       against OpenSSL
     - followed the instructions at
       http://people.gnome.org/~markmc/openssl-and-the-gpl.html
+  * debian/control, debian/rules: LP: #741364
+    - re-enable the openssl, pkcs, and tspi key modules, per the explicit
+      gpl/openssl exception
 
   [ Tyler Hicks ]
   * CONTRIBUTING:
