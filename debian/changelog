@@ -64,6 +64,7 @@ ecryptfs-utils (95) oneiric; urgency=low
     doc/manpage/ecryptfs-setup-private.1, lintian/ecryptfs-utils, ===
     removed directory debian/lintian:
     - merge a bunch of packaging changes from Debian's Daniel Baumann
+    - fixes LP: #800647
   * scripts/release.sh:
     - minor release fixes
 
