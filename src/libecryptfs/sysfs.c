@@ -50,8 +50,11 @@ static int get_sysfs_mountpoint(char *mnt, int *mnt_size)
 			fclose(fp);
 			goto out;
 		}
-	rc = -EINVAL;
 	fclose(fp);
+	/* Default to /sys if not found in /etc/mtab */
+	*mnt_size = strlen("/sys");
+	memcpy(mnt, "/sys", strlen("/sys"));
+	rc = 0;
 out:
 	return rc;
 }

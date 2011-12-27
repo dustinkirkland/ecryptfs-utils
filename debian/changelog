@@ -15,6 +15,11 @@ ecryptfs-utils (96) UNRELEASED; urgency=low
     - add an option to allow user to enter the mount passphrase,
       in case they've recorded that, but forgotten their login
       passphrase
+  * src/libecryptfs/sysfs.c: LP: #802197
+    - default sysfs to /sys, if not found in /etc/mtab
+    - it seems that reading /etc/mtab for this is outdated
+    - ensure that ecryptfs works even if there is no sysfs entry
+      in /etc/mtab
 
   [ Tyler Hicks ]
   * CONTRIBUTING:
