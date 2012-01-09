@@ -555,17 +555,16 @@ static uint32_t tspi_num_params = 1;
  */
 static void string_to_uuid(TSS_UUID *uuid, char *str)
 {
-	BYTE tmp[(sizeof(unsigned long) * 2 + 1)];
-	unsigned long l;
-	uint32_t i;
+	BYTE tmp[(sizeof(uint32_t) * 2 + 1)];
+	uint32_t i, l;
 
-	tmp[sizeof(unsigned long) * 2] = '\0';
+	tmp[sizeof(uint32_t) * 2] = '\0';
 	for (i = 0; i < (sizeof(TSS_UUID) * 2);
-	     i += (sizeof(unsigned long) * 2)) {
-		memcpy(tmp, &str[i], sizeof(unsigned long) * 2);
+	     i += (sizeof(uint32_t) * 2)) {
+		memcpy(tmp, &str[i], sizeof(uint32_t) * 2);
 		l = strtoul((char *)tmp, NULL, 16);
 		l = htonl(l);
-		memcpy(&((BYTE *)uuid)[i/2], &l, sizeof(unsigned long));
+		memcpy(&((BYTE *)uuid)[i/2], &l, sizeof(uint32_t));
 	}
 }
 
