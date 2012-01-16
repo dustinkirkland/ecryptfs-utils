@@ -1,0 +1,120 @@
+#!/bin/sh -e
+#    ecryptfs-escrow-private
+#    Copyright (C) 2012 Dustin Kirkland <dustin.kirkland@gmail.com>
+#
+#    Authors: Dustin Kirkland <dustin.kirkland@gmail.com>
+#
+#    This program is free software; you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; version 2 of the License.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+error() {
+	printf "ERROR: %s\n" "$@" 1>&2
+	printf "\nThis escrow did NOT succeed!\n\n"
+	exit 1
+}
+
+# Create our temp workspace
+tempfile=$(mktemp /dev/shm/ecryptfs-XXXXXXXXXXXX)
+chmod 600 "$tempfile"
+tempdir=$(mktemp -d /dev/shm/ecryptfs-XXXXXXXXXXXX)
+chmod 700 "$tempdir"
+mv "$tempfile" "$tempfile.tar.gz.gpg"
+tempfile="$tempfile.tar.gz.gpg"
+gpg_dir=$(mktemp -d /dev/shm/ecryptfs-XXXXXXXXXXXX)
+trap "rm -rf $tempfile $tempdir $gpg_dir 2>/dev/null || true" EXIT HUP INT QUIT TERM
+
+echo "
+#####################################################################
+# Some eCryptfs users choose to store a backup of of their eCryptfs
+# configuration and their randomly generated MOUNT passphrase on an
+# escrow server for retrieval later, in case of an emergency
+# recovery.
+#
+# You will be prompted for:
+#  - a key escrow server
+#  - your LOGIN passphrase
+#
+# Your LOGIN passphrase will be used to decrypt your MOUNT passphrase
+# and create an archive of your ~/.ecryptfs/ directory as well as your
+# MOUNT passphrase.  It will be encrypted with a public key unique to
+# your chosen open source key escrow server compatible with
+# KeyEscrow.net.
+#
+# After a successful upload, you MUST click on the generated URL, login
+# using either your Ubuntu One or Google account, and associate an
+# email address with this upload.
+#####################################################################
+"
+
+# Get the KeyEscrow.net server
+default_server="https://keyescrow.net"
+printf "Key escrow server [$default_server]: "
+server=$(head -n1)
+[ -n "$server" ] || server="$default_server"
+
+# Get the KeyEscrow server GPG fingerprint
+fingerprint=$(curl -s -o- $server/gpg.fingerprint) || error "Invalid server [$server]"
+gpg_opts="-q --yes --no-default-keyring --keyring ecryptfs --homedir $gpg_dir"
+(curl -s -o- $server/gpg.pub | gpg $gpg_opts --import) || error "Invalid server key"
+(printf "$fingerprint:6:\n" | gpg $gpg_opts --import-ownertrust 2>/tmp/out) || error "Invalid server fingerprint"
+
+# Copy payload to our temp dir
+cp -a "$HOME/.ecryptfs/"* "$tempdir"
+touch "$tempdir/unwrapped-passphrase"
+chmod 600 "$tempdir/unwrapped-passphrase"
+
+# Prompt for login passphrase
+stty_orig=$(stty -g)
+stty -echo
+printf "Your LOGIN passphrase: "
+passphrase=$(head -n1)
+stty $stty_orig
+printf "\n"
+printf "%s" "$passphrase" | ecryptfs-unwrap-passphrase "$HOME/.ecryptfs/wrapped-passphrase" - > "$tempdir/unwrapped-passphrase"
+
+# Create our base64 encoded, encrypted, tarball
+cd "$tempdir"
+tar zcf - * | gpg $gpg_opts -e -r 0x$fingerprint 2>/dev/null | base64 > "$tempfile"
+md5_1=$(md5sum "$tempfile" | awk '{print $1}')
+rm -rf "$tempdir" "$gpg_dir"
+
+# Push to the escrow server
+url=$(curl -s -o- -X POST --data-urlencode payload@"$tempfile" $server/upload/index.html) || error "Failed to upload to server"
+rm -f "$tempfile"
+[ -n "$url" ] || error "Failed to upload to server"
+
+# Check md5
+md5_2=$(printf "%s" "$url" | sed -e "s:.*=::" -e "s:-.*::")
+[ "$md5_1" = "$md5_2" ] || error "Data received by server [$md5_2] does not match data sent [$md5_1]"
+
+# Finish up
+echo "
+#####################################################################
+#
+# To complete this escrow, you MUST go to this url, login,
+# and associate an email address with your upload IMMEDIATELY!
+#  * $url
+#
+#####################################################################
+"
+
+# Launch browser?
+printf "Go to [%s] now [Y/n]: " "$url"
+answer=$(head -n1)
+case "$answer" in
+	n*|N*)
+		exit 0
+	;;
+	*)
+		exec sensible-browser $url
+	;;
+esac

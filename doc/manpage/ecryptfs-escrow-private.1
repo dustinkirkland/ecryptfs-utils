@@ -1,0 +1,35 @@
+.TH ecryptfs-escrow-private 1 2012-01-16 ecryptfs-utils "eCryptfs"
+.SH NAME
+\fBecryptfs-escrow-private\fP \- escrow a copy of ~/.ecryptfs and the mount passphrase to an escrow service compatible with the KeyEscrow.net open API for safe keeping
+
+.SH SYNOPSIS
+\fBecryptfs-escrow-private\fP
+
+.SH DESCRIPTION
+This interactive utility enables eCryptfs Encrypted Home and Encrypted Private users to escrow a copy of their \fI~/.ecryptfs\fP configuration and randomly generated mount passphrase to an escrow service compatible with the KeyEscrow.net open API.
+
+KeyEscrow.net is a public implementation of the open source (AGPL) project and API at \fIhttps://launchpad.net/keyescrow\fP.  It is designed to help some eCryptfs users remotely store a copy of their eCryptfs configuration for safe keeping, in the event that they lose all or some of their configuration.
+
+First, this program will prompt the user for the target KeyEscrow server, defaulting to the public instance at \fIhttps://keyescrow.net\fP.  Note that a target server should have a valid SSL certificate.
+
+Next, it will retrieve the \fBgpg\fP(1) fingerprint and \fBgpg\fP(1) public key of the KeyEscrow instance, and import it into a temporary keyring.
+
+It will then prompt the user for their LOGIN passphrase, in order to \fBecryptfs-unwrap-passphrase\fP(1) and store the MOUNT passphrase.
+
+Next, it will create a compressed, encrypted, encoded archive using \fBtar\fP(1), \fBgzip\fP(1), \fBgpg\fP(1), and \fBbase64\fP(1), and submit it to the output to the chosen KeyEscrow instance using \fBcurl(1)\fP.  It will confirm the \fBmd5sum\fP(1) with the remote server.
+
+If everything matches, the program will display a unique URL, to which the user should navigate, where they will login using either an Ubuntu One or a Google OpenID account, and associate an email address with the uploaded data.  The program will offer to launch a \fBsensible-browser\fP(1) to the returned URL.
+
+Any failure whatsoever will result in a non-zero exit code, and the user should beware that their eCryptfs configuration was NOT uploaded.
+
+.SH SEE ALSO
+\fBecryptfs-recover-private\fP(1), \fBecryptfs-unwrap-passphrase\fP(1), \fBtar\fP(1), \fBgzip\fP(1), \fBgpg\fP(1), \fBbase64\fP(1), \fBcurl(1)\fP, \fBmd5sum\fP(1), \fBsensible-browser\fP(1), \fIhttps://keyescrow.net\fP, \fIhttps://launchpad.net/keyescrow\fP
+
+.TP
+\fIhttp://launchpad.net/ecryptfs/\fP
+.PD
+
+.SH AUTHOR
+This manpage was written by Dustin Kirkland <kirkland@ubuntu.com> for Ubuntu systems (but may be used by others).  Permission is granted to copy, distribute and/or modify this document under the terms of the GNU General Public License, Version 2 or any later version published by the Free Software Foundation.
+
+On Debian systems, the complete text of the GNU General Public License can be found in /usr/share/common-licenses/GPL.

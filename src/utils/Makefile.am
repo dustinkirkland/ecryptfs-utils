@@ -13,6 +13,7 @@ bin_PROGRAMS=ecryptfs-manager ecryptfs-wrap-passphrase \
 	     ecryptfs-stat
 bin_SCRIPTS = ecryptfs-setup-private \
 	      ecryptfs-setup-swap \
+	      ecryptfs-escrow-private \
 	      ecryptfs-mount-private \
 	      ecryptfs-umount-private \
 	      ecryptfs-rewrite-file \
