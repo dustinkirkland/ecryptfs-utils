@@ -18,7 +18,7 @@
 
 error() {
 	printf "ERROR: %s\n" "$@" 1>&2
-	printf "\nThis escrow did NOT succeed!\n\n"
+	printf "ERROR: Beware, this escrow did NOT succeed!\n\n"
 	exit 1
 }
 
@@ -36,22 +36,23 @@ echo "
 #####################################################################
 # Some eCryptfs users choose to store a backup of of their eCryptfs
 # configuration and their randomly generated MOUNT passphrase on an
-# escrow server for retrieval later, in case of an emergency
-# recovery.
+# escrow server for retrieval later, as it will be REQUIRED if you
+# ever need to recover your encrypted data.
 #
 # You will be prompted for:
 #  - a key escrow server
 #  - your LOGIN passphrase
 #
 # Your LOGIN passphrase will be used to decrypt your MOUNT passphrase
-# and create an archive of your ~/.ecryptfs/ directory as well as your
+# and create an archive of your ~/.ecryptfs/ configuration and your
 # MOUNT passphrase.  It will be encrypted with a public key unique to
 # your chosen open source key escrow server compatible with
 # KeyEscrow.net.
 #
-# After a successful upload, you MUST click on the generated URL, login
-# using either your Ubuntu One or Google account, and associate an
-# email address with this upload.
+# After a successful upload, you MUST click on the generated URL and
+# login using either your Ubuntu One or Google account, and associate
+# your account with this upload.  Access to that account will be
+# REQUIRED to retrieve your escrowed data later!
 #####################################################################
 "
 
@@ -62,33 +63,49 @@ server=$(head -n1)
 [ -n "$server" ] || server="$default_server"
 
 # Get the KeyEscrow server GPG fingerprint
-fingerprint=$(curl -s -o- $server/gpg.fingerprint) || error "Invalid server [$server]"
+fingerprint=$(curl -s -o- $server/gpg.fingerprint) || error "Invalid key escrow server [$server]"
 gpg_opts="-q --yes --no-default-keyring --keyring ecryptfs --homedir $gpg_dir"
-(curl -s -o- $server/gpg.pub | gpg $gpg_opts --import) || error "Invalid server key"
+(curl -s -o- $server/gpg.pub | gpg $gpg_opts --import) || error "Invalid key escrow server"
 (printf "$fingerprint:6:\n" | gpg $gpg_opts --import-ownertrust 2>/tmp/out) || error "Invalid server fingerprint"
 
-# Copy payload to our temp dir
-cp -a "$HOME/.ecryptfs/"* "$tempdir"
-touch "$tempdir/unwrapped-passphrase"
-chmod 600 "$tempdir/unwrapped-passphrase"
+# Copy .ecryptfs data to our temp dir
+# Except for the wrapped-passphrase file
+# Don't store the user's login passphrase
+# But only their random mount passphrase
+mkdir -m 700 -p "$tempdir/ecryptfs"
+cp -af "$HOME/.ecryptfs/"* "$tempdir/ecryptfs"
+rm -f "$tempdir/ecryptfs/wrapped-passphrase"
+touch "$tempdir/ecryptfs/unwrapped-passphrase"
+chmod 600 "$tempdir/ecryptfs/unwrapped-passphrase"
 
 # Prompt for login passphrase
+echo "
+#####################################################################
+# Your LOGIN passphrase is required to unwrap your randomly generated
+# MOUNT passphrase.  The key escrow server will NOT store your login
+# passphrase.  It will only store your randomly generated MOUNT
+# passphrase.
+#####################################################################
+"
 stty_orig=$(stty -g)
 stty -echo
 printf "Your LOGIN passphrase: "
 passphrase=$(head -n1)
 stty $stty_orig
 printf "\n"
-printf "%s" "$passphrase" | ecryptfs-unwrap-passphrase "$HOME/.ecryptfs/wrapped-passphrase" - > "$tempdir/unwrapped-passphrase"
+if !(printf "%s" "$passphrase" | ecryptfs-unwrap-passphrase "$HOME/.ecryptfs/wrapped-passphrase" - > "$tempdir/ecryptfs/unwrapped-passphrase"); then
+	error "Failed to unwrap passphrase.  Incorrect LOGIN passphrase?"
+fi
+touch -r "$HOME/.ecryptfs/wrapped-passphrase" "$tempdir/ecryptfs/unwrapped-passphrase"
+touch -r "$HOME/.ecryptfs/" "$tempdir/ecryptfs/"
 
-# Create our base64 encoded, encrypted, tarball
-cd "$tempdir"
-tar zcf - * | gpg $gpg_opts -e -r 0x$fingerprint 2>/dev/null | base64 > "$tempfile"
-md5_1=$(md5sum "$tempfile" | awk '{print $1}')
+# Create our encrypted ascii-armored tarball
+tar -C "$tempdir" -zcvf - "ecryptfs" | gpg $gpg_opts -a -e -r 0x$fingerprint 2>/dev/null > "$tempfile"
+md5_1=$(tar -C "$tempdir" -zcf - "ecryptfs" | md5sum | awk '{print $1}')
 rm -rf "$tempdir" "$gpg_dir"
 
 # Push to the escrow server
-url=$(curl -s -o- -X POST --data-urlencode payload@"$tempfile" $server/upload/index.html) || error "Failed to upload to server"
+url=$(curl -s -o- -X POST --data-urlencode payload@"$tempfile" $server/deposit/index.html) || error "Failed to upload to server"
 rm -f "$tempfile"
 [ -n "$url" ] || error "Failed to upload to server"
 
@@ -99,11 +116,9 @@ md5_2=$(printf "%s" "$url" | sed -e "s:.*=::" -e "s:-.*::")
 # Finish up
 echo "
 #####################################################################
-#
 # To complete this escrow, you MUST go to this url, login,
 # and associate an email address with your upload IMMEDIATELY!
 #  * $url
-#
 #####################################################################
 "
 

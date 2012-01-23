@@ -45,6 +45,7 @@ ecryptfs-utils (96) UNRELEASED; urgency=low
     - add a utility that some users might choose to use, that helps them
       backup their ecryptfs configuration and passphrase to a server
       compatible with the open API of KeyEscrow.net
+    - clean up some of the verbiage
 
   [ Tyler Hicks ]
   * CONTRIBUTING:
