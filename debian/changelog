@@ -53,6 +53,10 @@ ecryptfs-utils (96) UNRELEASED; urgency=low
   * doc/manpage/ecryptfs-escrow-private.1, src/utils/ecryptfs-escrow-
     private:
     - drop references to Ubuntu One until that's working
+  * doc/manpage/ecryptfs-record-passphrase.1, src/desktop/ecryptfs-
+    record-passphrase, src/utils/ecryptfs-record-passphrase,
+    src/utils/Makefile.am:
+    - create an interactive, educational wrapper for recording a passphrase
 
   [ Tyler Hicks ]
   * CONTRIBUTING:
