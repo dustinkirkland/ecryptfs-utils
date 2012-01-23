@@ -48,6 +48,8 @@ ecryptfs-utils (96) UNRELEASED; urgency=low
     - clean up some of the verbiage
   * debian/control:
     - we need curl and gnupg for ecrptfs-escrow-private
+  * doc/manpage/ecryptfs-escrow-private.1:
+    - documentation updates
 
   [ Tyler Hicks ]
   * CONTRIBUTING:

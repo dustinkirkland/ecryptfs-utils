@@ -16,14 +16,23 @@ Next, it will retrieve the \fBgpg\fP(1) fingerprint and \fBgpg\fP(1) public key 
 
 It will then prompt the user for their LOGIN passphrase, in order to \fBecryptfs-unwrap-passphrase\fP(1) and store the MOUNT passphrase.
 
-Next, it will create a compressed, encrypted, encoded archive using \fBtar\fP(1), \fBgzip\fP(1), \fBgpg\fP(1), and \fBbase64\fP(1), and submit it to the output to the chosen KeyEscrow instance using \fBcurl(1)\fP.  It will confirm the \fBmd5sum\fP(1) with the remote server.
+Next, it will create a compressed, encrypted, encoded archive using \fBtar\fP(1), \fBgzip\fP(1), and \fBgpg\fP(1), and submit it to the output to the chosen KeyEscrow instance using \fBcurl(1)\fP.  It will confirm the \fBmd5sum\fP(1) with the remote server. 
 
-If everything matches, the program will display a unique URL, to which the user should navigate, where they will login using either an Ubuntu One or a Google OpenID account, and associate an email address with the uploaded data.  The program will offer to launch a \fBsensible-browser\fP(1) to the returned URL.
+Note that the uploaded archive will contain \fI~/.ecryptfs/*\fP, which typically includes:
+ - auto-umount
+ - auto-mount
+ - Private.sig
+ - Private.mnt
+ - unwrapped-passphrase
+
+Neither your LOGIN passphrase, nor your wrapped-passphrase are ever sent to the server.
+
+The local utility will confirm that the server's returned md5sum matches the locally calculated value.  If everything matches, the program will display a unique URL, to which the user should navigate, where they will login using either an Ubuntu One or a Google OpenID account, and associate an email address with the uploaded data.  The program will offer to launch a \fBsensible-browser\fP(1) to the returned URL.
 
 Any failure whatsoever will result in a non-zero exit code, and the user should beware that their eCryptfs configuration was NOT uploaded.
 
 .SH SEE ALSO
-\fBecryptfs-recover-private\fP(1), \fBecryptfs-unwrap-passphrase\fP(1), \fBtar\fP(1), \fBgzip\fP(1), \fBgpg\fP(1), \fBbase64\fP(1), \fBcurl(1)\fP, \fBmd5sum\fP(1), \fBsensible-browser\fP(1), \fIhttps://keyescrow.net\fP, \fIhttps://launchpad.net/keyescrow\fP
+\fBecryptfs-recover-private\fP(1), \fBecryptfs-unwrap-passphrase\fP(1), \fBtar\fP(1), \fBgzip\fP(1), \fBgpg\fP(1), \fBcurl(1)\fP, \fBmd5sum\fP(1), \fBsensible-browser\fP(1), \fIhttps://keyescrow.net\fP, \fIhttps://launchpad.net/keyescrow\fP
 
 .TP
 \fIhttp://launchpad.net/ecryptfs/\fP
