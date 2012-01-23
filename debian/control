@@ -38,6 +38,8 @@ Depends:
  libpam-runtime (>= 1.0.1-6)
 Recommends:
  cryptsetup,
+ curl,
+ gnupg,
  lsof,
  rsync
 Suggests:

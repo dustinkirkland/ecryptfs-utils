@@ -46,6 +46,8 @@ ecryptfs-utils (96) UNRELEASED; urgency=low
       backup their ecryptfs configuration and passphrase to a server
       compatible with the open API of KeyEscrow.net
     - clean up some of the verbiage
+  * debian/control:
+    - we need curl and gnupg for ecrptfs-escrow-private
 
   [ Tyler Hicks ]
   * CONTRIBUTING:
