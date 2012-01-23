@@ -50,9 +50,9 @@ echo "
 # KeyEscrow.net.
 #
 # After a successful upload, you MUST click on the generated URL and
-# login using either your Ubuntu One or Google account, and associate
-# your account with this upload.  Access to that account will be
-# REQUIRED to retrieve your escrowed data later!
+# login using a Google OpenID account, and associate your account
+# with this upload.  Access to that account will be  REQUIRED to
+# securely retrieve your escrowed data later!
 #####################################################################
 "
 

@@ -27,7 +27,7 @@ Note that the uploaded archive will contain \fI~/.ecryptfs/*\fP, which typically
 
 Neither your LOGIN passphrase, nor your wrapped-passphrase are ever sent to the server.
 
-The local utility will confirm that the server's returned md5sum matches the locally calculated value.  If everything matches, the program will display a unique URL, to which the user should navigate, where they will login using either an Ubuntu One or a Google OpenID account, and associate an email address with the uploaded data.  The program will offer to launch a \fBsensible-browser\fP(1) to the returned URL.
+The local utility will confirm that the server's returned md5sum matches the locally calculated value.  If everything matches, the program will display a unique URL, to which the user should navigate, where they will login using a Google OpenID account, and associate an email address with the uploaded data.  The program will offer to launch a \fBsensible-browser\fP(1) to the returned URL.
 
 Any failure whatsoever will result in a non-zero exit code, and the user should beware that their eCryptfs configuration was NOT uploaded.
 
