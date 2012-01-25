@@ -61,6 +61,30 @@ ecryptfs-utils (96) UNRELEASED; urgency=low
   [ Tyler Hicks ]
   * CONTRIBUTING:
     - clarified how to contribute to the ecryptfs kernel module
+  * tests/lib/etl_funcs.sh:
+    - created eCryptfs test library of bash functions for use in test
+      cases and test harnesses
+  * test/etl_add_passphrase_key_to_keyring.c:
+    - created a C helper program to allow bash scripts to interface to
+      the libecryptfs function that adds passphrase-based keys to the
+      kernel keyring
+  * tests/kernel/tests.rc, tests/userspace/tests.rc:
+    - created a test case category files for test harnesses to source
+      when running testcases of a certain category (destructive, safe,
+      etc.)
+  * tests/run_tests.sh:
+    - created a test harness to run eCryptfs test cases
+  * tests/kernel/miscdev-bad-count.sh,
+    tests/kernel/miscdev-bad-count/test.c:
+    - created test case for miscdev issue reported to mailing list
+  * tests/kernel/lp-885744.sh:
+    - created test case for pathconf bug
+  * tests/new.sh:
+    - created new test case template to copy from
+  * configure.ac, Makefile.am, tests/Makefile.am, tests/lib/Makefile.am,
+    tests/kernel/Makefile.am:
+    - updated and created autoconf/automake files to build the new tests
+      directory
 
   [ Eddie Garcia ]
   * img/*: LP: #907131

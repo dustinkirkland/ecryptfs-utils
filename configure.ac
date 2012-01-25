@@ -416,6 +416,13 @@ AC_CONFIG_FILES([
 	src/libecryptfs-swig/Makefile
 	po/Makefile.in
 ])
+AM_COND_IF([ENABLE_TESTS],
+	   [AC_CONFIG_FILES([
+	    	tests/Makefile
+		tests/lib/Makefile
+		tests/kernel/Makefile
+	    ])
+])
 AC_OUTPUT
 
 if test "${prefix}" != "/usr"; then

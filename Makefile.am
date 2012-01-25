@@ -23,7 +23,7 @@ MAINTAINERCLEANFILES = \
 	$(srcdir)/m4/ltoptions.m4 \
 	$(srcdir)/debian
 
-SUBDIRS = doc src po
+SUBDIRS = doc src po tests
 
 dist_doc_DATA = README
 
