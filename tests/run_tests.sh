@@ -1,4 +1,4 @@
-##!/bin/sh
+#!/bin/bash
 #
 # eCryptfs test suite harness
 # Author: Tyler Hicks <tyhicks@canonical.com>
