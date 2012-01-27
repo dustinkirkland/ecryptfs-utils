@@ -135,12 +135,12 @@ etl_unlink_key_sig()
 		return 1
 	fi
 
-	show_line=$(keyctl show | grep -s $1)
+	show_line=$(keyctl list @u | grep -s $1)
 	if [ $? -ne 0 ]; then
 		return 1
 	fi
 
-	key=$(printf $show_line | awk '{ print $1 }')
+	key=$(printf $show_line | awk -F ':' '{ print $1 }')
 	keyctl unlink $key &>/dev/null
 }
 
