@@ -38,10 +38,12 @@ blocks=0
 categories=""
 device=""
 disk_dir=""
+failed=0
 kernel=false
 ktests=""
 lower_fs=""
 lower_mnt=""
+passed=0
 upper_mnt=""
 userspace=false
 utests=""
@@ -63,12 +65,12 @@ run_tests()
 
 		${test_dir}/${etest}
 		if [ $? -ne 0 ]; then
-			rc=1
+			((failed++))
 			printf "FAIL\n"
-			exit
+		else
+			((passed++))
+			printf "pass\n"
 		fi
-
-		printf "success\n"
 	done
 }
 
@@ -218,5 +220,10 @@ if $userspace ; then
 	fi
 fi
 
-rc=0
+echo ""
+echo "Test Summary:"
+echo "$passed passed"
+echo "$failed failed"
+
+rc=$failed
 exit
