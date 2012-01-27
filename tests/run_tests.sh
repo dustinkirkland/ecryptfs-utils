@@ -63,7 +63,7 @@ run_tests()
 
 		${test_dir}/${etest}
 		if [ $? -ne 0 ]; then
-			rc=$?
+			rc=1
 			printf "FAIL\n"
 			exit
 		fi
@@ -183,7 +183,7 @@ export ETL_MOUNT_DST=$upper_mnt
 if [ "$blocks" -gt 0 ]; then
 	etl_create_disk $blocks $disk_dir
 	if [ $? -ne 0 ]; then
-		rc=$?
+		rc=1
 		exit
 	fi
 	export ETL_LMOUNT_SRC=$ETL_DISK
@@ -200,7 +200,7 @@ if $kernel ; then
 
 	run_tests "${run_tests_dir}/kernel" "$ktests"
 	if [ $? -ne 0 ]; then
-		rc=$?
+		rc=1
 		exit
 	fi
 fi
@@ -213,7 +213,7 @@ if $userspace ; then
 
 	run_tests "${run_tests_dir}/userspace" "$utests"
 	if [ $? -ne 0 ]; then
-		rc=$?
+		rc=1
 		exit
 	fi
 fi

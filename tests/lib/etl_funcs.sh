@@ -58,7 +58,7 @@ etl_add_fekek_passphrase()
 
 	sig=$(${etl}/etl-add-passphrase-key-to-keyring $pass $salt_hex)
 	if [ $? -ne 0 ]; then
-		return $?
+		return 1
 	fi
 
 	export ETL_FEKEK_SIG=$sig
@@ -89,7 +89,7 @@ etl_add_fnek_passphrase()
 
 	sig=$(${etl}/etl-add-passphrase-key-to-keyring $pass $salt_hex)
 	if [ $? -ne 0 ]; then
-		return $?
+		return 1
 	fi
 
 	export ETL_FNEK_SIG=$sig
@@ -112,8 +112,8 @@ etl_add_keys()
 	# TODO: This should support non-passphrase based keys, too
 
 	etl_add_fekek_passphrase
-	if [ $? -ne 0 ] ; then
-		return $?
+	if [ $? -ne 0 ]; then
+		return 1
 	fi
 
 	if $ETL_TEST_FNE ; then
@@ -158,7 +158,7 @@ etl_unlink_fekek()
 
 	etl_unlink_key_sig $ETL_FEKEK_SIG
 	if [ $? -ne 0 ]; then
-		return $?
+		return 1
 	fi
 
 	unset ETL_FEKEK_SIG
@@ -178,7 +178,7 @@ etl_unlink_fnek()
 
 	etl_unlink_key_sig $ETL_FNEK_SIG
 	if [ $? -ne 0 ]; then
-		return $?
+		return 1
 	fi
 
 	unset ETL_FNEK_SIG
@@ -197,7 +197,7 @@ etl_unlink_keys()
 {
 	etl_unlink_fekek
 	if [ $? -ne 0 ]; then
-		return $?
+		return 1
 	fi
 
 	if $ETL_TEST_FNE ; then
