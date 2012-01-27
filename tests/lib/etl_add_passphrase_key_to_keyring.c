@@ -39,6 +39,9 @@ int main(int argc, char *argv[])
 	from_hex(salt, argv[2], ECRYPTFS_SALT_SIZE);
 	rc = ecryptfs_add_passphrase_key_to_keyring(auth_tok_sig_hex, argv[1],
 						    salt);
+	/* If the key is already added to the keyring, 1 is returned */
+	if (rc == 1)
+		rc = 0;
 	if (!rc)
 		printf("%s\n", auth_tok_sig_hex);
 
