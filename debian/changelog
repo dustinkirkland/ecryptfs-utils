@@ -81,17 +81,22 @@ ecryptfs-utils (96) UNRELEASED; urgency=low
     - created test case for pathconf bug
   * tests/new.sh:
     - created new test case template to copy from
+  * tests/userspace/verify-passphrase-sig.sh,
+    tests/userspace/verify-passphrase-sig/test.c:
+    - created test case, for make check, to test the creation of
+      passphrase-based fekeks and signatures
   * configure.ac, Makefile.am, tests/Makefile.am, tests/lib/Makefile.am,
-    tests/kernel/Makefile.am:
+    tests/kernel/Makefile.am, tests/userspace/Makefile.am:
     - updated and created autoconf/automake files to build the new tests
       directory
+    - added make check target
 
   [ Eddie Garcia ]
   * img/*: LP: #907131
     - contributing a new set of logos and branding under the CC-by-SA3.0
       license
 
- -- Tyler Hicks <tyhicks@canonical.com>  Thu, 15 Dec 2011 17:48:46 -0600
+ -- Tyler Hicks <tyhicks@canonical.com>  Mon, 30 Jan 2012 11:08:05 -0600
 
 ecryptfs-utils (95) oneiric; urgency=low
 
