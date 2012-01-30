@@ -1,1 +1,2 @@
 destructive="lp-885744.sh miscdev-bad-count.sh extend-file-random.sh trunc-file.sh"
+race="directory-concurrent.sh"
