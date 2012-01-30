@@ -233,7 +233,7 @@ etl_create_disk()
 		lfs=$ETL_LFS
 	fi
 
-	img=$(mktemp -q /${dir_path}/etl-XXXXXXXXXX.img)
+	img=/${dir_path}/etl-$(mktemp XXXXXXXXXX).img
 	if [ $? -ne 0 ]; then
 		return 1
 	fi
