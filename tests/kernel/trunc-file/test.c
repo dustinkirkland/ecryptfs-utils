@@ -26,6 +26,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <signal.h>
+#include <limits.h>
 
 #define TEST_PASSED	(0)
 #define TEST_FAILED	(1)
@@ -252,7 +253,7 @@ void sighandler(int dummy)
 
 int main(int argc, char **argv)
 {
-	size_t len = DEFAULT_SIZE;
+	off_t len = DEFAULT_SIZE;
 	int i;
 	int ret;
 
@@ -262,15 +263,20 @@ int main(int argc, char **argv)
 	}
 
 	if (argc == 3) {
-		len = atoi(argv[2]);
+		len = atoll(argv[2]);
 		if (len < 1) {
 			fprintf(stderr, "size should be > 0\n");
 			exit(TEST_ERROR);
 		}
 	}
+
 	len *= 1024;
+	if (len > SSIZE_MAX) {
+		fprintf(stderr, "size should be < %zd\n", SSIZE_MAX / 1024);
+		exit(TEST_ERROR);
+	}
 
 	signal(SIGINT, sighandler);
 
-	exit(test_exercise(argv[1], len));
+	exit(test_exercise(argv[1], (ssize_t)len));
 }
