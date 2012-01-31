@@ -109,6 +109,8 @@ ecryptfs-utils (96) UNRELEASED; urgency=low
     tests/kernel/file-concurrent/test.c:
     - test for file creation/truncation/unlink races with multiple
       processes
+  * tests/kernel/inotify.sh,tests/kernel/inotify/test.c:
+    - test for proper inotify support
 
 
  -- Tyler Hicks <tyhicks@canonical.com>  Mon, 30 Jan 2012 11:08:05 -0600

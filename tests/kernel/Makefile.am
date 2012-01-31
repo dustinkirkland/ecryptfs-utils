@@ -7,7 +7,8 @@ noinst_PROGRAMS = miscdev-bad-count/test \
 		  extend-file-random/test \
 		  trunc-file/test \
 		  directory-concurrent/test \
-		  file-concurrent/test 
+		  file-concurrent/test \
+		  inotify/test
 
 miscdev_bad_count_test_SOURCES = miscdev-bad-count/test.c
 miscdev_bad_count_test_LDADD = $(top_builddir)/src/libecryptfs/libecryptfs.la
@@ -19,3 +20,5 @@ trunc_file_test_SOURCES = trunc-file/test.c
 directory_concurrent_test_SOURCES = directory-concurrent/test.c
 
 file_concurrent_test_SOURCES = file-concurrent/test.c
+
+inotify_test_SOURCES = inotify/test.c
