@@ -91,7 +91,7 @@ int test_write_read(int fd, char *buffer1, size_t len, off_t offset)
 	return TEST_PASSED;
 }
 
-int test_exercise(char *filename, size_t max_offset, char data)
+int test_exercise(char *filename, off_t max_offset, char data)
 {
 	int fd;
 	int i;
@@ -168,7 +168,7 @@ void sighandler(int dummy)
 
 int main(int argc, char **argv)
 {
-	size_t len = DEFAULT_SIZE;
+	off_t len = DEFAULT_SIZE;
 	int i;
 	int ret;
 
@@ -178,7 +178,7 @@ int main(int argc, char **argv)
 	}
 
 	if (argc == 3) {
-		len = atoi(argv[2]);
+		len = atoll(argv[2]);
 		if (len < 1) {
 			fprintf(stderr, "size should be > 0\n");
 			exit(TEST_ERROR);
