@@ -102,6 +102,9 @@ ecryptfs-utils (96) UNRELEASED; urgency=low
     - Test to randomly extend file size, read/write + unlink
   * tests/kernel/trunc-file.sh, tests/kernel/trunc-file/test.c:
     - Test to exercise file truncation
+  * tests/kernel/directory-concurrent.sh,
+    tests/kernel/directory-concurrent/test.c:
+    - test for directory creation/deletion races with multiple processes
 
 
  -- Tyler Hicks <tyhicks@canonical.com>  Mon, 30 Jan 2012 11:08:05 -0600
