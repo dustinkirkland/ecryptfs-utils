@@ -1,8 +1,11 @@
 AUTOMAKE_OPTIONS = subdir-objects
 
-noinst_SCRIPTS = lp-885744.sh miscdev-bad-count.sh
+noinst_SCRIPTS = lp-885744.sh miscdev-bad-count.sh extend-file-random.sh
 
-noinst_PROGRAMS = miscdev-bad-count/test
+noinst_PROGRAMS = miscdev-bad-count/test \
+		  extend-file-random/test
 
 miscdev_bad_count_test_SOURCES = miscdev-bad-count/test.c
 miscdev_bad_count_test_LDADD = $(top_builddir)/src/libecryptfs/libecryptfs.la
+
+extend_file_random_test_SOURCES = extend-file-random/test.c

@@ -96,6 +96,12 @@ ecryptfs-utils (96) UNRELEASED; urgency=low
     - contributing a new set of logos and branding under the CC-by-SA3.0
       license
 
+  [ Colin King ]
+  * tests/kernel/extend-file-random.sh,
+    tests/kernel/extend-file-random/test.c:
+    - Test to randomly extend file size, read/write + unlink
+
+
  -- Tyler Hicks <tyhicks@canonical.com>  Mon, 30 Jan 2012 11:08:05 -0600
 
 ecryptfs-utils (95) oneiric; urgency=low
