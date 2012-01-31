@@ -105,6 +105,10 @@ ecryptfs-utils (96) UNRELEASED; urgency=low
   * tests/kernel/directory-concurrent.sh,
     tests/kernel/directory-concurrent/test.c:
     - test for directory creation/deletion races with multiple processes
+  * tests/kernel/file-concurrent.sh,
+    tests/kernel/file-concurrent/test.c:
+    - test for file creation/truncation/unlink races with multiple
+      processes
 
 
  -- Tyler Hicks <tyhicks@canonical.com>  Mon, 30 Jan 2012 11:08:05 -0600
