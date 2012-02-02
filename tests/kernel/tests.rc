@@ -1,3 +1,2 @@
-destructive="lp-885744.sh miscdev-bad-count.sh extend-file-random.sh trunc-file.sh"
-race="directory-concurrent.sh file-concurrent.sh"
-misc="inotify.sh"
+destructive="miscdev-bad-count.sh extend-file-random.sh trunc-file.sh directory-concurrent.sh file-concurrent.sh"
+safe="lp-885744.sh inotify.sh"
