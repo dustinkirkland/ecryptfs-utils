@@ -113,8 +113,10 @@ ecryptfs-utils (96) UNRELEASED; urgency=low
       processes
   * tests/kernel/inotify.sh,tests/kernel/inotify/test.c:
     - test for proper inotify support
-  * tests/kernel/mmap-dir.sh, mmap-dir/test.c:
+  * tests/kernel/mmap-dir.sh, kernel/mmap-dir/test.c:
     - test that directory files cannot be mmap'ed
+  * tests/kernel/read-dir.sh, kernel/read-dir/test.c:
+    - test that read() on directory files returns the right error
 
 
  -- Tyler Hicks <tyhicks@canonical.com>  Mon, 30 Jan 2012 11:08:05 -0600

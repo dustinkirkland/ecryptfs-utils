@@ -1,7 +1,8 @@
 AUTOMAKE_OPTIONS = subdir-objects
 
-noinst_SCRIPTS = lp-885744.sh miscdev-bad-count.sh extend-file-random.sh trunc-file.sh \
-		 directory-concurrent.sh file-concurrent.sh mmap-dir.sh lp-926292.sh
+noinst_SCRIPTS = lp-885744.sh miscdev-bad-count.sh extend-file-random.sh \
+		 trunc-file.sh directory-concurrent.sh file-concurrent.sh \
+		 mmap-dir.sh lp-926292.sh read-dir.sh
 
 noinst_PROGRAMS = miscdev-bad-count/test \
 		  extend-file-random/test \
@@ -9,7 +10,8 @@ noinst_PROGRAMS = miscdev-bad-count/test \
 		  directory-concurrent/test \
 		  file-concurrent/test \
 		  inotify/test \
-		  mmap-dir/test
+		  mmap-dir/test \
+		  read-dir/test
 
 miscdev_bad_count_test_SOURCES = miscdev-bad-count/test.c
 miscdev_bad_count_test_LDADD = $(top_builddir)/src/libecryptfs/libecryptfs.la
@@ -25,3 +27,5 @@ file_concurrent_test_SOURCES = file-concurrent/test.c
 inotify_test_SOURCES = inotify/test.c
 
 mmap_dir_test_SOURCES = mmap-dir/test.c
+
+read_dir_test_SOURCES = read-dir/test.c
