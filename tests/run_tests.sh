@@ -144,34 +144,47 @@ done
 
 if [ -z "$lower_mnt" ] || [ -z "$upper_mnt" ]; then
 	# Lower and upper mounts must be specified
+	echo "Lower and upper mounts must be specified" 1>&2
 	usage 1>&2
 	exit
 elif [ "$blocks" -lt 1 ] && [ -z "$device" ]; then
 	# Must specify blocks for disk creation *or* an existing device
+	echo "Blocks for disk creation or an existing device must be specified" 1>&2
 	usage 1>&2
 	exit
 elif [ "$blocks" -gt 0 ] && [ -n "$device" ]; then
 	# Can't specify blocks for disk creation *and* an existing device 
+	echo "Cannot specify blocks for disk creation *and* also an existing device" 1>&2
 	usage 1>&2
 	exit
 elif [ -n "$disk_dir" ] && [ -n "$device" ]; then
 	# Can't specify a dir for disk creation and an existing device
+	echo "Cannot specify a directory for disk creation *and* also an existing device" 1>&2
 	usage 1>&2
 	exit
 elif [ -z "$categories" ]; then
 	# Lets not assume anything here
+	echo "Must specify at least one or more test category" 1>&2
 	usage 1>&2
 	exit
 elif ! $kernel && ! $userspace ; then
 	# Must specify at least one of these
+	echo "Must specify one of -U or -K" 1>&2
 	usage 1>&2
 	exit
-elif [ ! -d "$lower_mnt" ] || [ ! -d "$upper_mnt" ]; then
+elif [ ! -d "$lower_mnt" ]; then
 	# A small attempt at making sure we're dealing with directories
+	echo "Lower mount point must exist" 1>&2
+	usage 1>&2
+	exit
+elif [ ! -d "$upper_mnt" ]; then
+	# A small attempt at making sure we're dealing with directories
+	echo "Upper mount point must exist" 1>&2
 	usage 1>&2
 	exit
 elif [ -n "$disk_dir" ] && [ ! -d "$disk_dir" ]; then
 	# A small attempt at making sure we're dealing with a directory
+	echo "Directory used to store created backing disk must exist" 1>&2
 	usage 1>&2
 	exit
 fi
