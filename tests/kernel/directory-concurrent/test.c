@@ -36,15 +36,20 @@
 #define TEST_ERROR	(2)
 
 #define MAX_DIRS	(16)	/* number of directories to create per iteration */
-#define MAX_ITERATIONS	(1000)	/* number of mkdir/rmdir iterations */
 #define THREADS_PER_CPU	(8)	/* number of child processes per CPU */
 
 #define TIMEOUT		(30)	/* system hang timeout in seconds */
 
+#define TEST_DURATION	(60)	/* duration of test (seconds) */
+#define MIN_DURATION	(1)	/* minimum test duration (seconds) */
+
 #define MKDIR		(0)
 #define RMDIR		(1)
 
-static volatile bool die = false;
+#define DIE_SIGINT	(1)	/* Kill test threads because of SIGINT */
+#define DIE_COMPLETE	(2)	/* Kill test threads because end of test duration */
+
+static volatile int die = 0;
 
 /*
  *  Create many threads that try and create mkdir and rmdir races
@@ -94,7 +99,7 @@ int hang_check(int option, const char *filename)
 		default:
 			break;
 		}
-		if (write(pipefd[1], "EXIT", 4) < 0) 
+		if (write(pipefd[1], "EXIT", 4) < 0)
 			fprintf(stderr, "pipe write failed\n");
 
 		close(pipefd[1]);
@@ -121,9 +126,19 @@ int hang_check(int option, const char *filename)
 			kill(pid, SIGINT);
 			return TEST_FAILED;
 		case -1:
-			/* fprintf(stderr, "Unexpected return from select()\n"); */
-			waitpid(pid, &status, 0);
-			return TEST_ERROR;
+			if (errno != EINTR) {
+				fprintf(stderr, "Unexpected return from select(): %d %s\n", errno, strerror(errno));
+				waitpid(pid, &status, 0);
+				return TEST_ERROR;
+			} else {
+				/*
+				 * We got sent a signal from controlling process to
+				 * tell us to stop, so return TEST_PASSED since we have
+				 * not detected any failures from our child
+				 */
+				waitpid(pid, &status, 0);
+				return TEST_PASSED;
+			}
 		default:
 			/* Child completed the required operation and wrote down the pipe, lets reap */
 			waitpid(pid, &status, 0);
@@ -132,7 +147,7 @@ int hang_check(int option, const char *filename)
 	}
 }
 
-int test_dirs(const char *path, const int iterations, const int max_dirs)
+int test_dirs(const char *path, const int max_dirs)
 {
 	int i, j;
 	char *filename;
@@ -144,7 +159,7 @@ int test_dirs(const char *path, const int iterations, const int max_dirs)
 		return TEST_ERROR;
 	}
 
-	for (j = 0; j < iterations; j++) {
+	while (!die) {
 		for (i = 0; i < max_dirs; i++) {
 			snprintf(filename, len, "%s/%d", path, i);
 			if ((ret = hang_check(MKDIR, filename)) != TEST_PASSED) {
@@ -160,23 +175,27 @@ int test_dirs(const char *path, const int iterations, const int max_dirs)
 				return ret;
 			}
 		}
-		if (die) {
-			ret = TEST_ERROR;
-			break;
-		}
 	}
 
 	free(filename);
 
+	if (die & DIE_SIGINT)
+		ret = TEST_ERROR;	/* Got aborted */
+
 	return ret;
 }
 
-void sighandler(int dummy)
+void sigint_handler(int dummy)
 {
-	die = true;
+	die = DIE_SIGINT;
 }
 
-int test_exercise(const char *path, const int iterations, const int max_dirs)
+void sigusr1_handler(int dummy)
+{
+	die = DIE_COMPLETE;
+}
+
+int test_exercise(const char *path, const int max_dirs, const int duration)
 {
 	int i;
 	long threads = sysconf(_SC_NPROCESSORS_CONF) * THREADS_PER_CPU;
@@ -198,12 +217,17 @@ int test_exercise(const char *path, const int iterations, const int max_dirs)
 			fprintf(stderr, "failed to fork child %d of %ld\n", i+1, threads);
 			break;
 		case 0:
-			exit(test_dirs(path, iterations, max_dirs));
+			exit(test_dirs(path, max_dirs));
 		default:
 			pids[i] = pid;
 			break;
 		}
 	}
+
+	sleep(duration);
+
+	for (i = 0; i < threads; i++)
+		kill(pids[i], SIGUSR1);
 
 	for (i = 0; i < threads; i++) {
 		int status;
@@ -218,19 +242,46 @@ int test_exercise(const char *path, const int iterations, const int max_dirs)
 	return ret;
 }
 
+void show_usage(char *name)
+{
+	fprintf(stderr, "Syntax: %s [-d duration] pathname\n", name);
+	fprintf(stderr, "\t-d duration of test (in seconds)\n");
+	exit(TEST_ERROR);
+}
+
 int main(int argc, char **argv)
 {
-	if (argc < 2) {
-		fprintf(stderr, "Syntax: pathname\n");
-		exit(TEST_ERROR);
+	int opt;
+	int duration = TEST_DURATION;
+
+	while ((opt = getopt(argc, argv, "d:")) != -1) {
+		switch (opt) {
+		case 'd':
+			duration = atoi(optarg);
+			break;
+		default:
+			show_usage(argv[0]);
+			break;
+		}
 	}
 
-	signal(SIGINT, sighandler);
+	if (optind >= argc)
+		show_usage(argv[0]);
 
-	if (access(argv[1], R_OK | W_OK) < 0) {
+	if (duration < MIN_DURATION) {
+		fprintf(stderr,
+			"Test duration must be %d or more seconds long.\n",
+			MIN_DURATION);
+                exit(TEST_ERROR);
+	}
+
+	if (access(argv[optind], R_OK | W_OK) < 0) {
 		fprintf(stderr, "Cannot access %s\n", argv[1]);
 		exit(TEST_ERROR);
 	}
 
-	exit(test_exercise(argv[1], MAX_ITERATIONS, MAX_DIRS));
+	signal(SIGINT, sigint_handler);
+	signal(SIGUSR1, sigusr1_handler);
+
+	exit(test_exercise(argv[optind], MAX_DIRS, duration));
 }
