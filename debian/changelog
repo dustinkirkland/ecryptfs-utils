@@ -79,6 +79,8 @@ ecryptfs-utils (96) UNRELEASED; urgency=low
     - created test case for miscdev issue reported to mailing list
   * tests/kernel/lp-885744.sh:
     - created test case for pathconf bug
+  * tests/kernel/lp-926292.sh:
+    - created test case for checking stale inode attrs after setxattr
   * tests/new.sh:
     - created new test case template to copy from
   * tests/userspace/verify-passphrase-sig.sh,

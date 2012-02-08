@@ -1,7 +1,7 @@
 AUTOMAKE_OPTIONS = subdir-objects
 
 noinst_SCRIPTS = lp-885744.sh miscdev-bad-count.sh extend-file-random.sh trunc-file.sh \
-		 directory-concurrent.sh file-concurrent.sh
+		 directory-concurrent.sh file-concurrent.sh lp-926292.sh
 
 noinst_PROGRAMS = miscdev-bad-count/test \
 		  extend-file-random/test \
