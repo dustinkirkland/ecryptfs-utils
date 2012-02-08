@@ -117,6 +117,8 @@ ecryptfs-utils (96) UNRELEASED; urgency=low
     - test that directory files cannot be mmap'ed
   * tests/kernel/read-dir.sh, kernel/read-dir/test.c:
     - test that read() on directory files returns the right error
+  * tests/kernel/setattr-flush-dirty.sh:
+    - test that the modified timestamp isn't clobbered in writeback
 
 
  -- Tyler Hicks <tyhicks@canonical.com>  Mon, 30 Jan 2012 11:08:05 -0600
