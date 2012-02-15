@@ -111,17 +111,16 @@ ecryptfs-utils (96) UNRELEASED; urgency=low
     tests/kernel/file-concurrent/test.c:
     - test for file creation/truncation/unlink races with multiple
       processes
-  * tests/kernel/inotify.sh,tests/kernel/inotify/test.c:
+  * tests/kernel/inotify.sh, tests/kernel/inotify/test.c:
     - test for proper inotify support
-  * tests/kernel/mmap-dir.sh, kernel/mmap-dir/test.c:
+  * tests/kernel/mmap-dir.sh, tests/kernel/mmap-dir/test.c:
     - test that directory files cannot be mmap'ed
-  * tests/kernel/read-dir.sh, kernel/read-dir/test.c:
+  * tests/kernel/read-dir.sh, tests/kernel/read-dir/test.c:
     - test that read() on directory files returns the right error
   * tests/kernel/setattr-flush-dirty.sh:
     - test that the modified timestamp isn't clobbered in writeback
   * tests/kernel/inode-race-stat.sh, tests/kernel/inode-race-stat/test.c:
     - test for inode initialization race condition
-
 
  -- Tyler Hicks <tyhicks@canonical.com>  Mon, 30 Jan 2012 11:08:05 -0600
 
