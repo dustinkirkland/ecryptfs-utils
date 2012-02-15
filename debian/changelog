@@ -119,6 +119,8 @@ ecryptfs-utils (96) UNRELEASED; urgency=low
     - test that read() on directory files returns the right error
   * tests/kernel/setattr-flush-dirty.sh:
     - test that the modified timestamp isn't clobbered in writeback
+  * tests/kernel/inode-race-stat.sh, tests/kernel/inode-race-stat/test.c:
+    - test for inode initialization race condition
 
 
  -- Tyler Hicks <tyhicks@canonical.com>  Mon, 30 Jan 2012 11:08:05 -0600
