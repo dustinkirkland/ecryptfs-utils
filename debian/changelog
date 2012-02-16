@@ -40,23 +40,6 @@ ecryptfs-utils (96) UNRELEASED; urgency=low
   * src/key_mod/ecryptfs_key_mod_tspi.c: LP: #462225
     - fix TPM and string_to_uuid 64bits issue
     - thanks to Janos for the patch
-  * doc/manpage/ecryptfs-escrow-private.1, doc/manpage/Makefile.am,
-    src/utils/ecryptfs-escrow-private, src/utils/Makefile.am:
-    - add a utility that some users might choose to use, that helps them
-      backup their ecryptfs configuration and passphrase to a server
-      compatible with the open API of KeyEscrow.net
-    - clean up some of the verbiage
-  * debian/control:
-    - we need curl and gnupg for ecrptfs-escrow-private
-  * doc/manpage/ecryptfs-escrow-private.1:
-    - documentation updates
-  * doc/manpage/ecryptfs-escrow-private.1, src/utils/ecryptfs-escrow-
-    private:
-    - drop references to Ubuntu One until that's working
-  * doc/manpage/ecryptfs-record-passphrase.1, src/desktop/ecryptfs-
-    record-passphrase, src/utils/ecryptfs-record-passphrase,
-    src/utils/Makefile.am:
-    - create an interactive, educational wrapper for recording a passphrase
 
   [ Tyler Hicks ]
   * CONTRIBUTING:

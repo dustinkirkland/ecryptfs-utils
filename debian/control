@@ -38,12 +38,11 @@ Depends:
  libpam-runtime (>= 1.0.1-6)
 Recommends:
  cryptsetup,
- curl,
- gnupg,
  lsof,
  rsync
 Suggests:
- opencryptoki
+ opencryptoki,
+ keyescrow-client
 Description: ecryptfs cryptographic filesystem (utilities)
  eCryptfs is a POSIX-compliant enterprise-class stacked cryptographic filesystem
  for Linux.

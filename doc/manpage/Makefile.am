@@ -14,7 +14,6 @@ dist_man_MANS = \
 	ecryptfs.7 \
 	ecryptfs-add-passphrase.1 \
 	ecryptfsd.8 \
-	ecryptfs-escrow-private.1 \
 	ecryptfs-generate-tpm-key.1 \
 	ecryptfs-insert-wrapped-passphrase-into-keyring.1 \
 	ecryptfs-manager.8 \
