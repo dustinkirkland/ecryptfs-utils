@@ -15,9 +15,6 @@ Build-Depends:
  libkeyutils-dev,
  libnss3-dev,
  libpam0g-dev,
- libpkcs11-helper1-dev,
- libssl-dev,
- libtspi-dev,
  pkg-config,
  python-dev,
  swig
@@ -97,7 +94,6 @@ Depends:
  libopencryptoki-dev [alpha amd64 arm armel hppa ia64 i386 m68k mips mipsel powerpc sparc],
  libpam0g-dev,
  libpkcs11-helper1-dev,
- libssl-dev,
  libtspi-dev [alpha amd64 arm armel hppa ia64 i386 m68k mips mipsel powerpc sparc]
 Description: ecryptfs cryptographic filesystem (development)
  eCryptfs is a POSIX-compliant enterprise-class stacked cryptographic filesystem
