@@ -1,11 +1,13 @@
 AUTOMAKE_OPTIONS = subdir-objects
 
-check_SCRIPTS = verify-passphrase-sig.sh
+dist_check_SCRIPTS = verify-passphrase-sig.sh
 check_PROGRAMS = verify-passphrase-sig/test
+
+dist_noinst_DATA = tests.rc
 
 if ENABLE_TESTS
 ## tests not suitable for make check go here
-noinst_SCRIPTS = 
+dist_noinst_SCRIPTS = 
 noinst_PROGRAMS =
 endif
 

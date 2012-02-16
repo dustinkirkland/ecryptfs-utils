@@ -416,13 +416,9 @@ AC_CONFIG_FILES([
 	src/libecryptfs-swig/Makefile
     	tests/Makefile
 	tests/lib/Makefile
+	tests/kernel/Makefile
 	tests/userspace/Makefile
 	po/Makefile.in
-])
-AM_COND_IF([ENABLE_TESTS],
-	   [AC_CONFIG_FILES([
-		tests/kernel/Makefile
-	    ])
 ])
 AC_OUTPUT
 

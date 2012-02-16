@@ -1,7 +1,3 @@
-SUBDIRS = lib userspace
+SUBDIRS = lib userspace kernel
 
-if ENABLE_TESTS
-SUBDIRS += kernel
-endif
-
-noinst_SCRIPTS=run_tests.sh
+dist_noinst_SCRIPTS = run_tests.sh new.sh
