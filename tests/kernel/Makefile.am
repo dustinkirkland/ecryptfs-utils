@@ -12,7 +12,8 @@ dist_noinst_SCRIPTS = lp-885744.sh \
 		      lp-926292.sh \
 		      read-dir.sh \
 		      setattr-flush-dirty.sh \
-		      inode-race-stat.sh
+		      inode-race-stat.sh \
+		      inotify.sh
 
 if ENABLE_TESTS
 noinst_PROGRAMS = miscdev-bad-count/test \
