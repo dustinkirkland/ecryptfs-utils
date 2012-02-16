@@ -1,1 +1,1 @@
-safe="generate_passphrase_sig.sh"
+safe="verify-passphrase-sig.sh"
