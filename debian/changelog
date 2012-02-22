@@ -8,6 +8,14 @@ ecryptfs-utils (97) UNRELEASED; urgency=low
   * src/desktop/ecryptfs-find:
     - $mounts was quoted once too often
 
+  [ George Wilson ]
+  * src/key_mod/ecryptfs_key_mod_openssl.c,
+    src/key_mod/ecryptfs_key_mod_pkcs11_helper.c,
+    src/key_mod/ecryptfs_key_mod_tspi.c: LP: #937331
+    - IBM would like to grant a license exception for key modules that
+      require linking to OpenSSL. The change should make the modules
+      shippable by Linux distributions
+
  -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 16 Feb 2012 14:24:02 -0600
 
 ecryptfs-utils (96) oneiric; urgency=low
