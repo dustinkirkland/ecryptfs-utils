@@ -16,6 +16,10 @@ ecryptfs-utils (97) UNRELEASED; urgency=low
       require linking to OpenSSL. The change should make the modules
       shippable by Linux distributions
 
+  [ Dustin Kirkland ]
+  * debian/copyright:
+    - note the GPLv2 SSL exception granted by IBM for the key modules
+
  -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 16 Feb 2012 14:24:02 -0600
 
 ecryptfs-utils (96) oneiric; urgency=low
