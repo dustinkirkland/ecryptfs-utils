@@ -54,7 +54,6 @@ while read lower upper fstype opts dump pass; do
 done < /proc/mounts
 
 # Do the search
-mounts=${mounts## }
-for m in "$mounts"; do
+for m in $mounts; do
 	find "$m/" -inum "$inum"
 done

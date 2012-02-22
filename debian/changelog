@@ -4,6 +4,10 @@ ecryptfs-utils (97) UNRELEASED; urgency=low
   * src/pam_ecryptfs/pam_ecryptfs.c: LP: #938326
     - exit, rather than return to prevent duplicate processes
 
+  [ Andreas Raster ]
+  * src/desktop/ecryptfs-find:
+    - $mounts was quoted once too often
+
  -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 16 Feb 2012 14:24:02 -0600
 
 ecryptfs-utils (96) oneiric; urgency=low
