@@ -1,6 +1,8 @@
 ecryptfs-utils (97) UNRELEASED; urgency=low
 
-  * UNRELEASED
+  [ Kees Cook ]
+  * src/pam_ecryptfs/pam_ecryptfs.c: LP: #938326
+    - exit, rather than return to prevent duplicate processes
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 16 Feb 2012 14:24:02 -0600
 

@@ -324,7 +324,7 @@ static int private_dir(pam_handle_t *pamh, int mount)
 			    "%s/.ecryptfs/.wrapped-passphrase.recorded",
 			    pwd->pw_dir) < 0) || recorded == NULL) {
 				syslog(LOG_ERR, "pam_ecryptfs: Error allocating memory for recorded name");
-				return 1;
+				exit(1);
 			}
 			if (stat(recorded, &s) != 0 && stat("/usr/share/ecryptfs-utils/ecryptfs-record-passphrase", &s) == 0) {
 				/* User has not recorded their passphrase */
@@ -336,7 +336,7 @@ static int private_dir(pam_handle_t *pamh, int mount)
 			if (stat(autofile, &s) != 0) {
 				/* User does not want to auto-mount */
 				syslog(LOG_DEBUG, "pam_ecryptfs: Skipping automatic eCryptfs mount");
-				return 0;
+				exit(0);
 			}
 			/* run mount.ecryptfs_private as the user */
 			setresuid(pwd->pw_uid, pwd->pw_uid, pwd->pw_uid);
@@ -346,17 +346,17 @@ static int private_dir(pam_handle_t *pamh, int mount)
 			if (stat(autofile, &s) != 0) {
 				/* User does not want to auto-unmount */
 				syslog(LOG_DEBUG, "pam_ecryptfs: Skipping automatic eCryptfs unmount");
-				return 0;
+				exit(0);
 			}
 			/* run umount.ecryptfs_private as the user */
 			setresuid(pwd->pw_uid, pwd->pw_uid, pwd->pw_uid);
 			execl("/sbin/umount.ecryptfs_private",
  			      "umount.ecryptfs_private", NULL);
+			exit(1);
 		}
-		return 1;
+		exit(1);
 	} else {
 		waitpid(pid, &rc, 0);
-		goto out;
 	}
 out:
 	return 0;
