@@ -360,7 +360,7 @@ etl_lumount()
 	fi
 
 	sync
-	umount "$ETL_LMOUNT_SRC" &>/dev/null
+	umount "$ETL_LMOUNT_DST" &>/dev/null
 }
 
 #
