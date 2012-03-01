@@ -13,7 +13,8 @@ dist_noinst_SCRIPTS = lp-885744.sh \
 		      read-dir.sh \
 		      setattr-flush-dirty.sh \
 		      inode-race-stat.sh \
-		      inotify.sh
+		      inotify.sh \
+		      lp-509180.sh
 
 if ENABLE_TESTS
 noinst_PROGRAMS = miscdev-bad-count/test \
@@ -24,7 +25,8 @@ noinst_PROGRAMS = miscdev-bad-count/test \
 		  inotify/test \
 		  mmap-dir/test \
 		  read-dir/test \
-		  inode-race-stat/test
+		  inode-race-stat/test \
+		  lp-509180/test
 endif
 
 miscdev_bad_count_test_SOURCES = miscdev-bad-count/test.c
@@ -45,3 +47,6 @@ mmap_dir_test_SOURCES = mmap-dir/test.c
 read_dir_test_SOURCES = read-dir/test.c
 
 inode_race_stat_test_SOURCES = inode-race-stat/test.c
+
+lp_509180_test_SOURCES = lp-509180/test.c
+
