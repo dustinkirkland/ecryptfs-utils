@@ -20,6 +20,12 @@ ecryptfs-utils (97) UNRELEASED; urgency=low
   * debian/copyright:
     - note the GPLv2 SSL exception granted by IBM for the key modules
 
+  [ Tyler Hicks ]
+  * doc/manpage/ecryptfs.7:
+    - Remove the note saying that the passphrase and openssl key modules are
+      available by default. That's true upstream but not always true in distro
+      builds.
+
  -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 16 Feb 2012 14:24:02 -0600
 
 ecryptfs-utils (96) oneiric; urgency=low
