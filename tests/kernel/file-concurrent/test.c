@@ -61,14 +61,13 @@ static char *options[] = {
 };
 
 /*
- *  Create many threads that try and create mkdir and rmdir races
- *  Aim to load each CPU and create mkdir/rmdir collisions.
+ *  Create many threads that try and create create/truncate/unlink aces
  */
 
 /*
- *  Run mkdir/rmdir as a child and detect any timeouts.  This
+ *  Run creat/tuncate/unlink as a child and detect any timeouts.  This
  *  is a little heavy handed, but allows us to detect kernel
- *  hangs on the mkdir/rmdir syscalls if we lock up.
+ *  hangs on the syscalls if we lock up.
  *
  */
 int hang_check(int option, const char *filename)
@@ -176,7 +175,7 @@ int hang_check(int option, const char *filename)
 	}
 }
 
-int test_dirs(const char *path, const int max_files)
+int test_files(const char *path, const int max_files)
 {
 	int i, j;
 	char *filename;
@@ -262,7 +261,7 @@ int test_exercise(const char *path, const int max_files, const int duration)
 			fprintf(stderr, "failed to fork child %d of %ld\n", i+1, threads);
 			break;
 		case 0:
-			exit(test_dirs(path, max_files));
+			exit(test_files(path, max_files));
 		default:
 			pids[i] = pid;
 			break;
