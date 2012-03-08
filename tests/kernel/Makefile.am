@@ -15,7 +15,8 @@ dist_noinst_SCRIPTS = lp-885744.sh \
 		      inode-race-stat.sh \
 		      inotify.sh \
 		      lp-509180.sh \
-		      lp-524919.sh
+		      lp-524919.sh \
+		      lp-870326.sh
 
 if ENABLE_TESTS
 noinst_PROGRAMS = miscdev-bad-count/test \
@@ -28,7 +29,8 @@ noinst_PROGRAMS = miscdev-bad-count/test \
 		  read-dir/test \
 		  inode-race-stat/test \
 		  lp-509180/test \
-		  lp-524919/test
+		  lp-524919/test \
+		  lp-870326/test
 endif
 
 miscdev_bad_count_test_SOURCES = miscdev-bad-count/test.c
@@ -54,3 +56,4 @@ lp_509180_test_SOURCES = lp-509180/test.c
 
 lp_524919_test_SOURCES = lp-524919/test.c
 
+lp_870326_test_SOURCES = lp-870326/test.c
