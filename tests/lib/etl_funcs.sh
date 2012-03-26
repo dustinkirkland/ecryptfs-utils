@@ -313,7 +313,7 @@ etl_construct_lmount_opts()
 	fi
 
 	# TODO: Add support for more filesystems
-	case $LFS in
+	case $ETL_LFS in
 	ext2|ext3|ext4)
 		lmount_opts=${default_lmount_opts},${default_ext_opts}
 		;;
