@@ -37,6 +37,8 @@ ecryptfs-utils (97) UNRELEASED; urgency=low
     - test case for open(), mmap(), close(), modify mmap'd region
   * tests/kernel/lp-469664.sh:
     - test case for lsattr
+  * tests/kernel/lp-613873.sh:
+    - test case for stat modify time
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 16 Feb 2012 14:24:02 -0600
 
