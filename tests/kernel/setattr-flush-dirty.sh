@@ -51,7 +51,6 @@ etl_lmount || exit
 etl_mount_i || exit
 test_dir=$(etl_create_test_dir `basename $0`) || exit
 
-${test_script_dir}/mmap-dir/test ${test_dir}
 touch ${test_dir}/original
 sync
 sleep 1
