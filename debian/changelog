@@ -29,6 +29,7 @@ ecryptfs-utils (97) UNRELEASED; urgency=low
   [ Colin King ]
   * tests/lib/etl_funcs.sh:
     - etl_lumount() should use DST rather than SRC dir so it can run on Lucid
+    - use file system appropriate mkfs force flag
   * tests/kernel/lp-509180.sh, tests/kernel/lp-509180/test.c:
     - test for trailing garbage at end of files
   * tests/kernel/lp-524919.sh, tests/kernel/lp-524919/test.c:

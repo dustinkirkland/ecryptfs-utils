@@ -244,7 +244,19 @@ etl_create_disk()
 		return 1
 	fi
 
-	mkfs -F -t $lfs $img &>/dev/null
+	case $lfs in
+	ext2|ext3|ext4)
+		mkfs_force='-F'
+		;;
+	xfs)
+		mkfs_force='-f'
+		;;
+	*)
+		mkfs_force=''
+		;;
+	esac
+
+	mkfs -t $lfs $mkfs_force $img &>/dev/null
 	if [ $? -ne 0 ]; then
 		rm $img &>/dev/null
 		return 1
