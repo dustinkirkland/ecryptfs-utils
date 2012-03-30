@@ -29,7 +29,8 @@ default_fnek_salt_hex="9988776655443322"
 
 default_lfs="ext4"
 default_lmount_opts="rw,relatime"
-default_ext_opts="user_xattr,acl,commit=600,barrier=1,data=ordered"
+default_ext2_opts="user_xattr,acl"
+default_ext3_opts="user_xattr,acl,commit=600,barrier=1,data=ordered"
 default_mount_opts="rw,relatime,ecryptfs_cipher=aes,ecryptfs_key_bytes=16,ecryptfs_sig=\${ETL_FEKEK_SIG}"
 default_fne_mount_opts="${default_mount_opts},ecryptfs_fnek_sig=\${ETL_FNEK_SIG}"
 
@@ -326,8 +327,11 @@ etl_construct_lmount_opts()
 
 	# TODO: Add support for more filesystems
 	case $ETL_LFS in
-	ext2|ext3|ext4)
-		lmount_opts=${default_lmount_opts},${default_ext_opts}
+	ext2)
+		lmount_opts=${default_lmount_opts},${default_ext2_opts}
+		;;
+	ext3|ext4)
+		lmount_opts=${default_lmount_opts},${default_ext3_opts}
 		;;
 	*)
 		lmount_opts=$default_lmount_opts
