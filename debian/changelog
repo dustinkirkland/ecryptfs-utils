@@ -44,6 +44,10 @@ ecryptfs-utils (97) UNRELEASED; urgency=low
   * tests/kernel/lp-745836.sh:
     - test case for clearing ECRYPTFS_NEW_FILE flag during truncate
 
+  [ Colin Watson ]
+  * src/utils/ecryptfs-setup-swap: Skip /dev/zram* swap devices
+    LP: #979350
+
  -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 16 Feb 2012 14:24:02 -0600
 
 ecryptfs-utils (96) oneiric; urgency=low
