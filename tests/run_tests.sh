@@ -84,10 +84,8 @@ run_tests()
 
 usage()
 {
-	echo "Usage: $(basename $0) [options] -K -c categories -b blocks" \
-	     "[-l lower_mnt] [-u upper_mnt]"
-	echo "  or:  $(basename $0) [options] -K -c categories -d device" \
-	     "[-l lower_mnt] [-u upper_mnt]"
+	echo "Usage: $(basename $0) [options] -K -c categories -b blocks"
+	echo "  or:  $(basename $0) [options] -K -c categories -d device"
 	echo "  or:  $(basename $0) [options] -U -c categories"
 	echo "  or:  $(basename $0) [options] -K -U -c categories -b blocks"
 	echo
