@@ -38,12 +38,13 @@ blocks=0
 categories=""
 cleanup_lower_mnt=0
 cleanup_upper_mnt=0
+default_lower_fses="ext4"
 device=""
 disk_dir=""
 failed=0
 kernel=false
 ktests=""
-lower_fs=""
+lower_fses=""
 lower_mnt=""
 passed=0
 upper_mnt=""
@@ -82,6 +83,53 @@ run_tests()
 	done
 }
 
+run_kernel_tests_on_existing_device()
+{
+	echo "Running eCryptfs filesystem tests"
+
+	run_tests "${run_tests_dir}/kernel" "$ktests"
+	if [ $? -ne 0 ]; then
+		echo "Failed to run eCryptfs filesystem tests" 1>&2
+		rc=1
+		exit
+	fi
+
+	if [ -n "$ETL_DISK" ]; then
+		etl_remove_disk
+	fi
+}
+
+run_kernel_tests_on_created_disk_image()
+{
+	lower_fses=$(echo $lower_fses | tr ',' ' ')
+	for lower_fs in $lower_fses; do
+		echo "Running eCryptfs filesystem tests on $lower_fs"
+
+		if [ "$blocks" -gt 0 ]; then
+			export ETL_LFS=$lower_fs
+			etl_create_disk $blocks $disk_dir
+			if [ $? -ne 0 ]; then
+				echo "Failed to create disk for $lower_fs"\
+				     "(skipping all tests on $lower_fs)" 1>&2
+				continue
+			fi
+			export ETL_LMOUNT_SRC=$ETL_DISK
+		fi
+
+		run_tests "${run_tests_dir}/kernel" "$ktests"
+		if [ $? -ne 0 ]; then
+			echo "Failed to run eCryptfs filesystem tests on"\
+			     "$lower_fs" 1>&2
+			rc=1
+			exit
+		fi
+
+		if [ -n "$ETL_DISK" ]; then
+			etl_remove_disk
+		fi
+	done
+}
+
 usage()
 {
 	echo "Usage: $(basename $0) [options] -K -c categories -b blocks"
@@ -94,17 +142,20 @@ usage()
 	echo "  -b blocks	number of 1K blocks used when creating backing "
 	echo "		disk for lower filesystem (not compatible "
 	echo "		with -d)"
-	echo "  -c categories	comma-separated test categories"\
+	echo "  -c categories	comma-separated test categories" \
 				"(e.g., -c safe,destructive)"
 	echo "  -D disk_dir	directory used to store created backing disk "
 	echo "		when using -b (not compatible with -d)"
 	echo "  -d device	backing device to mount lower filesystem, such "
 	echo "		as /dev/sdd3 (not compatible with -b)"
-	echo "  -f lower_fs	lower filesystem type (ext2, ext3, ext4)"
+	echo "  -f lower_fses	comma-separated lower filesystem types" \
+				"(e.g., -f ext4,btrfs)"
+	echo "		defaults to $default_lower_fses" \
+			"(not compatible with -d)"
 	echo "  -h		display this help and exit"
 	echo "  -K		run tests relating to the kernel module"
 	echo "  -l lower_mnt	destination path to mount lower filesystem"
-	echo "  -U		run tests relating to the userspace utilities/"
+	echo "  -U		run tests relating to the userspace utilities"
 	echo "  -u upper_mnt	destination path to mount upper filesystem"
 }
 
@@ -123,7 +174,7 @@ while getopts "b:c:D:d:f:hKl:Uu:" opt; do
 		disk_dir=$OPTARG
 		;;
 	f)
-		lower_fs=$OPTARG
+		lower_fses=$OPTARG
 		;;
 	h)
 		usage
@@ -158,11 +209,6 @@ if ! $kernel && ! $userspace ; then
 	echo "Must specify one of -U or -K" 1>&2
 	usage 1>&2
 	exit
-elif [ -n "$device" ] && [ ! -b "$device" ]; then
-	# A small attempt at making sure we're dealing with a block dev
-	echo "Backing device must be a valid block device" 1>&2
-	usage 1>&2
-	exit
 elif [ -z "$categories" ]; then
 	# Lets not assume anything here
 	echo "Must specify at least one or more test category" 1>&2
@@ -189,6 +235,18 @@ if $kernel ; then
 		     "an existing device" 1>&2
 		usage 1>&2
 		exit
+	elif [ -n "$device" ] && [ ! -b "$device" ]; then
+		# A small attempt at making sure we're dealing with a block dev
+		echo "Backing device must be a valid block device" 1>&2
+		usage 1>&2
+		exit
+	elif [ -n "$device" ] && [ -n "$lower_fses" ]; then
+		# We currently don't reformat block devices so we shouldn't
+		# accept a list of lower filesystems to test on
+		echo "Lower filesystems cannot be specified when using" \
+		     "existing block devices" 1>&2
+		usage 1>&2
+		exit
 	elif [ -n "$lower_mnt" ] && [ ! -d "$lower_mnt" ]; then
 		# A small attempt at making sure we're dealing with directories
 		echo "Lower mount point must exist" 1>&2
@@ -208,18 +266,10 @@ if $kernel ; then
 	fi
 fi
 
-export ETL_LFS=$lower_fs
-
-
 if [ -n "$device" ]; then
 	export ETL_LMOUNT_SRC=$device
-else
-	etl_create_disk $blocks $disk_dir
-	if [ $? -ne 0 ]; then
-		rc=1
-		exit
-	fi
-	export ETL_LMOUNT_SRC=$ETL_DISK
+elif [ -z "$lower_fses" ]; then
+	lower_fses=$default_lower_fses
 fi
 
 if [ -z "$lower_mnt" ]; then
@@ -254,10 +304,10 @@ if $kernel ; then
 		ktests="$ktests $cat_tests"
 	done
 
-	run_tests "${run_tests_dir}/kernel" "$ktests"
-	if [ $? -ne 0 ]; then
-		rc=1
-		exit
+	if [ -n "$device" ]; then
+		run_kernel_tests_on_existing_device
+	else
+		run_kernel_tests_on_created_disk_image
 	fi
 fi
 if $userspace ; then
@@ -266,6 +316,8 @@ if $userspace ; then
 		eval cat_tests=\$$cat
 		utests="$utests $cat_tests"
 	done
+
+	echo "Running eCryptfs userspace tests"
 
 	run_tests "${run_tests_dir}/userspace" "$utests"
 	if [ $? -ne 0 ]; then

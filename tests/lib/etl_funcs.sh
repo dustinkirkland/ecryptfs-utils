@@ -283,6 +283,7 @@ etl_remove_disk()
 	fi
 
 	rm -f $ETL_DISK &>/dev/null
+	unset ETL_DISK
 }
 
 #

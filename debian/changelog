@@ -30,6 +30,10 @@ ecryptfs-utils (97) UNRELEASED; urgency=low
       creating directories in /tmp by default.
     - Make it possible to run only userspace tests without having to specify
       unused mount information
+    - Accept a comma-separated list of lower filesystems to test on and loop
+      through all kernel tests for each lower filesystem
+  * tests/lib/etl_funcs.sh:
+    - Unset $ETL_DISK just before etl_remove_disk() successfully returns
 
   [ Colin King ]
   * tests/lib/etl_funcs.sh:
