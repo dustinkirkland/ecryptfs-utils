@@ -36,6 +36,8 @@ rc=1
 
 blocks=0
 categories=""
+cleanup_lower_mnt=0
+cleanup_upper_mnt=0
 device=""
 disk_dir=""
 failed=0
@@ -50,6 +52,12 @@ utests=""
 
 run_tests_cleanup()
 {
+	if [ $cleanup_upper_mnt -ne 0 ] && [ -n "$upper_mnt" ]; then
+		rm -rf "$upper_mnt"
+	fi
+	if [ $cleanup_lower_mnt -ne 0 ] && [ -n "$lower_mnt" ]; then
+		rm -rf "$lower_mnt"
+	fi
 	etl_remove_disk
 	exit $rc
 }
@@ -76,8 +84,8 @@ run_tests()
 
 usage()
 {
-	echo "Usage: $(basename $0) [options] -K|-U -c categories -b blocks -l lower_mnt -u upper_mnt"
-	echo "  or:  $(basename $0) [options] -K|-U -c categories -d device -l lower_mnt -u upper_mnt"
+	echo "Usage: $(basename $0) [options] -K|-U -c categories -b blocks [-l lower_mnt] [-u upper_mnt]"
+	echo "  or:  $(basename $0) [options] -K|-U -c categories -d device [-l lower_mnt] [-u upper_mnt]"
 	echo
 	echo "eCryptfs test harness"
 	echo
@@ -142,12 +150,7 @@ while getopts "b:c:D:d:f:hKl:Uu:" opt; do
 	esac
 done
 
-if [ -z "$lower_mnt" ] || [ -z "$upper_mnt" ]; then
-	# Lower and upper mounts must be specified
-	echo "Lower and upper mounts must be specified" 1>&2
-	usage 1>&2
-	exit
-elif [ "$blocks" -lt 1 ] && [ -z "$device" ]; then
+if [ "$blocks" -lt 1 ] && [ -z "$device" ]; then
 	# Must specify blocks for disk creation *or* an existing device
 	echo "Blocks for disk creation or an existing device must be specified" 1>&2
 	usage 1>&2
@@ -162,6 +165,11 @@ elif [ -n "$disk_dir" ] && [ -n "$device" ]; then
 	echo "Cannot specify a directory for disk creation *and* also an existing device" 1>&2
 	usage 1>&2
 	exit
+elif [ -n "$device" ] && [ ! -b "$device" ]; then
+	# A small attempt at making sure we're dealing with a block dev
+	echo "Backing device must be a valid block device" 1>&2
+	usage 1>&2
+	exit
 elif [ -z "$categories" ]; then
 	# Lets not assume anything here
 	echo "Must specify at least one or more test category" 1>&2
@@ -172,12 +180,12 @@ elif ! $kernel && ! $userspace ; then
 	echo "Must specify one of -U or -K" 1>&2
 	usage 1>&2
 	exit
-elif [ ! -d "$lower_mnt" ]; then
+elif [ -n "$lower_mnt" ] && [ ! -d "$lower_mnt" ]; then
 	# A small attempt at making sure we're dealing with directories
 	echo "Lower mount point must exist" 1>&2
 	usage 1>&2
 	exit
-elif [ ! -d "$upper_mnt" ]; then
+elif [ -n "$upper_mnt" ] && [ ! -d "$upper_mnt" ]; then
 	# A small attempt at making sure we're dealing with directories
 	echo "Upper mount point must exist" 1>&2
 	usage 1>&2
@@ -190,12 +198,11 @@ elif [ -n "$disk_dir" ] && [ ! -d "$disk_dir" ]; then
 fi
 
 export ETL_LFS=$lower_fs
-export ETL_LMOUNT_SRC=$device
-export ETL_LMOUNT_DST=$lower_mnt
-export ETL_MOUNT_SRC=$lower_mnt
-export ETL_MOUNT_DST=$upper_mnt
 
-if [ "$blocks" -gt 0 ]; then
+
+if [ -n "$device" ]; then
+	export ETL_LMOUNT_SRC=$device
+else
 	etl_create_disk $blocks $disk_dir
 	if [ $? -ne 0 ]; then
 		rc=1
@@ -203,6 +210,29 @@ if [ "$blocks" -gt 0 ]; then
 	fi
 	export ETL_LMOUNT_SRC=$ETL_DISK
 fi
+
+if [ -z "$lower_mnt" ]; then
+	cleanup_lower_mnt=1
+	lower_mnt=$(mktemp -dq /tmp/etl-lower-XXXXXXXXXX)
+	if [ $? -ne 0 ]; then
+		cleanup_lower_mnt=0
+		rc=1
+		exit
+	fi
+fi
+export ETL_LMOUNT_DST=$lower_mnt
+export ETL_MOUNT_SRC=$lower_mnt
+
+if [ -z "$upper_mnt" ]; then
+	cleanup_upper_mnt=1
+	upper_mnt=$(mktemp -dq /tmp/etl-upper-XXXXXXXXXX)
+	if [ $? -ne 0 ]; then
+		cleanup_upper_mnt=0
+		rc=1
+		exit
+	fi
+fi
+export ETL_MOUNT_DST=$upper_mnt
 
 # Source in the kernel and/or userspace tests.rc files to build the test lists
 categories=$(echo $categories | tr ',' ' ')

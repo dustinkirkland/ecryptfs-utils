@@ -25,6 +25,9 @@ ecryptfs-utils (97) UNRELEASED; urgency=low
     - Remove the note saying that the passphrase and openssl key modules are
       available by default. That's true upstream but not always true in distro
       builds.
+  * tests/run_tests.sh:
+    - Make upper and lower mount point arguments optional by automatically
+      creating directories in /tmp by default.
 
   [ Colin King ]
   * tests/lib/etl_funcs.sh:
