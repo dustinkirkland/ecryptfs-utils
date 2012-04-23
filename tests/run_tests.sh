@@ -84,8 +84,12 @@ run_tests()
 
 usage()
 {
-	echo "Usage: $(basename $0) [options] -K|-U -c categories -b blocks [-l lower_mnt] [-u upper_mnt]"
-	echo "  or:  $(basename $0) [options] -K|-U -c categories -d device [-l lower_mnt] [-u upper_mnt]"
+	echo "Usage: $(basename $0) [options] -K -c categories -b blocks" \
+	     "[-l lower_mnt] [-u upper_mnt]"
+	echo "  or:  $(basename $0) [options] -K -c categories -d device" \
+	     "[-l lower_mnt] [-u upper_mnt]"
+	echo "  or:  $(basename $0) [options] -U -c categories"
+	echo "  or:  $(basename $0) [options] -K -U -c categories -b blocks"
 	echo
 	echo "eCryptfs test harness"
 	echo
@@ -150,19 +154,9 @@ while getopts "b:c:D:d:f:hKl:Uu:" opt; do
 	esac
 done
 
-if [ "$blocks" -lt 1 ] && [ -z "$device" ]; then
-	# Must specify blocks for disk creation *or* an existing device
-	echo "Blocks for disk creation or an existing device must be specified" 1>&2
-	usage 1>&2
-	exit
-elif [ "$blocks" -gt 0 ] && [ -n "$device" ]; then
-	# Can't specify blocks for disk creation *and* an existing device 
-	echo "Cannot specify blocks for disk creation *and* also an existing device" 1>&2
-	usage 1>&2
-	exit
-elif [ -n "$disk_dir" ] && [ -n "$device" ]; then
-	# Can't specify a dir for disk creation and an existing device
-	echo "Cannot specify a directory for disk creation *and* also an existing device" 1>&2
+if ! $kernel && ! $userspace ; then
+	# Must specify at least one of these
+	echo "Must specify one of -U or -K" 1>&2
 	usage 1>&2
 	exit
 elif [ -n "$device" ] && [ ! -b "$device" ]; then
@@ -175,26 +169,44 @@ elif [ -z "$categories" ]; then
 	echo "Must specify at least one or more test category" 1>&2
 	usage 1>&2
 	exit
-elif ! $kernel && ! $userspace ; then
-	# Must specify at least one of these
-	echo "Must specify one of -U or -K" 1>&2
-	usage 1>&2
-	exit
-elif [ -n "$lower_mnt" ] && [ ! -d "$lower_mnt" ]; then
-	# A small attempt at making sure we're dealing with directories
-	echo "Lower mount point must exist" 1>&2
-	usage 1>&2
-	exit
-elif [ -n "$upper_mnt" ] && [ ! -d "$upper_mnt" ]; then
-	# A small attempt at making sure we're dealing with directories
-	echo "Upper mount point must exist" 1>&2
-	usage 1>&2
-	exit
-elif [ -n "$disk_dir" ] && [ ! -d "$disk_dir" ]; then
-	# A small attempt at making sure we're dealing with a directory
-	echo "Directory used to store created backing disk must exist" 1>&2
-	usage 1>&2
-	exit
+fi
+
+if $kernel ; then
+	if [ "$blocks" -lt 1 ] && [ -z "$device" ]; then
+		# Must specify blocks for disk creation *or* an existing device
+		echo "Blocks for disk creation or an existing device must be" \
+		     "specified" 1>&2
+		usage 1>&2
+		exit
+	elif [ "$blocks" -gt 0 ] && [ -n "$device" ]; then
+		# Can't specify blocks for disk *and* an existing device 
+		echo "Cannot specify blocks for disk creation *and* also an" \
+		     "existing device" 1>&2
+		usage 1>&2
+		exit
+	elif [ -n "$disk_dir" ] && [ -n "$device" ]; then
+		# Can't specify a dir for disk creation and an existing device
+		echo "Cannot specify a directory for disk creation *and* also" \
+		     "an existing device" 1>&2
+		usage 1>&2
+		exit
+	elif [ -n "$lower_mnt" ] && [ ! -d "$lower_mnt" ]; then
+		# A small attempt at making sure we're dealing with directories
+		echo "Lower mount point must exist" 1>&2
+		usage 1>&2
+		exit
+	elif [ -n "$upper_mnt" ] && [ ! -d "$upper_mnt" ]; then
+		# A small attempt at making sure we're dealing with directories
+		echo "Upper mount point must exist" 1>&2
+		usage 1>&2
+		exit
+	elif [ -n "$disk_dir" ] && [ ! -d "$disk_dir" ]; then
+		# A small attempt at making sure we're dealing with a directory
+		echo "Directory used to store created backing disk must" \
+		     "exist" 1>&2
+		usage 1>&2
+		exit
+	fi
 fi
 
 export ETL_LFS=$lower_fs

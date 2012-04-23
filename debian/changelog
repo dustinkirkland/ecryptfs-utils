@@ -28,6 +28,8 @@ ecryptfs-utils (97) UNRELEASED; urgency=low
   * tests/run_tests.sh:
     - Make upper and lower mount point arguments optional by automatically
       creating directories in /tmp by default.
+    - Make it possible to run only userspace tests without having to specify
+      unused mount information
 
   [ Colin King ]
   * tests/lib/etl_funcs.sh:
