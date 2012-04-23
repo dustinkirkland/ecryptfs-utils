@@ -32,6 +32,7 @@ ecryptfs-utils (97) UNRELEASED; urgency=low
       unused mount information
     - Accept a comma-separated list of lower filesystems to test on and loop
       through all kernel tests for each lower filesystem
+    - Accept a comma-separated list of tests to run
   * tests/lib/etl_funcs.sh:
     - Unset $ETL_DISK just before etl_remove_disk() successfully returns
 

@@ -47,6 +47,7 @@ ktests=""
 lower_fses=""
 lower_mnt=""
 passed=0
+tests=""
 upper_mnt=""
 userspace=false
 utests=""
@@ -155,11 +156,12 @@ usage()
 	echo "  -h		display this help and exit"
 	echo "  -K		run tests relating to the kernel module"
 	echo "  -l lower_mnt	destination path to mount lower filesystem"
+	echo "  -t tests	comma-separated list of tests to run"
 	echo "  -U		run tests relating to the userspace utilities"
 	echo "  -u upper_mnt	destination path to mount upper filesystem"
 }
 
-while getopts "b:c:D:d:f:hKl:Uu:" opt; do
+while getopts "b:c:D:d:f:hKl:t:Uu:" opt; do
 	case $opt in
 	b)
 		blocks=$OPTARG
@@ -187,6 +189,9 @@ while getopts "b:c:D:d:f:hKl:Uu:" opt; do
 	l)
 		lower_mnt=$OPTARG
 		;;
+	t)
+		tests=$OPTARG
+		;;
 	U)
 		userspace=true
 		;;
@@ -209,9 +214,9 @@ if ! $kernel && ! $userspace ; then
 	echo "Must specify one of -U or -K" 1>&2
 	usage 1>&2
 	exit
-elif [ -z "$categories" ]; then
-	# Lets not assume anything here
-	echo "Must specify at least one or more test category" 1>&2
+elif [ -z "$categories" ] && [ -z "$tests" ]; then
+	# Must either specify test categories or specific tests
+	echo "Must specify a list of test categories or a list of tests" 1>&2
 	usage 1>&2
 	exit
 fi
@@ -298,11 +303,15 @@ export ETL_MOUNT_DST=$upper_mnt
 # Source in the kernel and/or userspace tests.rc files to build the test lists
 categories=$(echo $categories | tr ',' ' ')
 if $kernel ; then
-	. ${run_tests_dir}/kernel/tests.rc
-	for cat in $categories ; do
-		eval cat_tests=\$$cat
-		ktests="$ktests $cat_tests"
-	done
+	if [ -n "$tests" ]; then
+		ktests=$(echo $tests | tr ',' ' ')
+	else
+		. ${run_tests_dir}/kernel/tests.rc
+		for cat in $categories ; do
+			eval cat_tests=\$$cat
+			ktests="$ktests $cat_tests"
+		done
+	fi
 
 	if [ -n "$device" ]; then
 		run_kernel_tests_on_existing_device
@@ -311,11 +320,15 @@ if $kernel ; then
 	fi
 fi
 if $userspace ; then
-	. ${run_tests_dir}/userspace/tests.rc
-	for cat in $categories ; do
-		eval cat_tests=\$$cat
-		utests="$utests $cat_tests"
-	done
+	if [ -n "$tests" ]; then
+		utests=$(echo $tests | tr ',' ' ')
+	else
+		. ${run_tests_dir}/userspace/tests.rc
+		for cat in $categories ; do
+			eval cat_tests=\$$cat
+			utests="$utests $cat_tests"
+		done
+	fi
 
 	echo "Running eCryptfs userspace tests"
 
