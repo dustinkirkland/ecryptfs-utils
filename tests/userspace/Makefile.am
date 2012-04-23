@@ -1,14 +1,15 @@
 AUTOMAKE_OPTIONS = subdir-objects
 
+# Only place tests worth of 'make check' here. All other tests are noinst.
 dist_check_SCRIPTS = verify-passphrase-sig.sh
 check_PROGRAMS = verify-passphrase-sig/test
 
 dist_noinst_DATA = tests.rc
 
+dist_noinst_SCRIPTS = $(dist_check_SCRIPTS)
+
 if ENABLE_TESTS
-## tests not suitable for make check go here
-dist_noinst_SCRIPTS = 
-noinst_PROGRAMS =
+noinst_PROGRAMS = $(check_PROGRAMS)
 endif
 
 verify_passphrase_sig_test_SOURCES = verify-passphrase-sig/test.c

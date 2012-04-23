@@ -35,6 +35,8 @@ ecryptfs-utils (97) UNRELEASED; urgency=low
     - Accept a comma-separated list of tests to run
   * tests/lib/etl_funcs.sh:
     - Unset $ETL_DISK just before etl_remove_disk() successfully returns
+  * tests/userspace/Makefile.am:
+    - Also build 'make check' tests when building with --enable-tests
 
   [ Colin King ]
   * tests/lib/etl_funcs.sh:
