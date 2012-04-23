@@ -96,7 +96,8 @@ usage()
 	echo "  -b blocks	number of 1K blocks used when creating backing "
 	echo "		disk for lower filesystem (not compatible "
 	echo "		with -d)"
-	echo "  -c categories	test categories to run (destructive, ...)"
+	echo "  -c categories	comma-separated test categories"\
+				"(e.g., -c safe,destructive)"
 	echo "  -D disk_dir	directory used to store created backing disk "
 	echo "		when using -b (not compatible with -d)"
 	echo "  -d device	backing device to mount lower filesystem, such "
