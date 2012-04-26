@@ -20,6 +20,10 @@ ecryptfs-utils (97) UNRELEASED; urgency=low
   * debian/copyright:
     - note the GPLv2 SSL exception granted by IBM for the key modules
 
+  [ Sergio Pena ]
+  * src/libecryptfs/cipher_list.c: LP: #922821
+    - add the new name of the blowfish cipher (linux >= 3.2)
+
   [ Tyler Hicks ]
   * doc/manpage/ecryptfs.7:
     - Remove the note saying that the passphrase and openssl key modules are
