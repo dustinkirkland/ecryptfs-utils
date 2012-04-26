@@ -135,67 +135,6 @@ out:
 	return rc;
 }
 
-static int ecryptfs_generate_mount_flags(char *options, int *flags)
-{
-	char *opt;
-	char *next_opt;
-	char *end;
-	int num_options = 0;
-
-	if (!options)
-		return 0;
-
-	end = strchr(options, '\0');
-	opt = options;
-	while (opt) {
-		if ((next_opt = strchr(opt, ',')))
-			next_opt++;
-		/* the following mount options should be
-		 * stripped out from what is passed into the
-		 * kernel since these eight options are best
-		 * passed as the mount flags rather than
-		 * redundantly to the kernel and could
-		 * generate spurious warnings depending on the
-		 * level of the corresponding cifs vfs kernel
-		 * code */
-		if (!strncmp(opt, "nosuid", 6))
-			*flags |= MS_NOSUID;
-		else if (!strncmp(opt, "suid", 4))
-			*flags &= ~MS_NOSUID;
-		else if (!strncmp(opt, "nodev", 5))
-			*flags |= MS_NODEV;
-		else if (!strncmp(opt, "dev", 3))
-			*flags &= ~MS_NODEV;
-		else if (!strncmp(opt, "noexec", 6))
-			*flags |= MS_NOEXEC;
-		else if (!strncmp(opt, "exec", 4))
-			*flags &= ~MS_NOEXEC;
-		else if (!strncmp(opt, "ro", 2))
-			*flags |= MS_RDONLY;
-		else if (!strncmp(opt, "rw", 2))
-			*flags &= ~MS_RDONLY;
-		else if (!strncmp(opt, "remount", 7))
-			*flags |= MS_REMOUNT;
-		else {
-			opt = next_opt;
-			num_options++;
-			continue;
-		}
-		if (!next_opt) {
-			if (opt != options)
-				end = --opt;
-			else
-				end = options;
-			*end = '\0';
-			break;
-		}
-		memcpy(opt, next_opt, end - next_opt);
-		end = end - (next_opt - opt);
-		*end = '\0';
-	}
-	return num_options;
-}
-
 char *parameters_to_scrub[] = {
 	"key=",
 	"cipher=",
@@ -446,6 +385,87 @@ out:
 	return rc;
 }
 
+int ecryptfs_mount(char *source, char *target, char *opts)
+{
+    pid_t pid, pid_child;
+    char *fullpath_source = NULL;
+    char *fullpath_target = NULL;
+    int rc, status;
+
+    if (!source) {
+        rc = -EINVAL;
+        syslog(LOG_ERR, "Invalid source directory\n");
+        goto out;
+    }
+
+    if (!target) {
+        rc = -EINVAL;
+        syslog(LOG_ERR, "Invalid target directory\n");
+        goto out;
+    }
+
+    if (strlen(opts) > 200) {
+        rc = -EINVAL;
+        syslog(LOG_ERR, "Invalid mount options length\n");
+        goto out;
+    }
+
+    fullpath_source = realpath(source, NULL);
+    if (!fullpath_source) {
+        rc = -errno;
+        syslog(LOG_ERR, "could not resolve full path for source %s [%d]",
+            source, -errno);
+        goto out;
+    }
+ 
+    fullpath_target = realpath(target, NULL);
+    if (!fullpath_target) {
+        rc = -errno;
+        syslog(LOG_ERR, "could not resolve full path for target %s [%d]",
+            target, -errno);
+        goto out;
+    }
+
+    pid = fork();
+    if (pid == -1) {
+	syslog(LOG_ERR, "Could not fork process to mount eCryptfs: [%d]\n", -errno);
+	rc = -errno;
+    } else if (pid == 0) {
+        execl("/bin/mount", "mount", "-i", "--no-canonicalize", "-t", "ecryptfs", fullpath_source, fullpath_target, "-o", opts, NULL);
+
+        /* error message shown in console to let users know what was wrong */
+        /* i.e. /bin/mount does not exist */
+        perror("Failed to execute /bin/mount command");
+        exit(errno);
+    } else {
+        pid_child = waitpid(pid, &status, 0);
+        if (pid_child == -1) {
+            syslog(LOG_ERR, "Failed waiting for /bin/mount process: [%d]\n", -errno);
+            rc = -errno;
+            goto out;
+        }
+
+        if (WEXITSTATUS(status)) {
+	    rc = -WEXITSTATUS(status);
+            syslog(LOG_ERR, "Failed to perform eCryptfs mount: [%d]\n", rc);
+
+            if (-EPIPE == rc) {
+                rc = -EPERM;
+			}
+
+            goto out;
+        }
+
+        rc = 0;
+    }
+
+out:
+    free(fullpath_source);
+    free(fullpath_target);
+
+    return rc;
+}
+
 /**
  * ecryptfs_do_mount
  * @params:
@@ -472,7 +492,6 @@ static int ecryptfs_do_mount(int argc, char **argv, struct val_node *mnt_params,
 	rc = strip_userland_opts(opts);
 	if (rc)
 		goto out;
-	num_opts = ecryptfs_generate_mount_flags(opts, &flags);
 	if (!(temp = strdup("ecryptfs_unlink_sigs"))) {
 		rc = -ENOMEM;
 		goto out;
@@ -512,7 +531,7 @@ static int ecryptfs_do_mount(int argc, char **argv, struct val_node *mnt_params,
 		       rc);
 		goto out;
 	}
-	rc = ecryptfs_mount(src, targ, flags, new_opts);
+	rc = ecryptfs_mount(src, targ, new_opts);
 out:
 	free(src);
 	free(targ);
