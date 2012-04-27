@@ -387,83 +387,86 @@ out:
 
 int ecryptfs_mount(char *source, char *target, char *opts)
 {
-    pid_t pid, pid_child;
-    char *fullpath_source = NULL;
-    char *fullpath_target = NULL;
-    int rc, status;
+	pid_t pid, pid_child;
+	char *fullpath_source = NULL;
+	char *fullpath_target = NULL;
+	int rc, status;
 
-    if (!source) {
-        rc = -EINVAL;
-        syslog(LOG_ERR, "Invalid source directory\n");
-        goto out;
-    }
+	if (!source) {
+		rc = -EINVAL;
+		syslog(LOG_ERR, "Invalid source directory\n");
+		goto out;
+	}
 
-    if (!target) {
-        rc = -EINVAL;
-        syslog(LOG_ERR, "Invalid target directory\n");
-        goto out;
-    }
+	if (!target) {
+ 		rc = -EINVAL;
+ 		syslog(LOG_ERR, "Invalid target directory\n");
+ 		goto out;
+	}
 
-    if (strlen(opts) > 200) {
-        rc = -EINVAL;
-        syslog(LOG_ERR, "Invalid mount options length\n");
-        goto out;
-    }
+	if (strlen(opts) > 200) {
+ 		rc = -EINVAL;
+ 		syslog(LOG_ERR, "Invalid mount options length\n");
+		goto out;
+	}
 
-    fullpath_source = realpath(source, NULL);
-    if (!fullpath_source) {
-        rc = -errno;
-        syslog(LOG_ERR, "could not resolve full path for source %s [%d]",
-            source, -errno);
-        goto out;
-    }
- 
-    fullpath_target = realpath(target, NULL);
-    if (!fullpath_target) {
-        rc = -errno;
-        syslog(LOG_ERR, "could not resolve full path for target %s [%d]",
-            target, -errno);
-        goto out;
-    }
+	/* source & target are canonicalized here, so the correct error
+	 * is sent to syslog. 
+	 * /bin/mount tells you the error on normal output only, not to syslog.
+	 */
+	fullpath_source = realpath(source, NULL);
+	if (!fullpath_source) {
+		rc = -errno;
+		syslog(LOG_ERR, "could not resolve full path for source %s [%d]",
+			source, -errno);
+		goto out;
+	}
 
-    pid = fork();
-    if (pid == -1) {
-	syslog(LOG_ERR, "Could not fork process to mount eCryptfs: [%d]\n", -errno);
-	rc = -errno;
-    } else if (pid == 0) {
-        execl("/bin/mount", "mount", "-i", "--no-canonicalize", "-t", "ecryptfs", fullpath_source, fullpath_target, "-o", opts, NULL);
+	fullpath_target = realpath(target, NULL);
+	if (!fullpath_target) {
+		rc = -errno;
+		syslog(LOG_ERR, "could not resolve full path for target %s [%d]",
+			target, -errno);
+		goto out;
+	}
 
-        /* error message shown in console to let users know what was wrong */
-        /* i.e. /bin/mount does not exist */
-        perror("Failed to execute /bin/mount command");
-        exit(errno);
-    } else {
-        pid_child = waitpid(pid, &status, 0);
-        if (pid_child == -1) {
-            syslog(LOG_ERR, "Failed waiting for /bin/mount process: [%d]\n", -errno);
-            rc = -errno;
-            goto out;
-        }
+	pid = fork();
+	if (pid == -1) {
+		syslog(LOG_ERR, "Could not fork process to mount eCryptfs: [%d]\n", -errno);
+		rc = -errno;
+	} else if (pid == 0) {
+ 		execl("/bin/mount", "mount", "-i", "-t", "--no-canonicalize", "ecryptfs", fullpath_source, fullpath_target, "-o", opts, NULL);
 
-        if (WEXITSTATUS(status)) {
-	    rc = -WEXITSTATUS(status);
-            syslog(LOG_ERR, "Failed to perform eCryptfs mount: [%d]\n", rc);
+		/* error message shown in console to let users know what was wrong */
+		/* i.e. /bin/mount does not exist */
+		perror("Failed to execute /bin/mount command");
+		exit(errno);
+	} else {
+		pid_child = waitpid(pid, &status, 0);
+		if (pid_child == -1) {
+			syslog(LOG_ERR, "Failed waiting for /bin/mount process: [%d]\n", -errno);
+			rc = -errno;
+			goto out;
+		}
 
-            if (-EPIPE == rc) {
-                rc = -EPERM;
+		rc = -EPERM;
+		if (WIFEXITED(status)) {
+			rc = (WEXITSTATUS(status))?-WEXITSTATUS(status):0;
+		}
+
+		if (rc) {
+			syslog(LOG_ERR, "Failed to perform eCryptfs mount: [%d]\n", rc);
+			if (-EPIPE == rc) {
+				rc = -EPERM;
 			}
-
-            goto out;
-        }
-
-        rc = 0;
-    }
+		}
+	}
 
 out:
-    free(fullpath_source);
-    free(fullpath_target);
+	free(fullpath_source);
+	free(fullpath_target);
 
-    return rc;
+	return rc;
 }
 
 /**
@@ -480,8 +483,6 @@ static int ecryptfs_do_mount(int argc, char **argv, struct val_node *mnt_params,
 			     int sig_cache, struct passwd *pw)
 {
 	int rc;
-	int flags = 0;
-	int num_opts = 0;
 	char *src = NULL, *targ = NULL, *opts = NULL, *new_opts = NULL, *temp;
 	char *val;
 
