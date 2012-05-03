@@ -435,7 +435,7 @@ int ecryptfs_mount(char *source, char *target, char *opts)
 		syslog(LOG_ERR, "Could not fork process to mount eCryptfs: [%d]\n", -errno);
 		rc = -errno;
 	} else if (pid == 0) {
- 		execl("/bin/mount", "mount", "-i", "-t", "--no-canonicalize", "ecryptfs", fullpath_source, fullpath_target, "-o", opts, NULL);
+ 		execl("/bin/mount", "mount", "-i", "--no-canonicalize", "-t", "ecryptfs", fullpath_source, fullpath_target, "-o", opts, NULL);
 
 		/* error message shown in console to let users know what was wrong */
 		/* i.e. /bin/mount does not exist */
