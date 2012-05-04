@@ -560,41 +560,28 @@ static struct param_node ecryptfs_cipher_param_node = {
 	.tl = {{0}}
 };
 
-static int init_ecryptfs_cipher_param_node(uint32_t version)
+static struct cipher_descriptor {
+	char *name;
+	uint32_t blocksize;
+	uint32_t min_keysize;
+	uint32_t max_keysize;
+} cipher_descriptors[] = {
+	{"aes", 16, 16, 32},
+	{"blowfish", 16, 16, 56},
+	{"des3_ede", 8, 24, 24},
+	{"twofish", 16, 16, 32},
+	{"cast6", 16, 16, 32},
+	{"cast5", 8, 5, 16},
+	{NULL, 0, 0, 0}
+};
+
+static int init_ecryptfs_cipher_param_node()
 {
-	struct cipher_descriptor cd_head;
-	struct cipher_descriptor *cd_cursor;
+	struct cipher_descriptor *cd = cipher_descriptors;
 	int rc;
 
-	memset(&cd_head, 0, sizeof(cd_head));
-	rc = ecryptfs_get_kernel_ciphers(&cd_head);
-	if (rc) {
-		syslog(LOG_ERR, "%s: Error getting kernel ciphers; rc = [%d]\n",
-		       __FUNCTION__, rc);
-		goto out;
-	}
-	rc = ecryptfs_get_module_ciphers(&cd_head);
-	if (rc) {
-		syslog(LOG_ERR, "%s: Error getting module ciphers; rc = [%d]\n",
-		       __FUNCTION__, rc);
-		goto out;
-	}
-	if (cd_head.next == NULL) {
-		syslog(LOG_ERR, "%s: Unable to detect any available kernel "
-		       "ciphers; bailing out\n", __FUNCTION__);
-		rc = -ENOTSUP;
-		goto out;
-	}
-	rc = ecryptfs_sort_ciphers(&cd_head);
-	if (rc) {
-		syslog(LOG_ERR, "%s: Error sorting ciphers; rc = [%d]\n",
-		       __FUNCTION__, rc);
-		goto out;
-	}
-	cd_cursor = cd_head.next;
-	while (cd_cursor) {
+	while (cd && cd->name) {
 		struct transition_node *tn;
-		struct cipher_descriptor *cd_tmp;
 
 		if (ecryptfs_cipher_param_node.num_transitions
 		    >= MAX_NUM_TRANSITIONS) {
@@ -606,7 +593,7 @@ static int init_ecryptfs_cipher_param_node(uint32_t version)
 		}
 		tn = &ecryptfs_cipher_param_node.tl[
 			ecryptfs_cipher_param_node.num_transitions];
-		rc = asprintf(&tn->val, "%s", cd_cursor->crypto_api_name);
+		rc = asprintf(&tn->val, "%s", cd->name);
 		if (rc == -1) {
 			rc = -ENOMEM;
 			goto out;
@@ -614,23 +601,16 @@ static int init_ecryptfs_cipher_param_node(uint32_t version)
 		rc = 0;
 		if (!ecryptfs_cipher_param_node.suggested_val) {
 			rc = asprintf(&ecryptfs_cipher_param_node.suggested_val,
-				      "%s", cd_cursor->crypto_api_name);
+				      "%s", cd->name);
 			if (rc == -1) {
 				rc = -ENOMEM;
 				goto out;
 			}
 			rc = 0;
 		}
-		rc = asprintf(&tn->pretty_val,
-			      "%s: blocksize = %d; "
-			      "min keysize = %d; max keysize = %d (%s)",
-			      cd_cursor->crypto_api_name,
-			      cd_cursor->blocksize,
-			      cd_cursor->min_keysize,
-			      cd_cursor->max_keysize,
-			      ((cd_cursor->flags
-				& CIPHER_DESCRIPTOR_FLAG_LOADED) ? "loaded"
-			       : "not loaded"));
+		rc = asprintf(&tn->pretty_val, "%s: blocksize = %d; "
+			      "min keysize = %d; max keysize = %d", cd->name,
+			      cd->blocksize, cd->min_keysize, cd->max_keysize);
 		if (rc == -1) {
 			rc = -ENOMEM;
 			goto out;
@@ -639,14 +619,7 @@ static int init_ecryptfs_cipher_param_node(uint32_t version)
 		tn->next_token = &ecryptfs_key_bytes_param_node;
 		tn->trans_func = tf_ecryptfs_cipher;
 		ecryptfs_cipher_param_node.num_transitions++;
-		free(cd_cursor->crypto_api_name);
-		free(cd_cursor->descriptive_name);
-		free(cd_cursor->driver_name);
-		free(cd_cursor->module_name);
-		cd_tmp = cd_cursor;
-		cd_cursor = cd_cursor->next;
-		cd_tmp->next = NULL;
-		free(cd_tmp);
+		cd++;
 	}
 out:
 	return rc;
@@ -722,7 +695,7 @@ fill_in_decision_graph_based_on_version_support(struct param_node *root,
 	int rc;
 
 	ecryptfs_set_exit_param_on_graph(root, &another_key_param_node);
-	rc = init_ecryptfs_cipher_param_node(version);
+	rc = init_ecryptfs_cipher_param_node();
 	if (rc) {
 		syslog(LOG_ERR,
 		       "%s: Error initializing cipher list; rc = [%d]\n",

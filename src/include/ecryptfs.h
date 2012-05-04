@@ -407,38 +407,6 @@ enum main_menu_enum {
 struct val_node;
 struct param_node;
 
-struct cipher_str_name_map_elem {
-	char *kernel_name;
-	char *user_name;
-	int keysize_bytes;
-};
-
-struct ecryptfs_cipher_elem;
-
-struct ecryptfs_cipher_elem {
-	uint8_t loaded_cipher;
-	char *kernel_name;
-	char *user_name;
-	uint32_t bytes;
-	struct ecryptfs_cipher_elem *next;
-};
-
-struct cipher_descriptor;
-
-struct cipher_descriptor {
-#define CIPHER_DESCRIPTOR_FLAG_LOADED 0x00000001
-	uint32_t flags;
-	char *crypto_api_name;
-	char *descriptive_name;
-	char *driver_name;
-	char *module_name;
-	uint32_t blocksize;
-	uint32_t min_keysize;
-	uint32_t max_keysize;
-	uint32_t priority;
-	struct cipher_descriptor *next;
-};
-
 struct ecryptfs_nl_ctx {
 	int socket_fd;
 };
@@ -492,9 +460,6 @@ typedef struct binary_data {
 
 #define ECRYPTFS_DEFAULT_MESSAGING_TYPE ECRYPTFS_MESSAGING_TYPE_NETLINK
 
-int ecryptfs_get_kernel_ciphers(struct cipher_descriptor *cd_head);
-int ecryptfs_get_module_ciphers(struct cipher_descriptor *cd_head);
-int ecryptfs_sort_ciphers(struct cipher_descriptor *cd_head);
 int ecryptfs_get_version(uint32_t *version);
 int ecryptfs_supports_passphrase(uint32_t version);
 int ecryptfs_supports_pubkey(uint32_t version);
@@ -515,12 +480,7 @@ int get_string_stdin(char **val, char *prompt, int echo);
 int stack_pop(struct val_node **head);
 int stack_pop_val(struct val_node **head, void **val);
 int ecryptfs_mount(char *source, char *target, unsigned long flags, char *opts);
-int ecryptfs_get_current_kernel_ciphers(
-	struct ecryptfs_cipher_elem *cipher_list_head);
-int ecryptfs_default_cipher(struct ecryptfs_cipher_elem **default_cipher,
-		 	    struct ecryptfs_cipher_elem *cipher_list_head);
 int stack_push(struct val_node **head, void *val);
-int ecryptfs_free_cipher_list(struct ecryptfs_cipher_elem cipher_list_head);
 int ecryptfs_get_key_mod_list(struct ecryptfs_ctx* ctx);
 int ecryptfs_parse_rc_file(struct ecryptfs_name_val_pair *nvp_list_head);
 int ecryptfs_parse_options(char *opts, struct ecryptfs_name_val_pair *head);
@@ -538,8 +498,6 @@ int ecryptfs_free_key_mod_list(struct ecryptfs_ctx *ctx);
 int create_default_dir(char *home, struct ecryptfs_key_mod *key_mod);
 int
 create_subdirectory(char *file, char *home, struct ecryptfs_key_mod *key_mod);
-int ecryptfs_get_loaded_ciphers(struct ecryptfs_cipher_elem *cipher_list_head);
-int ecryptfs_add_crypto_modules(struct ecryptfs_cipher_elem *cipher_list_head);
 int parse_packet(struct ecryptfs_ctx *ctx,
 		 struct ecryptfs_message *emsg,
 		 struct ecryptfs_message **reply);

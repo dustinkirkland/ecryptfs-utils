@@ -41,6 +41,14 @@ ecryptfs-utils (97) UNRELEASED; urgency=low
     - Unset $ETL_DISK just before etl_remove_disk() successfully returns
   * tests/userspace/Makefile.am:
     - Also build 'make check' tests when building with --enable-tests
+  * include/ecryptfs.h, libecryptfs/Makefile.am,
+    libecryptfs/cipher_list.c, libecryptfs/module_mgr.c,
+    utils/io.h: LP: #994813
+    - remove overly complicated implementation to detect what ciphers
+      are supported by the currently running kernel's crypto api
+    - prompt for the entire supported cipher list, if the user selects a
+      cipher that their kernel doesn't support, the mount will fail
+      and the kernel will write an error message to the syslog
 
   [ Colin King ]
   * tests/lib/etl_funcs.sh:

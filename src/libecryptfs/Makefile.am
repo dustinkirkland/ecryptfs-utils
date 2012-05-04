@@ -6,7 +6,6 @@ pkgconfig_DATA = libecryptfs.pc
 
 libecryptfs_la_SOURCES = \
 	main.c \
-	cipher_list.c \
 	messaging.c \
 	packets.c \
 	netlink.c \
