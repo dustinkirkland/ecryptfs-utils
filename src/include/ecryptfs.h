@@ -479,7 +479,10 @@ int get_string(char *val, int len, int echo);
 int get_string_stdin(char **val, char *prompt, int echo);
 int stack_pop(struct val_node **head);
 int stack_pop_val(struct val_node **head, void **val);
-int ecryptfs_mount(char *source, char *target, unsigned long flags, char *opts);
+int ecryptfs_get_current_kernel_ciphers(
+	struct ecryptfs_cipher_elem *cipher_list_head);
+int ecryptfs_default_cipher(struct ecryptfs_cipher_elem **default_cipher,
+		 	    struct ecryptfs_cipher_elem *cipher_list_head);
 int stack_push(struct val_node **head, void *val);
 int ecryptfs_get_key_mod_list(struct ecryptfs_ctx* ctx);
 int ecryptfs_parse_rc_file(struct ecryptfs_name_val_pair *nvp_list_head);

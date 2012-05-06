@@ -20,9 +20,14 @@ ecryptfs-utils (97) UNRELEASED; urgency=low
   * debian/copyright:
     - note the GPLv2 SSL exception granted by IBM for the key modules
 
-  [ Sergio Pena ]
+  [ Sergio Peña ]
   * src/libecryptfs/cipher_list.c: LP: #922821
     - add the new name of the blowfish cipher (linux >= 3.2)
+  * src/include/ecryptfs.h, src/libecryptfs/main.c,
+    src/utils/mount.ecryptfs.c: LP: #917509
+    - use execl() to mount ecryptfs
+    - this allows us to support any arbitrary mount options in
+      /etc/fstab
 
   [ Tyler Hicks ]
   * doc/manpage/ecryptfs.7:
@@ -72,7 +77,7 @@ ecryptfs-utils (97) UNRELEASED; urgency=low
   * src/utils/ecryptfs-setup-swap: Skip /dev/zram* swap devices
     LP: #979350
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 16 Feb 2012 14:24:02 -0600
+ -- Dustin Kirkland <dustin.kirkland@gazzang.com>  Sun, 06 May 2012 10:18:56 -0500
 
 ecryptfs-utils (96) oneiric; urgency=low
 
