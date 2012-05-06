@@ -404,12 +404,6 @@ int ecryptfs_mount(char *source, char *target, char *opts)
  		goto out;
 	}
 
-	if (strlen(opts) > 200) {
- 		rc = -EINVAL;
- 		syslog(LOG_ERR, "Invalid mount options length\n");
-		goto out;
-	}
-
 	/* source & target are canonicalized here, so the correct error
 	 * is sent to syslog. 
 	 * /bin/mount tells you the error on normal output only, not to syslog.
