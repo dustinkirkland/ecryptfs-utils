@@ -450,9 +450,8 @@ int ecryptfs_mount(char *source, char *target, char *opts)
 		}
 
 		rc = -EPERM;
-		if (WIFEXITED(status)) {
-			rc = (WEXITSTATUS(status))?-WEXITSTATUS(status):0;
-		}
+		if (WIFEXITED(status))
+			rc = -WEXITSTATUS(status);
 
 		if (rc) {
 			syslog(LOG_ERR, "Failed to perform eCryptfs mount: [%d]\n", rc);
