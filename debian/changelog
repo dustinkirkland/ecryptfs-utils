@@ -54,6 +54,9 @@ ecryptfs-utils (97) UNRELEASED; urgency=low
     - prompt for the entire supported cipher list, if the user selects a
       cipher that their kernel doesn't support, the mount will fail
       and the kernel will write an error message to the syslog
+  * src/libecryptfs/module_mgr.c:
+    - Use correct blowfish block size when displaying supported ciphers to
+      the user
 
   [ Colin King ]
   * tests/lib/etl_funcs.sh:

@@ -567,7 +567,7 @@ static struct cipher_descriptor {
 	uint32_t max_keysize;
 } cipher_descriptors[] = {
 	{"aes", 16, 16, 32},
-	{"blowfish", 16, 16, 56},
+	{"blowfish", 8, 16, 56},
 	{"des3_ede", 8, 24, 24},
 	{"twofish", 16, 16, 32},
 	{"cast6", 16, 16, 32},
