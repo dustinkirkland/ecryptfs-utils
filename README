@@ -16,7 +16,7 @@ Contributors:
 Former maintainers:
 	Phillip Hellewell
 	Michael Halcrow
-Web Site: http://launchpad.net/ecryptfs
+Web Site: http://ecryptfs.org/
 
 As you should do with any filesystem, make sure to maintain a backup
 copy of any data you write into eCryptfs.  In addition, you should
@@ -25,10 +25,9 @@ industry-standard cryptographic ciphers, key generation, and
 passphrase protection mechanisms; without your salt/passphrase or
 private key, nobody will be able to retrieve your data.
 
-eCryptfs requires the userspace tools downloadable from the
-Launchpad site:
+eCryptfs requires the userspace tools available at:
 
-<http://launchpad.net/ecryptfs>
+<http://ecryptfs.org/downloads.html>
 
 Requirements include:
  - Kernel version 2.6.19 or above

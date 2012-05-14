@@ -632,7 +632,7 @@ int main(int argc, char **argv)
 			       "[%d] %s\nCheck your system logs for details "
 			       "on why this happened.\nTry updating your "
 			       "ecryptfs-utils package, and/or\nsubmit a bug "
-			       "report on https://launchpad.net/ecryptfs\n",
+			       "report on https://bugs.launchpad.net/ecryptfs\n",
 				rc, strerror(-rc));
 			goto out;
 		}
@@ -646,7 +646,7 @@ int main(int argc, char **argv)
 				rc = -rc;
 			printf("Error mounting eCryptfs: [%d] %s\n"
 			       "Check your system logs; visit "
-			       "<http://launchpad.net/ecryptfs>\n",
+			       "<http://ecryptfs.org/support.html>\n",
 			       rc, strerror(-rc));
 			if (rc == -ENODEV)
 				printf("Try ``modprobe ecryptfs''\n");

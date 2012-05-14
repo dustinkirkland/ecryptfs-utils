@@ -19,6 +19,22 @@ ecryptfs-utils (97) UNRELEASED; urgency=low
   [ Dustin Kirkland ]
   * debian/copyright:
     - note the GPLv2 SSL exception granted by IBM for the key modules
+  * debian/control, debian/copyright, doc/manpage/ecryptfs.7,
+    doc/manpage/ecryptfs-add-passphrase.1, doc/manpage/ecryptfsd.8,
+    doc/manpage/ecryptfs-generate-tpm-key.1, doc/manpage/ecryptfs-
+    insert-wrapped-passphrase-into-keyring.1, doc/manpage/ecryptfs-
+    manager.8, doc/manpage/ecryptfs-mount-private.1,
+    doc/manpage/ecryptfs-recover-private.1, doc/manpage/ecryptfs-rewrap-
+    passphrase.1, doc/manpage/ecryptfs-rewrite-file.1,
+    doc/manpage/ecryptfs-setup-private.1, doc/manpage/ecryptfs-setup-
+    swap.1, doc/manpage/ecryptfs-stat.1, doc/manpage/ecryptfs-umount-
+    private.1, doc/manpage/ecryptfs-unwrap-passphrase.1,
+    doc/manpage/ecryptfs-wrap-passphrase.1,
+    doc/manpage/mount.ecryptfs.8, doc/manpage/mount.ecryptfs_private.1,
+    doc/manpage/pam_ecryptfs.8, doc/manpage/umount.ecryptfs.8,
+    doc/manpage/umount.ecryptfs_private.1, README,
+    src/utils/mount.ecryptfs.c:
+    - use the new ecryptfs.org website where appropriate
 
   [ Sergio Peña ]
   * src/libecryptfs/cipher_list.c: LP: #922821

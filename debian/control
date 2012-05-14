@@ -19,7 +19,7 @@ Build-Depends:
  python-dev,
  swig
 Standards-Version: 3.9.2
-Homepage: https://launchpad.net/ecryptfs
+Homepage: http://ecryptfs.org/
 Vcs-Bzr: https://code.launchpad.net/~ecryptfs/ecryptfs/trunk
 Vcs-Browser: http://bazaar.launchpad.net/~ecryptfs/ecryptfs/trunk/files
 
