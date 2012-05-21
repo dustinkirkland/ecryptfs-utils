@@ -96,7 +96,11 @@ ecryptfs-utils (97) UNRELEASED; urgency=low
   * src/utils/ecryptfs-setup-swap: Skip /dev/zram* swap devices
     LP: #979350
 
- -- Dustin Kirkland <dustin.kirkland@gazzang.com>  Sun, 06 May 2012 10:18:56 -0500
+  [ Serge Hallyn ]
+  * src/utils/mount.ecryptfs_private.c:
+    - EoL fixes
+
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Mon, 21 May 2012 15:00:15 -0500
 
 ecryptfs-utils (96) oneiric; urgency=low
 

@@ -523,22 +523,22 @@ int main(int argc, char *argv[]) {
 		alias = argv[1];
 		/* Read the source and destination dirs from .conf file */
 		if (read_config(pwd->pw_dir, uid, alias, &src, &dest, &opts2) < 0) {
-			fputs("Error reading configuration file", stderr);
+			fputs("Error reading configuration file\n", stderr);
 			exit(1);
 		}
 		if (opts2 != NULL && strlen(opts2) != 0 && strcmp(opts2, "none") != 0) {
-			fputs("Mount options are not supported here", stderr);
+			fputs("Mount options are not supported here\n", stderr);
 			exit(1);
 		}
 	} else {
-		fputs("Too many arguments", stderr);
+		fputs("Too many arguments\n", stderr);
 		exit(1);
 	}
 
 	/* Lock the counter through the rest of the program */
 	fh_counter = lock_counter(pwd->pw_name, uid, alias);
 	if (fh_counter == NULL) {
-		fputs("Error locking counter", stderr);
+		fputs("Error locking counter\n", stderr);
 		goto fail;
 	}
 
