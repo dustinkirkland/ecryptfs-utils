@@ -39,7 +39,7 @@ Recommends:
  rsync
 Suggests:
  opencryptoki,
- keyescrow-client
+ zescrow-client
 Description: ecryptfs cryptographic filesystem (utilities)
  eCryptfs is a POSIX-compliant enterprise-class stacked cryptographic filesystem
  for Linux.

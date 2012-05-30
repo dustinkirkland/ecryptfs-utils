@@ -35,6 +35,8 @@ ecryptfs-utils (97) UNRELEASED; urgency=low
     doc/manpage/umount.ecryptfs_private.1, README,
     src/utils/mount.ecryptfs.c:
     - use the new ecryptfs.org website where appropriate
+  * debian/control:
+    - update to suggest zescrow-client
 
   [ Sergio Peña ]
   * src/libecryptfs/cipher_list.c: LP: #922821
