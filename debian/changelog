@@ -75,6 +75,10 @@ ecryptfs-utils (97) UNRELEASED; urgency=low
   * src/libecryptfs/module_mgr.c:
     - Use correct blowfish block size when displaying supported ciphers to
       the user
+  * tests/kernel/lp-1009207.sh, tests/kernel/Makefile.am,
+    tests/kernel/tests.rc:
+    - Add simple testcase for incorrect handling of umask and default POSIX
+      ACL masks
 
   [ Colin King ]
   * tests/lib/etl_funcs.sh:
