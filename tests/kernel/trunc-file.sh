@@ -40,12 +40,7 @@ etl_add_keys || exit
 etl_lmount || exit
 etl_mount_i || exit
 test_dir=$(etl_create_test_dir `basename $0`) || exit
-
-# How many 1K blocks can we use?
-blks=`df --total $ETL_LMOUNT_DST | tail -1 | awk '{print $4}'`
-if [ $blks -gt 10 ]; then
-	blks=$((blks - 5))
-fi
+blks=$(etl_lmax_filesize)
 if [ $blks -gt $max_blks ]; then
 	blks=$max_blks
 fi

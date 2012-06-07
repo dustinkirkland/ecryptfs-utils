@@ -97,6 +97,10 @@ ecryptfs-utils (97) UNRELEASED; urgency=low
     - test case for stat modify time
   * tests/kernel/lp-745836.sh:
     - test case for clearing ECRYPTFS_NEW_FILE flag during truncate
+  * tests/lib/etl_funcs.sh, tests/kernel/extend-file-random.sh,
+    tests/kernel/trunc-file.sh (LP: #1007159):
+    - Add test library function for estimating available space in lower fs
+    - Use new library function in tests that need to create large files
 
   [ Colin Watson ]
   * src/utils/ecryptfs-setup-swap: Skip /dev/zram* swap devices
