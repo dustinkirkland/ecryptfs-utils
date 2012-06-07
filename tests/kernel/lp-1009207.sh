@@ -38,14 +38,20 @@ trap test_cleanup 0 1 2 3 15
 etl_add_keys || exit
 etl_lmount || exit
 etl_mount_i || exit
+
 test_dir=$(etl_create_test_dir `basename $0`) || exit
+nomask="${test_dir}/nomask"
+masked="${test_dir}/masked"
 
 setfacl -dm m:rwx $test_dir
+umask 0000
+touch $nomask
 umask 0777
-touch ${test_dir}/foo
-perm=$(stat -c %a ${test_dir}/foo)
+touch $masked
+nomask_mode=$(stat -c %a $nomask)
+masked_mode=$(stat -c %a $masked)
 
-if [ $perm != "0" ]; then
+if [ "$nomask_mode" -eq "$masked_mode" ] && [ "$masked_mode" -gt 0 ]; then
 	rc=0
 fi
 
