@@ -381,6 +381,32 @@ etl_lumount()
 }
 
 #
+# etl_lmax_filesize
+#
+# Estimate on largest file that one can
+# create in the lower filesystem.
+#
+etl_lmax_filesize()
+{
+	# btrfs is a pain, since there is a big difference between the
+	# amount of free space it reports and the maximum size of a file
+	# one can produce before filling up the partition. So instead
+	# we divide by 2 to ensure we have more than enough free space. 
+	#
+	blks=$(df --total $ETL_LMOUNT_DST | tail -1 | awk '{print $4}')
+	if [ x$ETL_LFS = xbtrfs ]; then
+		blks=$((blks / 2))
+	else
+		#
+		# for other file systems we take off ~5% for some slop
+		#
+		slop=$((blks / 20))
+		blks=$((blks - $slop))
+	fi
+	echo $blks
+}
+
+#
 # etl_mount_i
 #
 # Performs an eCryptfs mount, bypassing the eCryptfs mount helper.

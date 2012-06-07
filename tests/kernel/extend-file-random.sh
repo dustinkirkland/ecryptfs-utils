@@ -19,7 +19,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
 
-max_blks=660000
 test_script_dir=$(dirname $0)
 rc=1
 test_dir=""
@@ -40,15 +39,8 @@ etl_add_keys || exit
 etl_lmount || exit
 etl_mount_i || exit
 test_dir=$(etl_create_test_dir `basename $0`) || exit
+blks=$(etl_lmax_filesize)
 
-# How many 1K blocks can we use?
-blks=`df --total $ETL_LMOUNT_DST | tail -1 | awk '{print $4}'`
-if [ $blks -gt 10 ]; then
-	blks=$((blks - 5))
-fi
-if [ $blks -gt $max_blks ]; then
-	blks=$max_blks
-fi
 ${test_script_dir}/extend-file-random/test ${test_dir}/test.img $blks
 
 rc=$?
