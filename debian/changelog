@@ -77,8 +77,12 @@ ecryptfs-utils (97) UNRELEASED; urgency=low
       the user
   * tests/kernel/lp-1009207.sh, tests/kernel/Makefile.am,
     tests/kernel/tests.rc:
-    - Add simple testcase for incorrect handling of umask and default POSIX
+    - Add simple test case for incorrect handling of umask and default POSIX
       ACL masks
+  * tests/kernel/lp-994247.sh, tests/kernel/lp-994247/test.c,
+    tests/kernel/Makefile.am, tests/kernel/tests.rc:
+    - Add test case for incorrect handling of open /dev/ecryptfs file
+      descriptors that are passed or inherited by other processes
 
   [ Colin King ]
   * tests/lib/etl_funcs.sh:
