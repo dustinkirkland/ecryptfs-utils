@@ -1,6 +1,12 @@
 ecryptfs-utils (98) UNRELEASED; urgency=low
 
-  * UNRELEASED
+  [ Dustin Kirkland ]
+  * debian/ecryptfs-utils.prerm:
+    - drop the pre-removal ERRORs down to WARNINGs
+    - these have caused a ton of trouble;  whatever is causing ecryptfs-utils
+      to be marked for removal should be fixed;  but ecryptfs exiting 1 seems
+      to be causing more trouble than it's worth
+    - LP: #871021, #812270, #988960, #990630, #995381, #1010961
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Fri, 15 Jun 2012 09:34:54 -0500
 
