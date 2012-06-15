@@ -1,4 +1,4 @@
-ecryptfs-utils (97) UNRELEASED; urgency=low
+ecryptfs-utils (97) quantal; urgency=low
 
   [ Kees Cook ]
   * src/pam_ecryptfs/pam_ecryptfs.c: LP: #938326
@@ -114,7 +114,7 @@ ecryptfs-utils (97) UNRELEASED; urgency=low
   * src/utils/mount.ecryptfs_private.c:
     - EoL fixes
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Mon, 21 May 2012 15:00:15 -0500
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Fri, 15 Jun 2012 09:32:48 -0500
 
 ecryptfs-utils (96) oneiric; urgency=low
 
