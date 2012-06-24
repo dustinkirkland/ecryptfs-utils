@@ -7,6 +7,10 @@ ecryptfs-utils (98) UNRELEASED; urgency=low
       to be marked for removal should be fixed;  but ecryptfs exiting 1 seems
       to be causing more trouble than it's worth
     - LP: #871021, #812270, #988960, #990630, #995381, #1010961
+  * doc/ecryptfs-faq.html:
+    - update the frequently asked questions, which haven't seen much
+      attention in a while now
+    - drop a few references to sourceforge
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Fri, 15 Jun 2012 09:34:54 -0500
 
