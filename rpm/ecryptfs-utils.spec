@@ -4,8 +4,8 @@ Release: 0%{?dist}
 Summary: The eCryptfs mount helper and support libraries
 Group: System Environment/Base
 License: GPL
-URL: http://ecryptfs.sourceforge.net
-Source0: http://downloads.sourceforge.net/ecryptfs/ecryptfs-utils-24.tar.bz2
+URL: http://ecryptfs.org
+Source0: https://launchpad.net/ecryptfs/+download
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires: libgcrypt-devel keyutils-libs-devel openssl-devel pam-devel
 Conflicts: kernel < 2.6.19

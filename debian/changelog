@@ -11,6 +11,28 @@ ecryptfs-utils (98) UNRELEASED; urgency=low
     - update the frequently asked questions, which haven't seen much
       attention in a while now
     - drop a few references to sourceforge
+  * doc/ecryptfs-pam-doc.txt, doc/manpage/fr/ecryptfs-add-passphrase.1,
+    doc/manpage/fr/ecryptfs-generate-tpm-key.1, doc/manpage/fr/ecryptfs-
+    insert-wrapped-passphrase-into-keyring.1, doc/manpage/fr/ecryptfs-
+    mount-private.1, doc/manpage/fr/ecryptfs-rewrap-passphrase.1,
+    doc/manpage/fr/ecryptfs-setup-private.1, doc/manpage/fr/ecryptfs-
+    umount-private.1, doc/manpage/fr/ecryptfs-unwrap-passphrase.1,
+    doc/manpage/fr/ecryptfs-wrap-passphrase.1, doc/manpage/fr/ecryptfs-
+    zombie-kill.1, doc/manpage/fr/ecryptfs-zombie-list.1,
+    doc/sourceforge_webpage/ecryptfs-article.pdf,
+    doc/sourceforge_webpage/ecryptfs_design_doc_v0_1.pdf,
+    doc/sourceforge_webpage/ecryptfs-faq.html,
+    doc/sourceforge_webpage/ecryptfs-key-diagram-356.png,
+    doc/sourceforge_webpage/ecryptfs-key-diagram-640.png,
+    doc/sourceforge_webpage/ecryptfs-pageuptodate-call-graph.png,
+    doc/sourceforge_webpage/ecryptfs-pam-doc.txt,
+    doc/sourceforge_webpage/ecryptfs.pdf,
+    doc/sourceforge_webpage/index.html, doc/sourceforge_webpage/README,
+    === removed directory doc/manpage/fr, === removed directory
+    doc/sourceforge_webpage, rpm/ecryptfs-utils.spec:
+    - remove some deprecated documentation
+    - fish it out of bzr, if we ever need it again, but let's
+      quit publishing it in our release tarballs
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Fri, 15 Jun 2012 09:34:54 -0500
 
