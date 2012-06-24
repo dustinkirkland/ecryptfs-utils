@@ -1,4 +1,4 @@
-ecryptfs-utils (98) UNRELEASED; urgency=low
+ecryptfs-utils (98) quantal; urgency=low
 
   [ Dustin Kirkland ]
   * debian/ecryptfs-utils.prerm:
@@ -34,7 +34,7 @@ ecryptfs-utils (98) UNRELEASED; urgency=low
     - fish it out of bzr, if we ever need it again, but let's
       quit publishing it in our release tarballs
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Fri, 15 Jun 2012 09:34:54 -0500
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Sun, 24 Jun 2012 11:41:27 -0500
 
 ecryptfs-utils (97) quantal; urgency=low
 
