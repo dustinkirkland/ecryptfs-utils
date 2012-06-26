@@ -1,6 +1,7 @@
 ecryptfs-utils (99) UNRELEASED; urgency=low
 
-  * UNRELEASED
+  * debian/ecryptfs-utils.postinst: LP: #936093
+    - ensure desktop file is executable
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Sun, 24 Jun 2012 11:41:43 -0500
 
