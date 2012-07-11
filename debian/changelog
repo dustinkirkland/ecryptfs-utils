@@ -27,6 +27,7 @@ ecryptfs-utils (99) UNRELEASED; urgency=low
     - force the MS_NOSUID mount flag to protect against user controlled lower
       filesystems, such as an auto mounted USB drive, that may contain a
       setuid-root binary
+    - force the MS_NODEV mount flag
     - after dropping privileges, clear the environment before executing umount
     - discovered by Sebastian Krahmer
 

@@ -632,7 +632,7 @@ int main(int argc, char *argv[]) {
 			goto fail;
 		}
  		/* Perform mount */
-		if (mount(src, ".", FSTYPE, MS_NOSUID, opt) == 0) {
+		if (mount(src, ".", FSTYPE, MS_NOSUID | MS_NODEV, opt) == 0) {
 			if (update_mtab(src, dest, opt) != 0) {
 				goto fail;
 			}
