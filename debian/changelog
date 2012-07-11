@@ -30,6 +30,12 @@ ecryptfs-utils (99) UNRELEASED; urgency=low
     - after dropping privileges, clear the environment before executing umount
     - discovered by Sebastian Krahmer
 
+  [ Tyler Hicks ]
+  * src/libecryptfs/key_management.c: LP: #732614
+    - zero statically declared buffers to prevent the leakage of stack
+      contents in the case of a short file read
+    - discovered by Vasiliy Kulikov
+
  -- Dustin Kirkland <kirkland@ubuntu.com>  Sun, 24 Jun 2012 11:41:43 -0500
 
 ecryptfs-utils (98) quantal; urgency=low

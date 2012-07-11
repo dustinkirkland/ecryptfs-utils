@@ -252,8 +252,7 @@ int ecryptfs_wrap_passphrase_file(char *dest, char *wrapping_passphrase,
 	char *p = NULL;
 	char decrypted_passphrase[ECRYPTFS_MAX_PASSPHRASE_BYTES + 1];
 
-	for (i=0; i<ECRYPTFS_MAX_PASSPHRASE_BYTES+1; i++)
-		decrypted_passphrase[i] = '\0';
+	memset(decrypted_passphrase, 0, sizeof(decrypted_passphrase));
 	if ((fd = open(src, O_RDONLY)) == -1) {
 		syslog(LOG_ERR, "Error attempting to open [%s] for reading\n",
 		       src);
@@ -454,6 +453,9 @@ int ecryptfs_unwrap_passphrase(char *decrypted_passphrase, char *filename,
 	ssize_t size;
 	int rc;
 
+	memset(wrapping_auth_tok_sig_from_file, 0,
+	       sizeof(wrapping_auth_tok_sig_from_file));
+	memset(encrypted_passphrase, 0, sizeof(encrypted_passphrase));
 	rc = generate_passphrase_sig(wrapping_auth_tok_sig, wrapping_key,
 				     wrapping_salt, wrapping_passphrase);
 	if (rc) {
@@ -720,6 +722,7 @@ int ecryptfs_check_sig(char *auth_tok_sig, char *sig_cache_filename,
 	ssize_t size;
 	int rc = 0;
 
+	memset(tmp, 0, sizeof(tmp));
 	(*flags) &= ~ECRYPTFS_SIG_FLAG_NOENT;
 	fd = open(sig_cache_filename, O_RDONLY);
 	if (fd == -1) {
@@ -733,6 +736,7 @@ int ecryptfs_check_sig(char *auth_tok_sig, char *sig_cache_filename,
 			close(fd);
 			goto out;
 		}
+		memset(tmp, 0, sizeof(tmp));
 	}
 	close(fd);
 	(*flags) |= ECRYPTFS_SIG_FLAG_NOENT;
