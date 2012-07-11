@@ -1,7 +1,34 @@
 ecryptfs-utils (99) UNRELEASED; urgency=low
 
+  [ Dustin Kirkland ]
   * debian/ecryptfs-utils.postinst: LP: #936093
     - ensure desktop file is executable
+
+  [ Sebastian Krahmer ]
+  * src/pam_ecryptfs/pam_ecryptfs.c: LP: #732614
+    - drop group privileges in the same places that user privileges are
+      dropped
+    - check return status of setresuid() calls and return if they fail
+    - drop privileges before checking for the existence of
+      ~/.ecryptfs/auto-mount to prevent possible file existence leakage
+      by a symlink to a path that typically would not be searchable by
+      the user
+    - drop privileges before reading salt from the rc file to prevent the
+      leakage of root's salt and, more importantly, using the incorrect salt
+    - discovered, independently, by Vasiliy Kulikov and Sebastian Krahmer
+  * src/pam_ecryptfs/pam_ecryptfs.c: LP: #1020904
+    - after dropping privileges, clear the environment before executing the
+      private eCryptfs mount helper
+    - discovered by Sebastian Krahmer
+  * src/utils/mount.ecryptfs_private.c: LP: #1020904
+    - do not allow private eCryptfs mount aliases to contain ".." characters
+      as a preventative measure against a crafted file path being used as an
+      alias
+    - force the MS_NOSUID mount flag to protect against user controlled lower
+      filesystems, such as an auto mounted USB drive, that may contain a
+      setuid-root binary
+    - after dropping privileges, clear the environment before executing umount
+    - discovered by Sebastian Krahmer
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Sun, 24 Jun 2012 11:41:43 -0500
 

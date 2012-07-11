@@ -32,13 +32,17 @@
 #include <unistd.h>
 #include <errno.h>
 #include <syslog.h>
+#include <limits.h>
 #include <pwd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/fsuid.h>
+#include <grp.h>
 #include <fcntl.h>
 #include <security/pam_modules.h>
+#include <security/pam_ext.h>
 #include "../include/ecryptfs.h"
 
 #define PRIVATE_DIR "Private"
@@ -119,9 +123,11 @@ static int wrap_passphrase_if_necessary(char *username, uid_t uid, char *wrapped
 PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags, int argc,
 				   const char **argv)
 {
-	uid_t uid = 0;
+	uid_t uid = 0, oeuid = 0;
+	long ngroups_max = sysconf(_SC_NGROUPS_MAX);
+	gid_t gid = 0, oegid = 0, groups[ngroups_max+1];
+	int ngids = 0;
 	char *homedir = NULL;
-	uid_t saved_uid = 0;
 	const char *username;
 	char *passphrase = NULL;
 	char salt[ECRYPTFS_SALT_SIZE];
@@ -139,12 +145,25 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags, int argc,
 		pwd = getpwnam(username);
 		if (pwd) {
 			uid = pwd->pw_uid;
+			gid = pwd->pw_gid;
 			homedir = pwd->pw_dir;
 		}
 	} else {
 		syslog(LOG_ERR, "pam_ecryptfs: Error getting passwd info for user [%s]; rc = [%ld]\n", username, rc);
 		goto out;
 	}
+
+	if ((oeuid = geteuid()) < 0 || (oegid = getegid()) < 0 ||
+	    (ngids = getgroups(sizeof(groups)/sizeof(gid_t), groups)) < 0) {
+		syslog(LOG_ERR, "pam_ecryptfs: geteuid error");
+		goto outnouid;
+	}
+
+	if (setegid(gid) < 0 || setgroups(1, &gid) < 0 || seteuid(uid) < 0) {
+		syslog(LOG_ERR, "pam_ecryptfs: seteuid error");
+		goto out;
+	}
+
 	if (!file_exists_dotecryptfs(homedir, "auto-mount"))
 		goto out;
 	private_mnt = ecryptfs_fetch_private_mnt(homedir);
@@ -158,13 +177,10 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags, int argc,
 	   load ecryptfs module if not loaded already */
 	if (ecryptfs_get_version(&version) != 0)
 		syslog(LOG_WARNING, "pam_ecryptfs: Can't check if kernel supports ecryptfs\n");
-	saved_uid = geteuid();
-	seteuid(uid);
 	if(file_exists_dotecryptfs(homedir, "wrapping-independent") == 1)
 		rc = pam_prompt(pamh, PAM_PROMPT_ECHO_OFF, &passphrase, "Encryption passphrase: ");
 	else
 		rc = pam_get_item(pamh, PAM_AUTHTOK, (const void **)&passphrase);
-	seteuid(saved_uid);
 	if (rc != PAM_SUCCESS) {
 		syslog(LOG_ERR, "pam_ecryptfs: Error retrieving passphrase; rc = [%ld]\n",
 		       rc);
@@ -182,7 +198,12 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags, int argc,
 	} else
 		from_hex(salt, salt_hex, ECRYPTFS_SALT_SIZE);
 	if ((child_pid = fork()) == 0) {
-		setuid(uid);
+		/* temp regain uid 0 to drop privs */
+		seteuid(oeuid);
+		/* setgroups() already called */
+		if (setgid(gid) < 0 || setuid(uid) < 0)
+			goto out_child;
+
 		if (passphrase == NULL) {
 			syslog(LOG_ERR, "pam_ecryptfs: NULL passphrase; aborting\n");
 			rc = -EINVAL;
@@ -240,6 +261,12 @@ out_child:
 	if (tmp_pid == -1)
 		syslog(LOG_WARNING, "pam_ecryptfs: waitpid() returned with error condition\n");
 out:
+
+	seteuid(oeuid);
+	setegid(oegid);
+	setgroups(ngids, groups);
+
+outnouid:
 	if (private_mnt != NULL)
 		free(private_mnt);
 	return PAM_SUCCESS;
@@ -338,8 +365,12 @@ static int private_dir(pam_handle_t *pamh, int mount)
 				syslog(LOG_DEBUG, "pam_ecryptfs: Skipping automatic eCryptfs mount");
 				exit(0);
 			}
+			clearenv();
+			if (setgroups(1, &pwd->pw_gid) < 0 || setgid(pwd->pw_gid) < 0)
+				return -1;
 			/* run mount.ecryptfs_private as the user */
-			setresuid(pwd->pw_uid, pwd->pw_uid, pwd->pw_uid);
+			if (setresuid(pwd->pw_uid, pwd->pw_uid, pwd->pw_uid) < 0)
+				return -1;
 			execl("/sbin/mount.ecryptfs_private",
 			      "mount.ecryptfs_private", NULL);
 		} else {
@@ -348,8 +379,12 @@ static int private_dir(pam_handle_t *pamh, int mount)
 				syslog(LOG_DEBUG, "pam_ecryptfs: Skipping automatic eCryptfs unmount");
 				exit(0);
 			}
+			clearenv();
+			if (setgroups(1, &pwd->pw_gid) < 0 || setgid(pwd->pw_gid) < 0)
+				return -1;
 			/* run umount.ecryptfs_private as the user */
-			setresuid(pwd->pw_uid, pwd->pw_uid, pwd->pw_uid);
+			if (setresuid(pwd->pw_uid, pwd->pw_uid, pwd->pw_uid) < 0)
+				return -1;
 			execl("/sbin/umount.ecryptfs_private",
  			      "umount.ecryptfs_private", NULL);
 			exit(1);
@@ -391,9 +426,11 @@ pam_sm_close_session(pam_handle_t *pamh, int flags,
 PAM_EXTERN int pam_sm_chauthtok(pam_handle_t * pamh, int flags,
                                 int argc, const char **argv)
 {
-	uid_t uid = 0;
+	uid_t uid = 0, oeuid = 0;
+	long ngroups_max = sysconf(_SC_NGROUPS_MAX);
+	gid_t gid = 0, oegid = 0, groups[ngroups_max+1];
+	int ngids = 0;
 	char *homedir = NULL;
-	uid_t saved_uid = 0;
 	const char *username;
 	char *old_passphrase = NULL;
 	char *new_passphrase = NULL;
@@ -411,6 +448,7 @@ PAM_EXTERN int pam_sm_chauthtok(pam_handle_t * pamh, int flags,
 		pwd = getpwnam(username);
 		if (pwd) {
 			uid = pwd->pw_uid;
+			gid = pwd->pw_gid;
 			homedir = pwd->pw_dir;
 			name = pwd->pw_name;
 		}
@@ -418,13 +456,22 @@ PAM_EXTERN int pam_sm_chauthtok(pam_handle_t * pamh, int flags,
 		syslog(LOG_ERR, "pam_ecryptfs: Error getting passwd info for user [%s]; rc = [%ld]\n", username, rc);
 		goto out;
 	}
-	saved_uid = geteuid();
-	seteuid(uid);
+
+	if ((oeuid = geteuid()) < 0 || (oegid = getegid()) < 0 ||
+	    (ngids = getgroups(sizeof(groups)/sizeof(gid_t), groups)) < 0) {
+		syslog(LOG_ERR, "pam_ecryptfs: geteuid error");
+		goto outnouid;
+	}
+
+	if (setegid(gid) < 0 || setgroups(1, &gid) < 0 || seteuid(uid) < 0) {
+		syslog(LOG_ERR, "pam_ecryptfs: seteuid error");
+		goto out;
+	}
+
 	if ((rc = pam_get_item(pamh, PAM_OLDAUTHTOK,
 			       (const void **)&old_passphrase))
 	    != PAM_SUCCESS) {
 		syslog(LOG_ERR, "pam_ecryptfs: Error retrieving old passphrase; rc = [%d]\n", rc);
-		seteuid(saved_uid);
 		goto out;
 	}
 	/* On the first pass, do nothing except check that we have a password */
@@ -434,14 +481,12 @@ PAM_EXTERN int pam_sm_chauthtok(pam_handle_t * pamh, int flags,
 			syslog(LOG_WARNING, "pam_ecryptfs: PAM passphrase change module retrieved a NULL passphrase; nothing to do\n");
 			rc = PAM_AUTHTOK_RECOVER_ERR;
 		}
-		seteuid(saved_uid);
 		goto out;
 	}
 	if ((rc = pam_get_item(pamh, PAM_AUTHTOK,
 			       (const void **)&new_passphrase))
 	    != PAM_SUCCESS) {
 		syslog(LOG_ERR, "pam_ecryptfs: Error retrieving new passphrase; rc = [%d]\n", rc);
-		seteuid(saved_uid);
 		goto out;
 	}
 	if ((rc = asprintf(&wrapped_pw_filename, "%s/.ecryptfs/%s", homedir,
@@ -462,7 +507,6 @@ PAM_EXTERN int pam_sm_chauthtok(pam_handle_t * pamh, int flags,
 		goto out;
 	}
 
-	seteuid(saved_uid);
 	if (!old_passphrase || !new_passphrase || *new_passphrase == '\0') {
 		syslog(LOG_WARNING, "pam_ecryptfs: PAM passphrase change module retrieved at least one NULL passphrase; nothing to do\n");
 		rc = PAM_AUTHTOK_RECOVER_ERR;
@@ -472,7 +516,12 @@ PAM_EXTERN int pam_sm_chauthtok(pam_handle_t * pamh, int flags,
 	if ((child_pid = fork()) == 0) {
 		char passphrase[ECRYPTFS_MAX_PASSWORD_LENGTH + 1];
 
-		setuid(uid);
+		/* temp regain uid 0 to drop privs */
+		seteuid(oeuid);
+		/* setgroups() already called */
+		if (setgid(gid) < 0 || setuid(uid) < 0)
+			goto out_child;
+
 		if ((rc = ecryptfs_unwrap_passphrase(passphrase,
 						     wrapped_pw_filename,
 						     old_passphrase, salt))) {
@@ -492,5 +541,11 @@ out_child:
 		syslog(LOG_WARNING, "pam_ecryptfs: waitpid() returned with error condition\n");
 	free(wrapped_pw_filename);
 out:
+
+	seteuid(oeuid);
+	setegid(oegid);
+	setgroups(ngids, groups);
+
+outnouid:
 	return rc;
 }

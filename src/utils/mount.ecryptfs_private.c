@@ -302,7 +302,7 @@ int update_mtab(char *dev, char *mnt, char *opt) {
 		goto fail_early;
 	}
 
-	while (old_ent = getmntent(old_mtab)) {
+	while ((old_ent = getmntent(old_mtab))) {
 		if (addmntent(new_mtab, old_ent) != 0) {
 			perror("addmntent");
 			goto fail;
@@ -535,6 +535,11 @@ int main(int argc, char *argv[]) {
 		exit(1);
 	}
 
+	if (strstr(alias, "..")) {
+		fputs("Invalid alias", stderr);
+		exit(1);
+	}
+
 	/* Lock the counter through the rest of the program */
 	fh_counter = lock_counter(pwd->pw_name, uid, alias);
 	if (fh_counter == NULL) {
@@ -627,7 +632,7 @@ int main(int argc, char *argv[]) {
 			goto fail;
 		}
  		/* Perform mount */
-		if (mount(src, ".", FSTYPE, 0, opt) == 0) {
+		if (mount(src, ".", FSTYPE, MS_NOSUID, opt) == 0) {
 			if (update_mtab(src, dest, opt) != 0) {
 				goto fail;
 			}
@@ -676,6 +681,7 @@ int main(int argc, char *argv[]) {
  		 */
 		setresuid(0,0,0);
 		setresgid(0,0,0);
+		clearenv();
 
 		/* Since we're doing a lazy unmount anyway, just unmount the current
 		 * directory. This avoids a lot of complexity in dealing with race
