@@ -35,6 +35,8 @@ ecryptfs-utils (99) UNRELEASED; urgency=low
     - zero statically declared buffers to prevent the leakage of stack
       contents in the case of a short file read
     - discovered by Vasiliy Kulikov
+  * src/libecryptfs/module_mgr.c, src/pam_ecryptfs/pam_ecryptfs.c:
+    - fix compiler warnings
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Sun, 24 Jun 2012 11:41:43 -0500
 

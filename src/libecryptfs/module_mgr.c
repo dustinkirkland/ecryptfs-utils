@@ -813,7 +813,7 @@ int ecryptfs_process_decision_graph(struct ecryptfs_ctx *ctx,
 	}
 	ad_cursor = ad_cursor->next;
 	ad_cursor->next = NULL;
-	if ((rc = asprintf(&ad_cursor->name,
+	if ((rc = asprintf(&ad_cursor->name, "%s",
 			   key_module_select_node.mnt_opt_names[0])) == -1) {
 		rc = -ENOMEM;
 		goto out_free_allowed_duplicates;

@@ -91,7 +91,7 @@ out:
 	return rc;
 }
 
-static int wrap_passphrase_if_necessary(char *username, uid_t uid, char *wrapped_pw_filename, char *passphrase, char *salt)
+static int wrap_passphrase_if_necessary(const char *username, uid_t uid, char *wrapped_pw_filename, char *passphrase, char *salt)
 {
 	char *unwrapped_pw_filename = NULL;
 	struct stat s;
@@ -453,7 +453,7 @@ PAM_EXTERN int pam_sm_chauthtok(pam_handle_t * pamh, int flags,
 			name = pwd->pw_name;
 		}
 	} else {
-		syslog(LOG_ERR, "pam_ecryptfs: Error getting passwd info for user [%s]; rc = [%ld]\n", username, rc);
+		syslog(LOG_ERR, "pam_ecryptfs: Error getting passwd info for user [%s]; rc = [%d]\n", username, rc);
 		goto out;
 	}
 
