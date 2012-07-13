@@ -1,3 +1,9 @@
+ecryptfs-utils (100) UNRELEASED; urgency=low
+
+  * UNRELEASED
+
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Fri, 13 Jul 2012 11:22:04 -0500
+
 ecryptfs-utils (99) quantal; urgency=low
 
   [ Dustin Kirkland ]
