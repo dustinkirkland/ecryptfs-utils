@@ -136,7 +136,6 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags, int argc,
 	char *private_mnt = NULL;
 	pid_t child_pid, tmp_pid;
 	long rc;
-	uint32_t version;
 
 	rc = pam_get_user(pamh, &username, NULL);
 	if (rc == PAM_SUCCESS) {
@@ -173,10 +172,6 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags, int argc,
 		   costly loading of keys */
 		goto out;
 	}
-	/* we need side effect of this check:
-	   load ecryptfs module if not loaded already */
-	if (ecryptfs_get_version(&version) != 0)
-		syslog(LOG_WARNING, "pam_ecryptfs: Can't check if kernel supports ecryptfs\n");
 	if(file_exists_dotecryptfs(homedir, "wrapping-independent") == 1)
 		rc = pam_prompt(pamh, PAM_PROMPT_ECHO_OFF, &passphrase, "Encryption passphrase: ");
 	else

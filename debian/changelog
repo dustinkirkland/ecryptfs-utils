@@ -1,6 +1,15 @@
 ecryptfs-utils (100) UNRELEASED; urgency=low
 
-  * UNRELEASED
+  [ Tyler Hicks ]
+  * src/pam_ecryptfs/pam_ecryptfs.c, src/libecryptfs/key_management.c:
+      LP: #1024476
+    - fix regression introduced in ecryptfs-utils-99 when Encrypted
+      Home/Private is in use and the eCryptfs kernel code is compiled as a
+      module
+    - drop check for kernel filename encryption support in pam_ecryptfs, as
+      appropriate privileges to load the eCryptfs kernel module may not be
+      available and filename encryption has been supported since 2.6.29
+    - always add filename encryption key to the kernel keyring from pam_mount
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Fri, 13 Jul 2012 11:22:04 -0500
 
