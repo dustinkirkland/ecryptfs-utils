@@ -546,10 +546,12 @@ int main(int argc, char **argv)
 	int rc;
 	struct passwd *pw;
 
-	/* Nasty hack;  On some systems, this need to run before we mlock.
-	 * See:
-	 *     https://bugs.launchpad.net/ubuntu/+source/glibc/+bug/329264
-	 */
+	rc = mlockall(MCL_FUTURE);
+	if (rc) {
+		fprintf(stderr, "Exiting. Unable to mlockall address space: %m\n");
+		return -1;
+	}
+
 	pw = getpwuid(getuid());
 	if (!pw) {
 		fprintf(stderr, "Exiting. Unable to obtain passwd info\n");
@@ -557,11 +559,6 @@ int main(int argc, char **argv)
 		goto out;
 	}
 
-	rc = mlockall(MCL_FUTURE);
-	if (rc) {
-		fprintf(stderr, "Exiting. Unable to mlockall address space: %m\n");
-		return -1;
-	}
 	if (dump_args) {
 		int i;
 

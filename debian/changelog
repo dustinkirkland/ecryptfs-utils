@@ -4,6 +4,11 @@ ecryptfs-utils (99) UNRELEASED; urgency=low
   * debian/ecryptfs-utils.postinst: LP: #936093
     - ensure desktop file is executable
 
+  [ Wesley Wiedenmeier ]
+  * src/utils/mount.ecryptfs.c: LP: #329264
+    - remove old hack, that worked around a temporary kernel regression;
+      ensure that all mount memory is mlocked
+
   [ Sebastian Krahmer ]
   * src/pam_ecryptfs/pam_ecryptfs.c: LP: #732614
     - drop group privileges in the same places that user privileges are
