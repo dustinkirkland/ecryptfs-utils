@@ -1,4 +1,4 @@
-ecryptfs-utils (99) UNRELEASED; urgency=low
+ecryptfs-utils (99) quantal; urgency=low
 
   [ Dustin Kirkland ]
   * debian/ecryptfs-utils.postinst: LP: #936093
@@ -45,7 +45,7 @@ ecryptfs-utils (99) UNRELEASED; urgency=low
   * src/libecryptfs/module_mgr.c, src/pam_ecryptfs/pam_ecryptfs.c:
     - fix compiler warnings
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Sun, 24 Jun 2012 11:41:43 -0500
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Fri, 13 Jul 2012 11:21:53 -0500
 
 ecryptfs-utils (98) quantal; urgency=low
 
