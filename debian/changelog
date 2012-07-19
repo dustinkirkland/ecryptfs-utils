@@ -14,6 +14,9 @@ ecryptfs-utils (100) UNRELEASED; urgency=low
   [ Colin King ]
   * tests/kernel/inode-race-stat/test.c:
     - limit number of forks based on fd limits
+  * tests/kernel/enospc.sh, tests/kernel/enospc/test.c,
+    tests/kernel/Makefile.am, tests/kernel/tests.rc:
+    - add test case for ENOSPC
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Fri, 13 Jul 2012 11:22:04 -0500
 

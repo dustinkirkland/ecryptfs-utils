@@ -35,7 +35,8 @@ noinst_PROGRAMS = miscdev-bad-count/test \
 		  lp-509180/test \
 		  lp-524919/test \
 		  lp-870326/test \
-		  lp-994247/test
+		  lp-994247/test \
+		  enospc/test
 endif
 
 miscdev_bad_count_test_SOURCES = miscdev-bad-count/test.c
@@ -64,3 +65,5 @@ lp_524919_test_SOURCES = lp-524919/test.c
 lp_870326_test_SOURCES = lp-870326/test.c
 
 lp_994247_test_SOURCES = lp-994247/test.c
+
+enospc_test_SOURCES = enospc/test.c
