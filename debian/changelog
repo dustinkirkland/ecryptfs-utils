@@ -11,6 +11,10 @@ ecryptfs-utils (100) UNRELEASED; urgency=low
       available and filename encryption has been supported since 2.6.29
     - always add filename encryption key to the kernel keyring from pam_mount
 
+  [ Colin King ]
+  * tests/kernel/inode-race-stat/test.c:
+    - limit number of forks based on fd limits
+
  -- Dustin Kirkland <kirkland@ubuntu.com>  Fri, 13 Jul 2012 11:22:04 -0500
 
 ecryptfs-utils (99) quantal; urgency=low

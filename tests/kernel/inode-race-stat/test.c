@@ -20,7 +20,7 @@
 
 /*
  *  Regression test for commit 3b06b3ebf44170c90c893c6c80916db6e922b9f2,
- *  bug https://bugzilla.kernel.org/show_bug.cgi?id=36002  
+ *  bug https://bugzilla.kernel.org/show_bug.cgi?id=36002
  *
  *  "Only unlock and d_add() new inodes after the plaintext inode size has
  *   been read from the lower filesystem. This fixes a race condition that
@@ -171,13 +171,15 @@ int main(int argc, char **argv)
 	int	pipe_from[MAX_CHILD][2];
 	char	cmd[32];
 	char	*filename;
-	int 	i;
+	int	i;
 	off_t 	j;
-	int	threads;
+	long	threads;
 	int 	duration = TEST_DURATION;
 	int	opt;
 	time_t	t1, t2;
-	
+	int	max_fd;
+	int	opened_fd;
+	int	max_threads;
 
 	if (geteuid() != 0) {
 		fprintf(stderr, "Need to run with root privilege\n");
@@ -207,8 +209,23 @@ int main(int argc, char **argv)
 
 	filename = argv[optind];
 
+	/* Determine how many used file descriptors we have */
+	max_fd = (int)sysconf(_SC_OPEN_MAX);
+	for (i = 0, opened_fd = 0; i < max_fd; i++)
+		if (!fcntl(i, F_GETFD, 0))
+			opened_fd++;
+	/*
+	 * Each process takes initially an extra 4 file descriptors
+	 * on 2 pipe calls, but after the process has been successfully
+	 * forked it closes two file descriptors. So we need 2*N + 2
+	 * free file descriptors for N children which limits the
+	 * maximum number of processes we can fork.
+	 */
+	max_threads = (max_fd - (opened_fd + 2)) / 2;
+	max_threads = max_threads > MAX_CHILD ? MAX_CHILD : max_threads;
+
 	threads = (int)sysconf(_SC_NPROCESSORS_CONF) * THREADS_PER_CPU;
-	threads = threads > MAX_CHILD ? MAX_CHILD : threads;
+	threads = threads > max_threads ? max_threads : threads;
 
 	signal(SIGINT, sigint_handler);
 	signal(SIGPIPE, sigint_handler);
