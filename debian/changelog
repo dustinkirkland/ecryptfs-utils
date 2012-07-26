@@ -18,6 +18,11 @@ ecryptfs-utils (100) UNRELEASED; urgency=low
     tests/kernel/Makefile.am, tests/kernel/tests.rc:
     - add test case for ENOSPC
 
+  [ Tim Harder ]
+  * m4/ac_python_devel.m4: LP: #1029217
+    - proplery save and restore CPPFLAGS and LIBS when python support is
+      enabled
+
  -- Dustin Kirkland <kirkland@ubuntu.com>  Fri, 13 Jul 2012 11:22:04 -0500
 
 ecryptfs-utils (99) quantal; urgency=low
