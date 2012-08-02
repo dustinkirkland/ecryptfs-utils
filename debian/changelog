@@ -1,3 +1,9 @@
+ecryptfs-utils (101) UNRELEASED; urgency=low
+
+  * UNRELEASED
+
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 02 Aug 2012 16:33:28 -0500
+
 ecryptfs-utils (100) precise; urgency=low
 
   [ Tyler Hicks ]
