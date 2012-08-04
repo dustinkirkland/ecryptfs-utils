@@ -116,5 +116,5 @@ for d in $dirs; do
 	(keyctl list @u | grep -qs "$fnek_sig") || error "The key required to access this private data is not available."
 	tmpdir=$(mktemp -d /tmp/ecryptfs.XXXXXXXX)
 	mount -i -t ecryptfs -o "$mount_opts" "$d" "$tmpdir"
-	info "Success!  Private data mounted read-only at [$tmpdir]."
+	info "Success!  Private data mounted at [$tmpdir]."
 done

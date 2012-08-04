@@ -9,6 +9,9 @@ ecryptfs-utils (101) UNRELEASED; urgency=low
     - Correct minor misspelling
   * src/utils/ecryptfs-recover-private: LP: #1004082
     - Fix option parsing when --rw is specified
+  * src/utils/ecryptfs-recover-private: LP: #1028923
+    - Simplify success message to prevent incorrectly reporting that a
+      read-only mount was performed when the --rw option is specified
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 02 Aug 2012 16:33:28 -0500
 
