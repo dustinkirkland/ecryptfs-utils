@@ -1,6 +1,8 @@
 ecryptfs-utils (101) UNRELEASED; urgency=low
 
-  * UNRELEASED
+  [ Eric Lammerts ]
+  * src/libecryptfs/sysfs.c: LP: #1007880
+    - Handle NULL mnt pointer when sysfs is not mounted
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 02 Aug 2012 16:33:28 -0500
 
