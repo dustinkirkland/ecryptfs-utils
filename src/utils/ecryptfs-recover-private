@@ -31,6 +31,11 @@ info() {
 
 # Handle parameters
 opts="ro"
+if [ "$1" = "--rw" ]; then
+	opts="rw"
+	shift
+fi
+
 if [ -d "$1" ]; then
 	# Allow for target directories on the command line
 	dirs="$@"
@@ -42,7 +47,6 @@ else
 		info "Hint: click 'Places' and select your hard disk, then run this again."
 		error "No private directories found; make sure that your root filesystem is mounted."
 	fi
-	[ "$1" = "--rw" ] && opts="rw"
 fi
 
 # Examine directories

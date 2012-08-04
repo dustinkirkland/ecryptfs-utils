@@ -7,6 +7,8 @@ ecryptfs-utils (101) UNRELEASED; urgency=low
   [ Tyler Hicks ]
   * src/utils/ecryptfs-migrate-home: LP: #1026180
     - Correct minor misspelling
+  * src/utils/ecryptfs-recover-private: LP: #1004082
+    - Fix option parsing when --rw is specified
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 02 Aug 2012 16:33:28 -0500
 
