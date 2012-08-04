@@ -171,7 +171,7 @@ encrypt_dir () {
 	echo "    their randomly generated mount passphrase as soon as possible."
 	echo
 	echo " 4. To ensure the integrity of all encrypted data on this system, you"
-	echo "    should also encrypted swap space with 'ecryptfs-setup-swap'."
+	echo "    should also encrypt swap space with 'ecryptfs-setup-swap'."
 	echo "========================================================================"
 	echo
 }
