@@ -1,2 +1,2 @@
 destructive="miscdev-bad-count.sh extend-file-random.sh trunc-file.sh directory-concurrent.sh file-concurrent.sh lp-994247.sh"
-safe="lp-469664.sh lp-524919.sh lp-509180.sh lp-613873.sh lp-745836.sh lp-870326.sh lp-885744.sh lp-926292.sh inotify.sh mmap-dir.sh read-dir.sh setattr-flush-dirty.sh inode-race-stat.sh lp-1009207.sh enospc.sh lp-911507.sh"
+safe="lp-469664.sh lp-524919.sh lp-509180.sh lp-613873.sh lp-745836.sh lp-870326.sh lp-885744.sh lp-926292.sh inotify.sh mmap-dir.sh read-dir.sh setattr-flush-dirty.sh inode-race-stat.sh lp-1009207.sh enospc.sh lp-911507.sh lp-872905.sh"
