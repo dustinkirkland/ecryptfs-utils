@@ -39,35 +39,37 @@ etl_add_keys || exit
 etl_lmount || exit
 etl_mount_i || exit
 test_dir=$(etl_create_test_dir `basename $0`) || exit
+test_file="${test_dir}/test_file"
 
-touch $test_dir/testfile
+touch $test_file
 
 #
 # Drop caches
 #
 echo 1 > /proc/sys/vm/drop_caches
 
+lower_test_file=$(etl_find_lower_path $test_file)
+if [ $? -ne 0 ] || [ -z "$lower_test_file" ]; then
+	rc=1
+	exit
+fi
+
 #
 # Truncate lower, this will force bug LP#911507 when reading the file
 #
-for f in $ETL_LMOUNT_DST/*/*
-do
-	if [ -f $f ]; then
-		truncate -s 0 $f
-	fi
-done
+truncate -s 0 $lower_test_file
 
 #
 # Now read the file, eCryptfs should fix the lower file
 # and append the text without failing
 #
-cat $test_dir/testfile > /dev/null 2>&1 
+cat $test_file > /dev/null 2>&1 
 rc=$?
 if [ $rc -eq 0 ]; then
 	#
 	# Is the file contents correct?
 	#
-	sum=$(md5sum $test_dir/testfile | cut -d' ' -f1)
+	sum=$(md5sum $test_file | cut -d' ' -f1)
 	if [ x$sum != xd41d8cd98f00b204e9800998ecf8427e ]; then
 		rc=1
 	fi

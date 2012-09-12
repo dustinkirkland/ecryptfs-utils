@@ -39,33 +39,39 @@ etl_add_keys || exit
 etl_lmount || exit
 etl_mount_i || exit
 test_dir=$(etl_create_test_dir `basename $0`) || exit
+test_file="${test_dir}/test_file"
 
+lower_test_dir=$(etl_find_lower_path $test_dir)
+if [ $? -ne 0 ]; then
+	exit
+fi
 
 #
 # Fill the lower
 #
-dd if=/dev/zero of=$ETL_LMOUNT_DST/filler bs=4K > /dev/null 2>&1
+dd if=/dev/zero of=${lower_test_dir}/filler bs=4K > /dev/null 2>&1
 
 #
 # Now attempt to create an upper and see how big it is
 #
-touch $test_dir/testfile >& /dev/null
+touch $test_file >& /dev/null
+if [ $? -ne 0 ]; then
+	rc=0
+	exit
+fi
+
+lower_test_file=$(etl_find_lower_path $test_file)
+if [ $? -ne 0 ]; then
+	exit
+fi
 
 #
 # We shouldn't have a lower file created of zero bytes size if
 # the bug is fixed
 # 
-rc=0
-for f in $ETL_LMOUNT_DST/ECRYPTFS*/ECRYPTFS*
-do
-	if [ -f $f ]; then
-		sz=$(stat -c%s $f)
-		if [ $sz -eq 0 ]; then
-			rc=1
-		fi
-	fi
-done
-
-rm -f $ETL_LMOUNT_DST/filler $test_dir/testfile 
+sz=$(stat -c%s $lower_test_file)
+if [ $sz -ne 0 ]; then
+	rc=0
+fi
 
 exit
