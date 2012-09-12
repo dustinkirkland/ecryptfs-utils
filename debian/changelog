@@ -12,6 +12,9 @@ ecryptfs-utils (101) UNRELEASED; urgency=low
   * src/utils/ecryptfs-recover-private: LP: #1028923
     - Simplify success message to prevent incorrectly reporting that a
       read-only mount was performed when the --rw option is specified
+  * tests/lib/etl_func.sh:
+    - Add test library function to return a lower path from an upper path,
+      based on inode numbers
 
   [ Colin King ]
   * tests/kernel/lp-911507.sh:

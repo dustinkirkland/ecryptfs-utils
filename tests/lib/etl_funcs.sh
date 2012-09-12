@@ -553,3 +553,37 @@ etl_remove_test_dir()
 
 	rm -rf $1 &>/dev/null
 }
+
+#
+# etl_find_lower_path UPPER_PATH [LOWER_MOUNT]
+#
+# Given a path to an eCryptfs inode, finds a path to the lower inode. Searches
+# for the lower inode in $ETL_LMOUNT_DST, unless LOWER_MOUNT is specified. Be
+# careful using this with an inode with multiple hard links, as only one lower
+# path will be returned.
+#
+# Upon success, the lower path is echoed to stdout and zero is returned.
+#
+etl_find_lower_path()
+{
+	lmount=$ETL_LMOUNT_DST
+	if [ -n "$2" ]; then
+		lmount=$2
+	fi
+	if [ -z "lmount" ]; then
+		return 1
+	fi
+
+	inum=$(stat --printf=%i $1)
+	if [ $? -ne 0 ]; then
+		return 1
+	fi
+
+	lower_path=$(find $lmount -inum $inum -print -quit 2>/dev/null)
+	if [ $? -ne 0 ] || [ -z "$lower_path" ]; then
+		return 1
+	fi
+
+	echo $lower_path
+	return 0
+}
