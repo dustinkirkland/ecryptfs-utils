@@ -13,6 +13,10 @@ ecryptfs-utils (101) UNRELEASED; urgency=low
     - Simplify success message to prevent incorrectly reporting that a
       read-only mount was performed when the --rw option is specified
 
+  [ Colin King ]
+  * tests/kernel/lp-911507.sh:
+    - Add test case for initializing empty lower files during open()
+
  -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 02 Aug 2012 16:33:28 -0500
 
 ecryptfs-utils (100) precise; urgency=low
