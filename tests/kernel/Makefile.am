@@ -21,7 +21,8 @@ dist_noinst_SCRIPTS = lp-885744.sh \
 		      lp-613873.sh \
 		      lp-1009207.sh \
 		      lp-994247.sh \
-		      lp-911507.sh
+		      lp-911507.sh \
+		      lp-872905.sh
 
 if ENABLE_TESTS
 noinst_PROGRAMS = miscdev-bad-count/test \

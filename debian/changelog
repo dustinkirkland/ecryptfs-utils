@@ -16,6 +16,9 @@ ecryptfs-utils (101) UNRELEASED; urgency=low
   [ Colin King ]
   * tests/kernel/lp-911507.sh:
     - Add test case for initializing empty lower files during open()
+  * tests/kernel/lp-872905.sh:
+    - Add test case to check for proper unlinking of lower files when
+      lower file initialization fails
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 02 Aug 2012 16:33:28 -0500
 
