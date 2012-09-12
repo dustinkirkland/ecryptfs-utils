@@ -388,21 +388,57 @@ etl_lumount()
 #
 etl_lmax_filesize()
 {
-	# btrfs is a pain, since there is a big difference between the
-	# amount of free space it reports and the maximum size of a file
-	# one can produce before filling up the partition. So instead
-	# we divide by 2 to ensure we have more than enough free space. 
-	#
 	blks=$(df --total $ETL_LMOUNT_DST | tail -1 | awk '{print $4}')
-	if [ x$ETL_LFS = xbtrfs ]; then
+
+	case $ETL_LFS in
+	btrfs)
+		# btrfs is a pain, since there is a big difference between the
+		# amount of free space it reports and the maximum size of a file
+		# one can produce before filling up the partition. So instead
+		# we divide by 2 to ensure we have more than enough free space. 
+		#
 		blks=$((blks / 2))
-	else
+		;;
+	xfs)
+		# xfs misbehaves on small file systems when we truncate, according to
+		# david@fromorbit.com:
+		#
+		# "The space is considered "busy" and won't be reused until the
+		# truncate transaction hits the log and the space is free on disk. See
+		# xfs_busy_extent.c
+		# 
+		# Basically, testing XFS performance on tiny filesystems is going to
+		# show false behaviours. XFS is optimised for large filesystems and
+		# will typically shows low space artifacts on small filesystems,
+		# especially when you are doing things like filling most of the free
+		# filesystem space with 1 file.
+		# 
+		# e.g.  1GB free on at 100TB filesystem will throttle behaviours (say
+		# speculative preallocation) much more effectively because itis within
+		# 1% of ENOSPC. That same 1GB free on a 1GB filesystem won't throttle
+		# preallocation at all, and so that one file when it reaches a little
+		# over 500MB will try to preallocate half the remaining space in the
+		# filesystem because the filesystem is only 50% full...."
+		#
+		# So lets limit ourselves generously by using just 33% for 'small'
+		# xfs file systems to leave plenty of slop and 50% for larger xfs
+		# file systems.
+		#
+		if [ $blks -lt 5000000 ]; then
+			blks=$((blks / 3))
+		else
+			blks=$((blks / 2))
+		fi
+		;;
+	*)
 		#
 		# for other file systems we take off ~5% for some slop
 		#
 		slop=$((blks / 20))
 		blks=$((blks - $slop))
-	fi
+		;;
+	esac
+
 	echo $blks
 }
 
