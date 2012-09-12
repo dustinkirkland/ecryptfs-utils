@@ -2,63 +2,58 @@ AUTOMAKE_OPTIONS = subdir-objects
 
 dist_noinst_DATA = tests.rc
 
-dist_noinst_SCRIPTS = lp-885744.sh \
-		      miscdev-bad-count.sh \
+dist_noinst_SCRIPTS = directory-concurrent.sh \
+		      enospc.sh \
 		      extend-file-random.sh \
-		      trunc-file.sh \
-		      directory-concurrent.sh \
 		      file-concurrent.sh \
-		      mmap-dir.sh \
-		      lp-926292.sh \
-		      read-dir.sh \
-		      setattr-flush-dirty.sh \
 		      inode-race-stat.sh \
 		      inotify.sh \
+		      lp-1009207.sh \
+		      lp-469664.sh \
 		      lp-509180.sh \
 		      lp-524919.sh \
-		      lp-870326.sh \
-		      lp-469664.sh \
 		      lp-613873.sh \
-		      lp-1009207.sh \
-		      lp-994247.sh \
+		      lp-745836.sh \
+		      lp-870326.sh \
+		      lp-872905.sh \
+		      lp-885744.sh \
 		      lp-911507.sh \
-		      lp-872905.sh
+		      lp-926292.sh \
+		      lp-994247.sh \
+		      miscdev-bad-count.sh \
+		      mmap-dir.sh \
+		      read-dir.sh \
+		      setattr-flush-dirty.sh \
+		      trunc-file.sh
 
 if ENABLE_TESTS
-noinst_PROGRAMS = miscdev-bad-count/test \
+noinst_PROGRAMS = directory-concurrent/test \
+		  enospc/test \
 		  extend-file-random/test \
-		  trunc-file/test \
-		  directory-concurrent/test \
 		  file-concurrent/test \
-		  inotify/test \
-		  mmap-dir/test \
-		  read-dir/test \
 		  inode-race-stat/test \
+		  inotify/test \
 		  lp-509180/test \
 		  lp-524919/test \
 		  lp-870326/test \
 		  lp-994247/test \
-		  enospc/test
+		  miscdev-bad-count/test \
+		  mmap-dir/test \
+		  read-dir/test \
+		  trunc-file/test
 endif
-
-miscdev_bad_count_test_SOURCES = miscdev-bad-count/test.c
-miscdev_bad_count_test_LDADD = $(top_builddir)/src/libecryptfs/libecryptfs.la
-
-extend_file_random_test_SOURCES = extend-file-random/test.c
-
-trunc_file_test_SOURCES = trunc-file/test.c
 
 directory_concurrent_test_SOURCES = directory-concurrent/test.c
 
+enospc_test_SOURCES = enospc/test.c
+
+extend_file_random_test_SOURCES = extend-file-random/test.c
+
 file_concurrent_test_SOURCES = file-concurrent/test.c
 
-inotify_test_SOURCES = inotify/test.c
-
-mmap_dir_test_SOURCES = mmap-dir/test.c
-
-read_dir_test_SOURCES = read-dir/test.c
-
 inode_race_stat_test_SOURCES = inode-race-stat/test.c
+
+inotify_test_SOURCES = inotify/test.c
 
 lp_509180_test_SOURCES = lp-509180/test.c
 
@@ -68,4 +63,11 @@ lp_870326_test_SOURCES = lp-870326/test.c
 
 lp_994247_test_SOURCES = lp-994247/test.c
 
-enospc_test_SOURCES = enospc/test.c
+miscdev_bad_count_test_SOURCES = miscdev-bad-count/test.c
+miscdev_bad_count_test_LDADD = $(top_builddir)/src/libecryptfs/libecryptfs.la
+
+mmap_dir_test_SOURCES = mmap-dir/test.c
+
+read_dir_test_SOURCES = read-dir/test.c
+
+trunc_file_test_SOURCES = trunc-file/test.c
