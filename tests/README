@@ -1,0 +1,147 @@
+eCryptfs Test Suite
+
+Follow these steps when adding a new test:
+
+ NOTE: This guide primarily focuses on kernel test cases. If you're writing a
+       userspace test case, substitute all mentions of tests/kernel/ with
+       tests/userspace/ and pay attention to any other kernel-specific
+       instructions.
+
+ 1) Pick a name for the new test. This guide will be using the test case name
+    "mmap-close", but you'll need to substitute in the name of your own test
+    case.
+
+    If it is a reproducer for a bug, consider using the bug tracker and bug
+    number. For example, lp-469664 is the test for
+    https://launchpad.net/bugs/469664.
+
+    Otherwise, pick a short, but descriptive, name for the test. For example,
+    trunc-file is the name of a test that excercises file truncation.
+
+ 2) Copy the skeleton test script to the appropriate test directory. In this
+    guide, we're creating a kernel test so copy it to the tests/kernel/
+    directory:
+
+    --- 
+    $ cp tests/new.sh tests/kernel/mmap-close.sh
+    ---
+
+ 3) Update the information in the comments at the top of your new test case.
+    Specifically, the words below in all caps need to be modified:
+
+    ---
+    # FILENAME: Test for BUG_URL|LIST_URL|DESCRIPTION
+    # Author: FIRST LAST <USER@DOMAIN>
+    #
+    # Copyright (C) YEAR COPYRIGHT_HOLDER
+    ---
+
+    In this case, we end up with something along these lines:
+
+    ---
+    # mmap-close.sh : Test for catching regressions when applications do this:
+    #
+    #                 open() -> mmap() -> *close()* -> dirty mapping -> munmap()
+    #
+    #                 Past regressions have been reported in these bugs:
+    #
+    #                 https://bugs.launchpad.net/bugs/870326
+    #                 https://bugs.launchpad.net/bugs/1047261
+    # Author: Tyler Hicks <tyhicks@canonical.com> 
+    ---
+
+ 4) Now you can start writing the test. You'll probably need to set up a basic
+    eCryptfs mount. You can do that by pasting in these sequence of helper
+    functions after the "# TEST" line in your new test case:
+
+    ---
+    # TEST
+    etl_add_keys || exit
+    etl_lmount || exit
+    etl_mount_i || exit
+    test_dir=$(etl_create_test_dir `basename $0`) || exit
+    ---
+
+    This is probably a good time to introduce the library of helper functions.
+    It can be found in tests/lib/etl_funcs.sh. Take a look at the functions
+    available and feel free to add any new functions if you feel like they would
+    benefit multiple test cases.
+
+ 5) At this point, we have a lower filesystem mounted, an eCryptfs filesystem
+    mounted on top of it, and a test directory created inside of the eCryptfs
+    mount. We'll need to properly tear all of that down when the test case
+    exits, so update the test_cleanup() function accordingly:
+
+    ---
+    test_cleanup()
+    {
+    	etl_remove_test_dir $test_dir
+    	etl_umount
+    	etl_lumount
+    	etl_unlink_keys
+    	exit $rc
+    }
+    trap test_cleanup 0 1 2 3 15
+    ---
+
+ 6) Now we are ready to implement the actual test. If it is simple enough to do
+    with basic bash commands, as is the case for lp-469664.sh, simply add those
+    commands and skip to step 11).
+
+    If you need to write a C (or possibly Python) program, proceed to step 7).
+
+ 7) Create a directory to hold the C source file(s) and any other data files
+    that you'll need. It should be named after your test case.
+
+    ---
+    $ mkdir tests/kernel/mmap-close/
+    ---
+
+ 8) Create a new file, inside that directory, called test.c and implement the
+    test case in the new file. Be sure to add a header, including the GPLv2
+    text, similiar to what is in the example test script that was modified in
+    step 3).
+
+ 9) Update the test script (mmap-close.sh) to call the test binary after the
+    environment setup stage:
+
+    ---
+    ${test_script_dir}/mmap-close/test || exit
+    ---
+
+ 10) Add a line to tests/kernel/Makefile.am to build test.c:
+
+    ---
+    mmap_close_test_SOURCES = mmap-close/test.c
+    ---
+
+    And add the test binary to the noinst_PROGRAMS list:
+
+    ---
+    noinst_PROGRAMS = directory-concurrent/test \
+    		      ...
+    		      mmap-close/test \
+    		      ...
+    		      trunc-file/test
+    
+    ---
+
+ 11) Add a line to tests/kernel/Makefile.am to place the new test script in the
+    dist_noinst_SCRIPTS list:
+
+    ---
+    dist_noinst_SCRIPTS = directory-concurrent.sh \
+    			  ...
+    			  mmap-close.sh \
+    			  ...
+    			  trunc-file.sh
+    
+    ---
+
+ 12) Finally, add the new test script to the appropriate list in
+     tests/kernel/tests.rc. There are only two lists - safe and destructive.
+     Safe means that the tests aren't likely to cause a kernel oops or other
+     unrecoverable error. Everything else goes in the destructive list.
+
+This was a quick introduction into creating a new test case. Look at other
+existing test cases for more examples.
