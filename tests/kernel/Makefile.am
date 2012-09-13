@@ -12,6 +12,7 @@ dist_noinst_SCRIPTS = directory-concurrent.sh \
 		      lp-469664.sh \
 		      lp-509180.sh \
 		      lp-524919.sh \
+		      lp-561129.sh \
 		      lp-613873.sh \
 		      lp-745836.sh \
 		      lp-870326.sh \

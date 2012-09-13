@@ -18,6 +18,9 @@ ecryptfs-utils (101) UNRELEASED; urgency=low
   * tests/kernel/mmap-close.sh, tests/kernel/mmap-close/test.c:
     - Add regression test for open->mmap()->close()->dirty memory->munmap()
       pattern
+  * tests/kernel/lp-561129.sh:
+    - Add test for checking that a pre-existing target inode is properly
+      evicted after a rename
   * tests/README:
     - Add documentation on the steps to take when adding new test cases
 
