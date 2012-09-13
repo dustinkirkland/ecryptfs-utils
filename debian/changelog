@@ -15,6 +15,9 @@ ecryptfs-utils (101) UNRELEASED; urgency=low
   * tests/lib/etl_func.sh:
     - Add test library function to return a lower path from an upper path,
       based on inode numbers
+  * tests/kernel/mmap-close.sh, tests/kernel/mmap-close/test.c:
+    - Add regression test for open->mmap()->close()->dirty memory->munmap()
+      pattern
 
   [ Colin King ]
   * tests/kernel/lp-911507.sh:

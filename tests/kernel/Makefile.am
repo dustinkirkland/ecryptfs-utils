@@ -21,6 +21,7 @@ dist_noinst_SCRIPTS = directory-concurrent.sh \
 		      lp-926292.sh \
 		      lp-994247.sh \
 		      miscdev-bad-count.sh \
+		      mmap-close.sh \
 		      mmap-dir.sh \
 		      read-dir.sh \
 		      setattr-flush-dirty.sh \
@@ -38,6 +39,7 @@ noinst_PROGRAMS = directory-concurrent/test \
 		  lp-870326/test \
 		  lp-994247/test \
 		  miscdev-bad-count/test \
+		  mmap-close/test \
 		  mmap-dir/test \
 		  read-dir/test \
 		  trunc-file/test
@@ -65,6 +67,8 @@ lp_994247_test_SOURCES = lp-994247/test.c
 
 miscdev_bad_count_test_SOURCES = miscdev-bad-count/test.c
 miscdev_bad_count_test_LDADD = $(top_builddir)/src/libecryptfs/libecryptfs.la
+
+mmap_close_test_SOURCES = mmap-close/test.c
 
 mmap_dir_test_SOURCES = mmap-dir/test.c
 
