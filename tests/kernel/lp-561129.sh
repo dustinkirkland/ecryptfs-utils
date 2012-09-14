@@ -40,17 +40,20 @@ etl_add_keys || exit
 etl_lmount || exit
 etl_mount_i || exit
 test_dir=$(etl_create_test_dir `basename $0`) || exit
-foo="${test_dir}/foo"
-bar="${test_dir}/bar"
+src="${test_dir}/src"
+dst="${test_dir}/dst"
 
-touch "$foo" "$bar" || exit
+touch "$dst" || exit
+# IMPORTANT: This test gives false positives on filesystems that do not
+# report free inodes (btrfs, for example) in statfs(). On those
+# filesystems, we're testing [ 0 -eq 0 ]. Until this test framework has
+# the notion of skipped tests, we'll have to let it slide.
+expected_inodes=$(stat -fc %d "$dst") || exit
+# TODO: Mark test as skipped if [ $expected_inodes -eq 0 ]
 
-# Moving foo to bar should result in the original bar inode being freed
-expected_inodes=$(stat -fc %d "$bar") || exit
-expected_inodes=$(( $expected_inodes + 1 ))
-
-mv "$foo" "$bar" || exit
-free_inodes=$(stat -fc %d "$bar") || exit
+touch "$src" || exit
+mv "$src" "$dst" || exit
+free_inodes=$(stat -fc %d "$dst") || exit
 
 if [ $free_inodes -eq $expected_inodes ]; then
 	rc=0
