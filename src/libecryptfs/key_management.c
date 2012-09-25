@@ -236,7 +236,7 @@ int ecryptfs_add_passphrase_key_to_keyring(char *auth_tok_sig, char *passphrase,
 	}
 out:
 	if (auth_tok) {
-		memset(auth_tok, 0, sizeof(auth_tok));
+		memset(auth_tok, 0, sizeof(*auth_tok));
 		free(auth_tok);
 	}
 	return rc;
