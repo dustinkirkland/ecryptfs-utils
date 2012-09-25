@@ -30,6 +30,14 @@ ecryptfs-utils (101) UNRELEASED; urgency=low
   * tests/kernel/lp-872905.sh:
     - Add test case to check for proper unlinking of lower files when
       lower file initialization fails
+  * src/key_mod/ecryptfs_key_mod_openssl.c,
+    src/key_mod/ecryptfs_key_mod_pkcs11_helper.c,
+    src/libecryptfs/key_management.c,
+    src/utils/mount.ecryptfs_private.c, src/utils/umount.ecryptfs.c:
+    - address some issues raised by smatch static analysis
+    - fix some memory leaks with frees
+    - fix some pointer refs and derefs
+    - fix some comment typos
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 02 Aug 2012 16:33:28 -0500
 

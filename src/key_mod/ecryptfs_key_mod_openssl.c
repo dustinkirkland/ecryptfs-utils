@@ -895,7 +895,7 @@ static struct param_node ssl_param_nodes[] = {
  * @node: The param_node from which we are transitioning
  * @head: The head of the name/value pair list that is being
  *        constructed as the decision graph is being traversed
- * @foo: Arbitary state information for the current subgraph
+ * @foo: Arbitrary state information for the current subgraph
  *
  * Each transition from one node in the decision graph to another node
  * can have a function executed on the transition event. A transition
