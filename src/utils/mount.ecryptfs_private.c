@@ -173,6 +173,7 @@ char *fetch_sig(char *pw_dir, int entry, char *alias) {
 			i++;
 		} else {
 			fputs("Invalid hex signature\n", stderr);
+			free(sig);
 			return NULL;
 		}
 	}
@@ -184,6 +185,7 @@ char *fetch_sig(char *pw_dir, int entry, char *alias) {
 		} else {
 			fputs("Invalid hex signature length\n", stderr);
 		}
+		free(sig);
 		return NULL;
 	}
 	sig[KEY_BYTES] = '\0';
@@ -192,6 +194,7 @@ char *fetch_sig(char *pw_dir, int entry, char *alias) {
 	 */
 	if (keyctl_search(KEY_SPEC_USER_KEYRING, "user", sig, 0) < 0) {
 		saved_errno = errno;
+		free(sig);
 		return NULL;
 	}
 	return sig;
