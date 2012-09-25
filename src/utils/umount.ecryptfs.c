@@ -142,7 +142,7 @@ static int construct_umount_args(int argc, char **argv, char ***new_argv)
 	int i, rc;
 
 	*new_argv = malloc(sizeof(char *) * (new_argc + 1));
-	if (!new_argv) {
+	if (!*new_argv) {
 		rc = errno;
 		goto out;
 	}
