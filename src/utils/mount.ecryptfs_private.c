@@ -130,72 +130,70 @@ int check_username(char *u) {
 	return 0;
 }
 
-char *fetch_sig(char *pw_dir, int entry, char *alias) {
+char **fetch_sig(char *pw_dir, char *alias, int mounting) {
 /* Read ecryptfs signature from file and validate
  * Return signature as a string, or NULL on failure
  */
 	char *sig_file;
-	int c;
-	FILE *fh;
-	char *sig;
-	int i;
+	FILE *fh = NULL;
+	char **sig = NULL;
+	int i, j;
 	/* Construct sig file name */
-	if (
-	    asprintf(&sig_file, "%s/.ecryptfs/%s.sig", pw_dir,
-		     alias) < 0
-	   ) {
+	if (asprintf(&sig_file, "%s/.ecryptfs/%s.sig", pw_dir, alias) < 0) {
 		perror("asprintf");
-		return NULL;
+		goto out;
 	}
 	fh = fopen(sig_file, "r");
 	if (fh == NULL) {
 		perror("fopen");
-		return NULL;
+		goto out;
 	}
-	if ((sig = (char *)malloc(KEY_BYTES*sizeof(char)+1)) == NULL) {
+	/* Read up to 2 lines from the file */
+	if ((sig = malloc(sizeof(char*) * 2)) == NULL) {
 		perror("malloc");
-		return NULL;
+		goto out;
 	}
-	/* Move to the correct line in the file */
-	if (entry == 1) {
-		while ((c = fgetc(fh)) != EOF) {
-			if (c == '\n') {
-				break;
+	for (i=0; i<2; i++) {
+		if ((sig[i] = (char *)malloc(KEY_BYTES*sizeof(char)+2)) == NULL) {
+			perror("malloc");
+			goto out;
+		}
+		memset(sig[i], '\0', KEY_BYTES+2);
+		/* Read KEY_BYTES characters from line */
+		if (fgets(sig[i], KEY_BYTES+2, fh) == NULL) {
+			if (i == 0) {
+				fputs("Missing file encryption signature", stderr);
+				sig = NULL;
+				goto out;
+			}
+			continue;
+		}
+		/* Validate hex signature */
+		for (j=0; j<strlen(sig[i]); j++) {
+			if (isxdigit(sig[i][j]) == 0 && isspace(sig[i][j]) == 0) {
+				fputs("Invalid hex signature\n", stderr);
+			}
+			if (isspace(sig[i][j]) != 0) {
+				/* truncate at first whitespace */
+				sig[i][j] = '\0';
 			}
 		}
-	}
-	i = 0;
-	/* Read KEY_BYTES characters from file */
-	while ((c = fgetc(fh)) != EOF && i < KEY_BYTES) {
-		if ((c>='0' && c<='9') || (c>='a' && c<='f') ||
-		    (c>='A' && c<='F')) {
-			sig[i] = (char)c;
-			i++;
-		} else {
-			fputs("Invalid hex signature\n", stderr);
-			free(sig);
-			return NULL;
-		}
-	}
-	fclose(fh);
-	/* Check signature length */
-	if (i != KEY_BYTES) {
-		if (entry == 1 && i == 0) {
-			/* This means that we have no fnek sig; tis okay */
-		} else {
+		if (strlen(sig[i]) > 0 && strlen(sig[i]) != KEY_BYTES) {
 			fputs("Invalid hex signature length\n", stderr);
 		}
-		free(sig);
-		return NULL;
+		/* Validate that signature is in the current keyring,
+		 * compile with -lkeyutils
+		 */
+		if (mounting && keyctl_search(KEY_SPEC_USER_KEYRING, "user", sig[i], 0) < 0) {
+			saved_errno = errno;
+			fputs("Signature not found in user keyring\n", stderr);
+			sig = NULL;
+			goto out;
+		}
 	}
-	sig[KEY_BYTES] = '\0';
-	/* Validate that signature is in the current keyring,
-	 * compile with -lkeyutils
-	 */
-	if (keyctl_search(KEY_SPEC_USER_KEYRING, "user", sig, 0) < 0) {
-		saved_errno = errno;
-		free(sig);
-		return NULL;
+out:
+	if (fh != NULL) {
+		fclose(fh);
 	}
 	return sig;
 }
@@ -489,7 +487,7 @@ int main(int argc, char *argv[]) {
 	int force = 0;
 	struct passwd *pwd;
 	char *alias, *src, *dest, *opt, *opts2;
-	char *sig, *sig_fnek;
+	char **sig;
 	FILE *fh_counter = NULL;
 
 	uid = getuid();
@@ -572,29 +570,21 @@ int main(int argc, char *argv[]) {
 
 	/* Fetch signatures from file */
 	/* First line is the file content encryption key signature */
-	sig = fetch_sig(pwd->pw_dir, 0, alias);
-	if (sig == NULL) {
-		/* if umounting, no sig is ok */
-		if (mounting) {
-			errno = saved_errno;
-			perror("keyctl_search");
-			fputs("Perhaps try the interactive 'ecryptfs-mount-private'\n",
-				stderr);
-			goto fail;
-		}
-	}
 	/* Second line, if present, is the filename encryption key signature */
-	sig_fnek = fetch_sig(pwd->pw_dir, 1, alias);
+	if ((sig = fetch_sig(pwd->pw_dir, alias, mounting)) == NULL) {
+		fputs("Error loading key signature(s)\n", stderr);
+		goto fail;
+	}
 
 	/* Build mount options */
 	if (
 	    (asprintf(&opt, "ecryptfs_check_dev_ruid,ecryptfs_cipher=%s,ecryptfs_key_bytes=%d,ecryptfs_unlink_sigs%s%s%s%s",
 		      KEY_CIPHER,
 		      KEY_BYTES,
-		      sig ? ",ecryptfs_sig=" : "",
-		      sig ? sig : "",
-		      sig_fnek ? ",ecryptfs_fnek_sig=" : "",
-		      sig_fnek ? sig_fnek : ""
+		      strlen(sig[0]) > 0 ? ",ecryptfs_sig=" : "",
+		      strlen(sig[0]) > 0 ? sig[0] : "",
+		      strlen(sig[1]) > 0 ? ",ecryptfs_fnek_sig=" : "",
+		      strlen(sig[1]) > 0 ? sig[1] : ""
 		     ) < 0
 	    ) || opt == NULL
 	   ) {
@@ -614,7 +604,7 @@ int main(int argc, char *argv[]) {
 			fputs("Error incrementing mount counter\n", stderr);
 		}
 		/* Mounting, so exit if already mounted */
-		if (ecryptfs_private_is_mounted(src, dest, sig, mounting) == 1) {
+		if (ecryptfs_private_is_mounted(src, dest, sig[1], mounting) == 1) {
 			goto success;
 		}
 		/* We must maintain our real uid as the user who called this
@@ -663,18 +653,18 @@ int main(int argc, char *argv[]) {
                    to prevent root from mounting without the user's key.
                    This is a best-effort basis, so we'll just print messages
                    on error. */
-		if (sig != NULL) {
-			rc = ecryptfs_remove_auth_tok_from_keyring(sig);
+		if (strlen(sig[0]) == 0) {
+			rc = ecryptfs_remove_auth_tok_from_keyring(sig[0]);
 			if (rc != 0 && rc != ENOKEY)
 				fputs("Could not remove key from keyring, try 'ecryptfs-umount-private'\n", stderr);
 		}
-		if (sig_fnek != NULL) {
-			rc = ecryptfs_remove_auth_tok_from_keyring(sig_fnek);
+		if (strlen(sig[1]) == 0) {
+			rc = ecryptfs_remove_auth_tok_from_keyring(sig[1]);
 			if (rc != 0 && rc != ENOKEY)
 				fputs("Could not remove key from keyring, try 'ecryptfs-umount-private'\n", stderr);
 		}
 		/* Unmounting, so exit if not mounted */
-		if (ecryptfs_private_is_mounted(src, dest, sig, mounting) == 0) {
+		if (ecryptfs_private_is_mounted(src, dest, sig[0], mounting) == 0) {
 			goto fail;
 		}
 		/* The key is not needed for unmounting, so we set res=0.

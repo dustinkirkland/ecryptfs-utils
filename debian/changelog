@@ -43,6 +43,21 @@ ecryptfs-utils (101) UNRELEASED; urgency=low
   * src/libecryptfs/key_management.c:
     - silence pam error message when errno == EACCES
       + "Error attempting to parse .ecryptfsrc file; rc = [-13]"
+  * src/utils/mount.ecryptfs_private.c: LP: #1052038
+    - fix race condition, which typically manifests itself with a user
+      saying that their home directory is not accessible, or that their
+      filenames are not decrypted
+    - the root of the problem is that we were reading the signature file,
+      ~/.ecryptfs/Private.sig, twice; in some cases, the first one succeeds,
+      so the file encryption signature is read and key is loaded, but then
+      some other process (usually from PAM, perhaps a cron job or a
+      subsequent login) mounts the home directory before the filename
+      encryption key is loaded;  thus, $HOME is mounted but filenames are
+      not decrypted, so the second read of ~/.ecryptfs/Private.sig fails
+      as that file is not found
+    - the solution is to rework the internal fetch_sig() function and read
+      one or both signatures within a single open/read/close operation of
+      the file
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 02 Aug 2012 16:33:28 -0500
 
