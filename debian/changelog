@@ -59,6 +59,8 @@ ecryptfs-utils (101) UNRELEASED; urgency=low
       one or both signatures within a single open/read/close operation of
       the file
     - free memory used by char **sig on failure
+  * debian/copyright:
+    - fix lintian warning
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 02 Aug 2012 16:33:28 -0500
 
