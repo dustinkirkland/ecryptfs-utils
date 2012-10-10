@@ -191,11 +191,24 @@ char **fetch_sig(char *pw_dir, char *alias, int mounting) {
 			goto out;
 		}
 	}
-out:
 	if (fh != NULL) {
 		fclose(fh);
 	}
 	return sig;
+out:
+	if (fh) {
+		fclose(fh);
+	}
+	/* Clean up malloc'd memory if failure */
+	if (sig) {
+		for (i=0; i<2; i++) {
+			if (sig[i]) {
+				free(sig[i]);
+			}
+		}
+		free(sig);
+	}
+	return NULL;
 }
 
 int check_ownership_mnt(int uid, char **mnt) {
