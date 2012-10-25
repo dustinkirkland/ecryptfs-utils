@@ -1,4 +1,4 @@
-ecryptfs-utils (101) UNRELEASED; urgency=low
+ecryptfs-utils (101) quantal; urgency=low
 
   [ Eric Lammerts ]
   * src/libecryptfs/sysfs.c: LP: #1007880
@@ -62,7 +62,7 @@ ecryptfs-utils (101) UNRELEASED; urgency=low
   * debian/copyright:
     - fix lintian warning
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 02 Aug 2012 16:33:28 -0500
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 25 Oct 2012 16:12:36 -0500
 
 ecryptfs-utils (100) precise; urgency=low
 
