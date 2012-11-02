@@ -11,7 +11,6 @@ fi
 rm -rf .git/
 rm -rf .to_fold/
 rm -rf rpm/
-rm -rf src/test
 rm -f src/pki/Makefile
 rm -f src/include/Makefile
 rm -f src/libecryptfs/Makefile
@@ -21,7 +20,6 @@ rm -f src/Makefile
 rm -f Makefile
 rm -rf debian/ecryptfs-util
 rm -rf debian/ecryptfs-util-doc
-rm -rf src/testcases/cthon04
 find . -name ".libs" -exec rm -rf {} \;
 find . -name ".deps" -exec rm -rf {} \;
 find . -name ".tmp_versions" -exec rm -rf {} \;

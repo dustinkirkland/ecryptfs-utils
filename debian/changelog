@@ -25,6 +25,9 @@ ecryptfs-utils (102) UNRELEASED; urgency=low
   * tests/lib/etl_funcs.sh:
     - Update etl_create_test_dir() to allow a parent directory to be specified
       when creating the directory
+  * src/testcases:
+    - Delete old testcases that were either too basic, covered by more
+      extensive tests in the modern test framework, or just didn't work
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 25 Oct 2012 16:12:45 -0500
 
