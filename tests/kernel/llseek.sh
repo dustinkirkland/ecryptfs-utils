@@ -1,14 +1,14 @@
 #!/bin/bash
 #
-# extend-file-random: Randomly extend file size, read/write + unlink
-# Author: Colin King <colin.king@canonical.com>
+# llseek: Test for llseek operations
+# Author: Tyler Hicks <tyhicks@canonical.com>
 #
-# Copyright (C) 2012 Canonical, Ltd.
+# Copyright (C) 2012 Canonical Ltd.
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; either version 2
-# of the License, or (at your option) any later version.
+# as published by the Free Software Foundation version 2
+# of the License.
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,7 +21,6 @@
 
 test_script_dir=$(dirname $0)
 rc=1
-test_dir=""
 
 . ${test_script_dir}/../lib/etl_funcs.sh
 
@@ -39,15 +38,8 @@ etl_add_keys || exit
 etl_lmount || exit
 etl_mount_i || exit
 test_dir=$(etl_create_test_dir) || exit
+path="${test_dir}/foo"
 
-#
-#  We try to make a file way larger than the number of free blocks
-#  to ensure we hit ENOSPC
-#
-blks=$(etl_lmax_filesize)
-blks=$((blks * 5))
-
-${test_script_dir}/enospc/test ${test_dir}/test.img $blks
-
+${test_script_dir}/llseek/test ${path}
 rc=$?
 exit

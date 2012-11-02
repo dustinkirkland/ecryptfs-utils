@@ -519,12 +519,19 @@ etl_umount()
 #
 etl_create_test_dir()
 {
-	if [ -z "$ETL_MOUNT_DST" ] || [ -z "$1" ]; then
+	parent=
+
+	if [ -z "$ETL_MOUNT_DST" ] && [ -z "$1" ]; then
 		return 1
 	fi
 
+	if [ -z "$1" ]; then
+		parent=$ETL_MOUNT_DST
+	else
+		parent=$1
+	fi
 	test_basename=$(basename $0)
-	test_dir=$(mktemp -qd /${ETL_MOUNT_DST}/etl-${test_basename}-XXXXXXXXXX)
+	test_dir=$(mktemp -qd ${parent}/etl-${test_basename}-XXXXXXXXXX)
 	if [ $? -ne 0 ]; then
 		return 1;
 	fi

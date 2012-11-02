@@ -8,6 +8,7 @@ dist_noinst_SCRIPTS = directory-concurrent.sh \
 		      file-concurrent.sh \
 		      inode-race-stat.sh \
 		      inotify.sh \
+		      llseek.sh \
 		      lp-1009207.sh \
 		      lp-469664.sh \
 		      lp-509180.sh \
@@ -35,6 +36,7 @@ noinst_PROGRAMS = directory-concurrent/test \
 		  file-concurrent/test \
 		  inode-race-stat/test \
 		  inotify/test \
+		  llseek/test \
 		  lp-509180/test \
 		  lp-524919/test \
 		  lp-870326/test \
@@ -57,6 +59,8 @@ file_concurrent_test_SOURCES = file-concurrent/test.c
 inode_race_stat_test_SOURCES = inode-race-stat/test.c
 
 inotify_test_SOURCES = inotify/test.c
+
+llseek_test_SOURCES = llseek/test.c
 
 lp_509180_test_SOURCES = lp-509180/test.c
 

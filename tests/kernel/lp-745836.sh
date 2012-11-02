@@ -37,7 +37,7 @@ trap test_cleanup 0 1 2 3 15
 etl_add_keys || exit
 etl_lmount || exit
 etl_mount_i || exit
-test_dir=$(etl_create_test_dir `basename $0`) || exit
+test_dir=$(etl_create_test_dir) || exit
 test_file="${test_dir}/foo"
 
 touch $test_file || exit

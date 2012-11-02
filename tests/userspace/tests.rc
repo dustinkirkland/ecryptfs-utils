@@ -1,1 +1,1 @@
-safe="verify-passphrase-sig.sh"
+safe="verify-passphrase-sig.sh wrap-unwrap.sh"

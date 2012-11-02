@@ -59,7 +59,7 @@ Follow these steps when adding a new test:
     etl_add_keys || exit
     etl_lmount || exit
     etl_mount_i || exit
-    test_dir=$(etl_create_test_dir `basename $0`) || exit
+    test_dir=$(etl_create_test_dir) || exit
     ---
 
     This is probably a good time to introduce the library of helper functions.
