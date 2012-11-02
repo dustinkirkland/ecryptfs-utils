@@ -17,6 +17,8 @@ ecryptfs-utils (102) UNRELEASED; urgency=low
     - Remove all jprobes code, as I don't use jprobes to debug eCryptfs kernel
       issues and I don't like the idea of maintaining these jprobes outside of
       the kernel tree
+  * src/escrow/*:
+    - Remove all escrow code, as it isn't used or maintained
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 25 Oct 2012 16:12:45 -0500
 
