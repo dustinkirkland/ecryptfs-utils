@@ -4,6 +4,16 @@ ecryptfs-utils (102) UNRELEASED; urgency=low
   * debian/control:
     - bump standards, no change
 
+  [ Tyler Hicks ]
+  * src/daemon/main.c, src/include/ecryptfs.h,
+    src/libecryptfs/{Makefile.am,messaging.c,miscdev.c,netlink.c,sysfs.c},
+    doc/manpage/ecryptfsd.8, doc/design_doc/ecryptfs_design_doc_v0_2.tex:
+    - Remove netlink messaging interface support
+    - Netlink messaging support was superceded by the miscdev interface
+      (/dev/ecryptfs) in upstream kernel version 2.6.26 in July, 2008
+    - Netlink messaging support was completely removed from the upstream
+      kernel starting with version 2.6.32 in December, 2009
+
  -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 25 Oct 2012 16:12:45 -0500
 
 ecryptfs-utils (101) quantal; urgency=low

@@ -3,7 +3,7 @@
 ecryptfsd \- user\-space eCryptfs daemon.
 
 .SH DESCRIPTION
-\fBecryptfsd\fP is a userspace daemon that runs as the user performing file operations under the eCryptfs mount point. It services public key requests from the eCryptfs kernel module; these requests are sent via netlink on file open events. ecryptfsd only needs to be run when a mount is done with a public key module.
+\fBecryptfsd\fP is a userspace daemon that runs as the user performing file operations under the eCryptfs mount point. It services public key requests from the eCryptfs kernel module; these requests are sent via /dev/ecryptfs on file open events. ecryptfsd only needs to be run when a mount is done with a public key module.
 
 The daemon can be started simply by running \fIecryptfsd\fP. ecryptfsd will register itself with the kernel as the daemon that should service all eCryptfs filesystem requests done under the context of the user who runs the daemon.
 

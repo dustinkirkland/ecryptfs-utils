@@ -685,19 +685,19 @@ authentication token key object in the keyring. This authentication
 token object contains additional information necessary for the
 userspace code to complete the operation.
 
-eCryptfs manages a netlink socket between the kernel module and the
-userspace daemon. When the kernel would like to request a public key
-operation from the userspace daemon on a file open event, the kernel
-module allocates from a pool of free netlink message context
-objects. It then constructs the request packet and sends it down to
-the userspace daemon, after which the process calls the scheduler. The
-daemon wakes up and parses the message, directing the request to the
-appropriate PKI module. Once the request has been processed, the
-daemon sends a reply packet via the netlink socket. A kernel thread
-receives the reply, associates the received packet with its netlink
-message context object, and wakes up the process that originally sent
-the request out to userspace. The process parses the received packet
-from the netlink message and continues with the file open operation.
+eCryptfs manages a device file (/dev/ecryptfs) between the kernel module
+and the userspace daemon. When the kernel would like to request a public
+key operation from the userspace daemon on a file open event, the kernel
+module allocates from a pool of free message context objects. It then
+constructs the request packet and allows the userspace daemon to read it
+from the device file, after which the process calls the scheduler. The
+daemon wakes up, reads and parses the message, then directs the request
+to the appropriate PKI module. Once the request has been processed, the
+daemon writes a reply packet via the device file. A kernel thread
+receives the reply, associates the received packet with its message
+context object, and wakes up the process that originally sent the
+request out to userspace. The process parses the received packet from
+the message and continues with the file open operation.
 
 \subsection{Deployment Considerations}
 

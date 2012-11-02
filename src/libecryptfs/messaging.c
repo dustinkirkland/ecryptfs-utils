@@ -106,14 +106,12 @@ int ecryptfs_init_messaging(struct ecryptfs_messaging_ctx *mctx, uint32_t type)
 
 	memset(mctx, 0, sizeof(*mctx));
 	switch (type) {
-	case ECRYPTFS_MESSAGING_TYPE_NETLINK:
-		mctx->type = ECRYPTFS_MESSAGING_TYPE_NETLINK;
-		rc = ecryptfs_init_netlink(&mctx->ctx.nl_ctx);
-		break;
 	case ECRYPTFS_MESSAGING_TYPE_MISCDEV:
 		mctx->type = ECRYPTFS_MESSAGING_TYPE_MISCDEV;
 		rc = ecryptfs_init_miscdev(&mctx->ctx.miscdev_ctx);
 		break;
+	case ECRYPTFS_MESSAGING_TYPE_NETLINK:
+		/* No longer supported */
 	default:
 		rc = -EINVAL;
 		goto out;
@@ -127,9 +125,6 @@ int ecryptfs_messaging_exit(struct ecryptfs_messaging_ctx *mctx)
 	int rc = 0;
 
 	switch (mctx->type) {
-	case ECRYPTFS_MESSAGING_TYPE_NETLINK:
-		ecryptfs_release_netlink(&mctx->ctx.nl_ctx);
-		break;
 	case ECRYPTFS_MESSAGING_TYPE_MISCDEV:
 		ecryptfs_release_miscdev(&mctx->ctx.miscdev_ctx);
 		break;
@@ -158,16 +153,6 @@ int ecryptfs_send_message(struct ecryptfs_messaging_ctx *mctx,
 	int rc = 0;
 
 	switch (mctx->type) {
-	case ECRYPTFS_MESSAGING_TYPE_NETLINK:
-		rc = ecryptfs_send_netlink(&mctx->ctx.nl_ctx, msg, msg_type,
-					   msg_flags, msg_seq);
-		if (rc) {
-			syslog(LOG_ERR, "%s: Failed to register netlink daemon "
-			       "with the eCryptfs kernel module; rc = [%d]\n",
-			       __FUNCTION__, rc);
-
-		}
-		break;
 	case ECRYPTFS_MESSAGING_TYPE_MISCDEV:
 		rc = ecryptfs_send_miscdev(&mctx->ctx.miscdev_ctx, msg,
 					   msg_type, msg_flags, msg_seq);
@@ -190,11 +175,6 @@ int ecryptfs_run_daemon(struct ecryptfs_messaging_ctx *mctx)
 	int rc;
 
 	switch (mctx->type) {
-	case ECRYPTFS_MESSAGING_TYPE_NETLINK:
-		rc = ecryptfs_run_netlink_daemon(&mctx->ctx.nl_ctx);
-		if (rc)
-			goto out;
-		break;
 	case ECRYPTFS_MESSAGING_TYPE_MISCDEV:
 		rc = ecryptfs_run_miscdev_daemon(&mctx->ctx.miscdev_ctx);
 		if (rc)

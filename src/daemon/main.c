@@ -268,19 +268,16 @@ int main(int argc, char **argv)
 		 required_argument, NULL, 'R'},
 		{"version\0\t\t\tShow version information", no_argument, NULL,
 		 'V'},
-		{"channel\0\tCommunications channel (netlink or miscdev)",
-		  required_argument, NULL, 'd'},
 		{"help\0\t\t\tShow usage information", no_argument, NULL, 'h'},
 		{NULL, 0, NULL, 0}
 	};
-	static char *short_options = "p:fC:R:Vd:h";
+	static char *short_options = "p:fC:R:Vh";
 	int long_options_ret;
 	struct rlimit core = {0, 0};
 	int foreground = 0;
 	char *chrootdir = NULL;
 	char *tty = NULL;
-	uint32_t channel_type = ECRYPTFS_DEFAULT_MESSAGING_TYPE;
-	int messaging_type_specified = 0;
+	uint32_t version;
 	int rc = 0;
 	
 	while ((long_options_ret = getopt_long(argc, argv, short_options,
@@ -314,13 +311,6 @@ int main(int argc, char **argv)
 			       PACKAGE_VERSION);
 			exit(0);
 			break;
-		case 'd':
-			messaging_type_specified = 1;
-			if (strcmp(optarg, "netlink") == 0)
-				channel_type = ECRYPTFS_MESSAGING_TYPE_NETLINK;
-			else if (strcmp(optarg, "miscdev") == 0)
-				channel_type = ECRYPTFS_MESSAGING_TYPE_MISCDEV;
-			break;
 		case 'h':
 		default:
 			usage(basename(argv[0]), long_options,
@@ -329,21 +319,18 @@ int main(int argc, char **argv)
 			break;
 		}
 	}
+	rc = ecryptfs_get_version(&version);
+	if (!rc && !(version & ECRYPTFS_VERSIONING_MISCDEV)) {
+		rc = -EPROTONOSUPPORT;
+		syslog(LOG_ERR, "%s: Current kernel does not have support for "
+		       "/dev/ecryptfs; please use 2.6.26 or newer\n", __func__);
+		exit(rc);
+	}
 	openlog(argv[0], LOG_PID | (foreground ? LOG_PERROR : 0), 0);
-	if (!messaging_type_specified) {
-		uint32_t version;
-
-		rc = ecryptfs_get_version(&version);
-		if (rc) {
-			syslog(LOG_WARNING, "%s: Unable to retrieve versioning "
-			       "info from kernel module; falling back on "
-			       "default values\n", __FUNCTION__);
-		} else {
-			if (version & ECRYPTFS_VERSIONING_MISCDEV)
-				channel_type = ECRYPTFS_MESSAGING_TYPE_MISCDEV;
-			else
-				channel_type = ECRYPTFS_MESSAGING_TYPE_NETLINK;
-		}
+	if (rc) {
+		syslog(LOG_WARNING, "%s: Unable to retrieve versioning "
+		       "info from kernel module; assuming /dev/ecryptfs is "
+		       "available\n " , __FUNCTION__);
 	}
 	tty = ttyname(0); /* We may need the tty name later */
 	if (tty != NULL)
@@ -391,7 +378,7 @@ int main(int argc, char **argv)
  	cryptfs_get_ctx_opts()->prompt = prompt_callback;
 	pthread_mutex_init(&mctx_mux, NULL);
 	pthread_mutex_lock(&mctx_mux);
-	rc = ecryptfs_init_messaging(&mctx, channel_type);
+	rc = ecryptfs_init_messaging(&mctx, ECRYPTFS_MESSAGING_TYPE_MISCDEV);
 	if (rc) {
 		syslog(LOG_ERR, "%s: Failed to initialize messaging; rc = "
 		       "[%d]\n", __FUNCTION__, rc);
@@ -401,8 +388,8 @@ int main(int argc, char **argv)
 	rc = ecryptfs_send_message(&mctx, NULL, ECRYPTFS_MSG_HELO, 0, 0);
 	if (rc) {
 		syslog(LOG_ERR, "%s: Error attempting to send message to "
-		       "eCryptfs kernel module via transport of type "
-		       "[0x%.8x]; rc = [%d]\n", __FUNCTION__, mctx.type, rc);
+		       "eCryptfs kernel module via /dev/ecryptfs; rc = [%d]\n",
+		       __func__, rc);
 		pthread_mutex_unlock(&mctx_mux);
 		goto daemon_out;
 	}

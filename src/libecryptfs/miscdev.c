@@ -227,23 +227,23 @@ int ecryptfs_run_miscdev_daemon(struct ecryptfs_miscdev_ctx *miscdev_ctx)
 receive:
 	rc = ecryptfs_recv_miscdev(miscdev_ctx, &emsg, &msg_seq, &msg_type);
 	if (rc < 0) {
-		syslog(LOG_ERR, "Error while receiving eCryptfs netlink "
-		       "message; errno = [%d]; errno msg = [%m]\n", errno);
+		syslog(LOG_ERR, "Error while receiving eCryptfs message "
+		       "errno = [%d]; errno msg = [%m]\n", errno);
 		error_count++;
-		if (error_count > ECRYPTFS_NETLINK_ERROR_COUNT_THRESHOLD) {
-			syslog(LOG_ERR, "Netlink error threshold exceeded "
+		if (error_count > ECRYPTFS_MSG_ERROR_COUNT_THRESHOLD) {
+			syslog(LOG_ERR, "Messaging error threshold exceeded "
 			       "maximum of [%d]; terminating daemon\n",
-			       ECRYPTFS_NETLINK_ERROR_COUNT_THRESHOLD);
+			       ECRYPTFS_MSG_ERROR_COUNT_THRESHOLD);
 			rc = -EIO;
 			goto out;
 		}
 	} else if (msg_type == ECRYPTFS_MSG_HELO) {
-		syslog(LOG_DEBUG, "Received eCryptfs netlink HELO "
-		       "message from the kernel\n");
+		syslog(LOG_DEBUG, "Received eCryptfs HELO message from the "
+		       "kernel\n");
 		error_count = 0;
 	} else if (msg_type == ECRYPTFS_MSG_QUIT) {
-		syslog(LOG_DEBUG, "Received eCryptfs netlink QUIT "
-		       "message from the kernel\n");
+		syslog(LOG_DEBUG, "Received eCryptfs QUIT message from the "
+		       "kernel\n");
 		free(emsg);
 		rc = 0;
 		goto out;
@@ -252,8 +252,7 @@ receive:
 
 		rc = parse_packet(&ctx, emsg, &reply);
 		if (rc) {
-			syslog(LOG_ERR, "Failed to miscdevess "
-			       "netlink packet\n");
+			syslog(LOG_ERR, "Failed to miscdevess packet\n");
 			free(reply);
 			goto free_emsg;
 		}
@@ -261,15 +260,14 @@ receive:
 		rc = ecryptfs_send_miscdev(miscdev_ctx, reply,
 					   ECRYPTFS_MSG_RESPONSE, 0, msg_seq);
 		if (rc < 0) {
-			syslog(LOG_ERR, "Failed to send netlink "
-			       "message in response to kernel "
-			       "request\n");
+			syslog(LOG_ERR, "Failed to send message in response to "
+			       "kernel request\n");
 		}
 		free(reply);
 		error_count = 0;
 	} else
-		syslog(LOG_DEBUG, "Received unrecognized netlink "
-		       "message type [%d]\n", msg_type);
+		syslog(LOG_DEBUG, "Received unrecognized message type [%d]\n",
+		       msg_type);
 free_emsg:
 	free(emsg);
 	goto receive;

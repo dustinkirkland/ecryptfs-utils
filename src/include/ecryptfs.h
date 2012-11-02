@@ -40,12 +40,6 @@
 #ifndef S_SPLINT_S
 #include <sys/types.h>
 #include <linux/types.h>
-#include <linux/netlink.h>
-#endif
-
-#ifndef NETLINK_ECRYPTFS
-#warning NETLINK_ECRYPTFS not defined in netlink.h
-#define NETLINK_ECRYPTFS 19
 #endif
 
 /* Version verification for shared data structures w/ userspace */
@@ -114,7 +108,7 @@
 #define ECRYPTFS_MSG_REQUEST 102
 #define ECRYPTFS_MSG_RESPONSE 103
 #define ECRYPTFS_MSG_MAX_SIZE 1024
-#define ECRYPTFS_NETLINK_ERROR_COUNT_THRESHOLD 8
+#define ECRYPTFS_MSG_ERROR_COUNT_THRESHOLD 8
 #define ECRYPTFS_MAX_KEY_MOD_NAME_BYTES 16
 
 #ifndef SHA512_DIGEST_LENGTH
@@ -420,7 +414,7 @@ struct ecryptfs_miscdev_ctx {
 };
 
 struct ecryptfs_messaging_ctx {
-#define ECRYPTFS_MESSAGING_TYPE_NETLINK 0x00000001
+#define ECRYPTFS_MESSAGING_TYPE_NETLINK 0x00000001 /* No longer supported */
 #define ECRYPTFS_MESSAGING_TYPE_MISCDEV 0x00000002
 	uint32_t type;
 #define ECRYPTFS_MESSAGING_STATE_LISTENING 0x00000001
@@ -457,8 +451,6 @@ typedef struct binary_data {
 	int size;
 	unsigned char *data;
 } binary_data;
-
-#define ECRYPTFS_DEFAULT_MESSAGING_TYPE ECRYPTFS_MESSAGING_TYPE_NETLINK
 
 int ecryptfs_get_version(uint32_t *version);
 int ecryptfs_supports_passphrase(uint32_t version);
@@ -515,13 +507,6 @@ int parse_options_file(int fd, struct ecryptfs_name_val_pair *head);
 int free_name_val_pairs(struct ecryptfs_name_val_pair *pair);
 int ecryptfs_init_messaging(struct ecryptfs_messaging_ctx *mctx, uint32_t type);
 int ecryptfs_messaging_exit(struct ecryptfs_messaging_ctx *mctx);
-int ecryptfs_send_netlink(struct ecryptfs_nl_ctx *nl_ctx,
-			  struct ecryptfs_message *emsg, uint8_t msg_type,
-			  uint16_t msg_flags, uint32_t msg_seq);
-void ecryptfs_release_netlink(struct ecryptfs_nl_ctx *nl_ctx);
-int ecryptfs_init_netlink_daemon(void);
-int ecryptfs_run_netlink_daemon(struct ecryptfs_nl_ctx *nl_ctx);
-int ecryptfs_init_netlink(struct ecryptfs_nl_ctx *nl_ctx);
 int ecryptfs_nvp_list_union(struct ecryptfs_name_val_pair *dst,
 			    struct ecryptfs_name_val_pair *src,
 			    struct ecryptfs_name_val_pair *allowed_duplicates);
