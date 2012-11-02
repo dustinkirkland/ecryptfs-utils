@@ -25,7 +25,6 @@ rm -rf src/testcases/cthon04
 find . -name ".libs" -exec rm -rf {} \;
 find . -name ".deps" -exec rm -rf {} \;
 find . -name ".tmp_versions" -exec rm -rf {} \;
-find . -name ".jprobe*" -exec rm -rf {} \;
 find . -name ".test*" -exec rm -rf {} \;
 find . -name "*.ko" -exec rm -rf {} \;
 find . -name "*.o" -exec rm -rf {} \;

@@ -13,6 +13,10 @@ ecryptfs-utils (102) UNRELEASED; urgency=low
       (/dev/ecryptfs) in upstream kernel version 2.6.26 in July, 2008
     - Netlink messaging support was completely removed from the upstream
       kernel starting with version 2.6.32 in December, 2009
+  * src/jprobes/*, scripts/delete-cruft.sh:
+    - Remove all jprobes code, as I don't use jprobes to debug eCryptfs kernel
+      issues and I don't like the idea of maintaining these jprobes outside of
+      the kernel tree
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 25 Oct 2012 16:12:45 -0500
 
