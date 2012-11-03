@@ -5,11 +5,8 @@ Maintainer: Dustin Kirkland <kirkland@ubuntu.com>
 XSBC-Original-Maintainer: Daniel Baumann <daniel@debian.org>
 Build-Depends:
  debhelper (>= 8),
- autotools-dev,
- autoconf,
- automake,
+ dh-autoreconf,
  intltool,
- libtool,
  libgcrypt11-dev,
  libglib2.0-dev,
  libkeyutils-dev,

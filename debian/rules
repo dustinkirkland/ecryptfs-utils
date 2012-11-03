@@ -9,7 +9,7 @@ endif
 CFLAGS += -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64
 
 %:
-	dh ${@} --with autotools_dev,python2
+	dh ${@} --with autoreconf,python2
 
 override_dh_auto_configure:
 	dh_auto_configure -- --enable-static --disable-gpg --enable-nss  --disable-gui --enable-pam --disable-openssl --disable-pkcs11-helper --disable-tspi $(TPMFLAGS) CFLAGS="$(CFLAGS)"
