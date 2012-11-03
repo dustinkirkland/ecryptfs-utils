@@ -7,7 +7,7 @@ check_PROGRAMS = verify-passphrase-sig/test
 dist_noinst_DATA = tests.rc
 
 dist_noinst_SCRIPTS = $(dist_check_SCRIPTS) \
-		      wrap-unwrap/test
+		      wrap-unwrap.sh
 
 if ENABLE_TESTS
 noinst_PROGRAMS = $(check_PROGRAMS) \
