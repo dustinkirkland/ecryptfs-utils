@@ -8,6 +8,7 @@ ecryptfs-utils (102) UNRELEASED; urgency=low
   * autogen.sh, scripts/release.sh, Makefile.am:
     - Break out the autoreconf and intltoolize commands from release.sh into
       an executable autogen.sh
+    - Use the --copy option when invoking intltoolize
     - Include the new autogen.sh script in the release tarball
   * debian/rules, debian/control:
     - Use dh-autoreconf so that upstream sources can easily be used to build
