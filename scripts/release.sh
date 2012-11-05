@@ -12,8 +12,7 @@ head -n1 debian/changelog | grep -i "unreleased" || error "This version must be 
 curver=`head -n1 debian/changelog | sed "s/^.*(//" | sed "s/).*$//"`
 
 rm -f ./ecryptfs-utils_$curver.orig.tar.gz
-autoreconf -i -v -f
-intltoolize --force
+./autogen.sh
 ./configure --prefix=/usr
 make dist
 for i in `ls ecryptfs-utils-*.tar.gz`; do

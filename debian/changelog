@@ -5,10 +5,15 @@ ecryptfs-utils (102) UNRELEASED; urgency=low
     - bump standards, no change
 
   [ Tyler Hicks ]
+  * autogen.sh, scripts/release.sh, Makefile.am:
+    - Break out the autoreconf and intltoolize commands from release.sh into
+      an executable autogen.sh
+    - Include the new autogen.sh script in the release tarball
   * debian/rules, debian/control:
     - Use dh-autoreconf so that upstream sources can easily be used to build
       packages for all the stable Ubuntu releases in the ecryptfs-utils daily
       build PPA
+    - Override the dh_autoreconf target by running the autogen.sh script
     - Drop Build-Depends on autotools-dev since dh-autoreconf is a superset of
       autotools-dev
     - Drop Build-Depends on autoconf, automake, and libtool since

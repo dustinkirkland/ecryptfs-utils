@@ -25,6 +25,8 @@ MAINTAINERCLEANFILES = \
 
 SUBDIRS = doc src po tests
 
+EXTRA_DIST = autogen.sh
+
 dist_doc_DATA = README
 
 dist-hook:
