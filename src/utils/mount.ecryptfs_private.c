@@ -153,6 +153,9 @@ char **fetch_sig(char *pw_dir, char *alias, int mounting) {
 		perror("malloc");
 		goto out;
 	}
+
+	sig[0] = NULL;
+	sig[1] = NULL;
 	for (i=0; i<2; i++) {
 		if ((sig[i] = (char *)malloc(KEY_BYTES*sizeof(char)+2)) == NULL) {
 			perror("malloc");
@@ -666,12 +669,12 @@ int main(int argc, char *argv[]) {
                    to prevent root from mounting without the user's key.
                    This is a best-effort basis, so we'll just print messages
                    on error. */
-		if (strlen(sig[0]) == 0) {
+		if (strlen(sig[0]) == KEY_BYTES) {
 			rc = ecryptfs_remove_auth_tok_from_keyring(sig[0]);
 			if (rc != 0 && rc != ENOKEY)
 				fputs("Could not remove key from keyring, try 'ecryptfs-umount-private'\n", stderr);
 		}
-		if (strlen(sig[1]) == 0) {
+		if (strlen(sig[1]) == KEY_BYTES) {
 			rc = ecryptfs_remove_auth_tok_from_keyring(sig[1]);
 			if (rc != 0 && rc != ENOKEY)
 				fputs("Could not remove key from keyring, try 'ecryptfs-umount-private'\n", stderr);

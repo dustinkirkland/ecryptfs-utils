@@ -19,6 +19,12 @@ ecryptfs-utils (102) UNRELEASED; urgency=low
       autotools-dev
     - Drop Build-Depends on autoconf, automake, and libtool since
       dh-autoreconf depends on all of these packages
+  * src/utils/mount.ecryptfs_private.c:
+    - Fix conditionals when checking whether to remove authentication tokens
+      from the kernel keyring upon umount. This conditional was incorrectly
+      modified in ecryptfs-utils-101, yet the authentication tokens still seem
+      to be removed from the kernel keyring so it isn't clear if there was
+      actually a user-facing regression.
   * src/daemon/main.c, src/include/ecryptfs.h,
     src/libecryptfs/{Makefile.am,messaging.c,miscdev.c,netlink.c,sysfs.c},
     doc/manpage/ecryptfsd.8, doc/design_doc/ecryptfs_design_doc_v0_2.tex:
