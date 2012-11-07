@@ -25,6 +25,8 @@ ecryptfs-utils (102) UNRELEASED; urgency=low
       modified in ecryptfs-utils-101, yet the authentication tokens still seem
       to be removed from the kernel keyring so it isn't clear if there was
       actually a user-facing regression.
+    - Pass the FEKEK sig, rather than the FNEK sig, to
+      ecryptfs_private_is_mounted()
   * src/daemon/main.c, src/include/ecryptfs.h,
     src/libecryptfs/{Makefile.am,messaging.c,miscdev.c,netlink.c,sysfs.c},
     doc/manpage/ecryptfsd.8, doc/design_doc/ecryptfs_design_doc_v0_2.tex:

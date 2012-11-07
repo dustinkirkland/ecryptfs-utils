@@ -620,7 +620,7 @@ int main(int argc, char *argv[]) {
 			fputs("Error incrementing mount counter\n", stderr);
 		}
 		/* Mounting, so exit if already mounted */
-		if (ecryptfs_private_is_mounted(src, dest, sig[1], mounting) == 1) {
+		if (ecryptfs_private_is_mounted(src, dest, sig[0], mounting) == 1) {
 			goto success;
 		}
 		/* We must maintain our real uid as the user who called this
