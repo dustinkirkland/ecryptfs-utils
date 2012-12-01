@@ -53,8 +53,6 @@
 #define FSTYPE "ecryptfs"
 #define TMP "/dev/shm"
 
-int saved_errno;
-
 int read_config(char *pw_dir, int uid, char *alias, char **s, char **d, char **o) {
 /* Read an fstab(5) style config file */
 	char *fnam;
@@ -187,10 +185,11 @@ char **fetch_sig(char *pw_dir, char *alias, int mounting) {
 		/* Validate that signature is in the current keyring,
 		 * compile with -lkeyutils
 		 */
-		if (mounting && keyctl_search(KEY_SPEC_USER_KEYRING, "user", sig[i], 0) < 0) {
-			saved_errno = errno;
-			fputs("Signature not found in user keyring\n", stderr);
-			sig = NULL;
+		if (keyctl_search(KEY_SPEC_USER_KEYRING, "user", sig[i], 0) < 0) {
+			if (mounting)
+				fputs("Signature not found in user keyring\n"
+				      "Perhaps try the interactive "
+				      "'ecryptfs-mount-private'\n", stderr);
 			goto out;
 		}
 	}
@@ -204,12 +203,8 @@ out:
 	}
 	/* Clean up malloc'd memory if failure */
 	if (sig) {
-		for (i=0; i<2; i++) {
-			if (sig[i]) {
-				free(sig[i]);
-			}
-		}
-		free(sig);
+		free(sig[0]);
+		free(sig[1]);
 	}
 	return NULL;
 }
@@ -587,8 +582,9 @@ int main(int argc, char *argv[]) {
 	/* Fetch signatures from file */
 	/* First line is the file content encryption key signature */
 	/* Second line, if present, is the filename encryption key signature */
-	if ((sig = fetch_sig(pwd->pw_dir, alias, mounting)) == NULL) {
-		fputs("Error loading key signature(s)\n", stderr);
+	sig = fetch_sig(pwd->pw_dir, alias, mounting);
+	if (!sig && mounting) {
+		/* if umounting, no sig is ok */
 		goto fail;
 	}
 

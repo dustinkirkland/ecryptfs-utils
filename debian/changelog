@@ -27,6 +27,12 @@ ecryptfs-utils (102) UNRELEASED; urgency=low
       actually a user-facing regression.
     - Pass the FEKEK sig, rather than the FNEK sig, to
       ecryptfs_private_is_mounted()
+    - Restore behavior of not printing error messages to syslog when
+      unmounting and keys cannot be found in the kernel keyring.
+    - Restore behavior of printing a useful error message about
+      ecryptfs-mount-private when mounting and keys cannot be found in the
+      kernel keyring
+    - Fix memory leak and clean up free()'s in an error path
   * src/daemon/main.c, src/include/ecryptfs.h,
     src/libecryptfs/{Makefile.am,messaging.c,miscdev.c,netlink.c,sysfs.c},
     doc/manpage/ecryptfsd.8, doc/design_doc/ecryptfs_design_doc_v0_2.tex:
