@@ -139,17 +139,17 @@ char **fetch_sig(char *pw_dir, char *alias, int mounting) {
 	/* Construct sig file name */
 	if (asprintf(&sig_file, "%s/.ecryptfs/%s.sig", pw_dir, alias) < 0) {
 		perror("asprintf");
-		goto out;
+		goto err;
 	}
 	fh = fopen(sig_file, "r");
 	if (fh == NULL) {
 		perror("fopen");
-		goto out;
+		goto err;
 	}
 	/* Read up to 2 lines from the file */
 	if ((sig = malloc(sizeof(char*) * 2)) == NULL) {
 		perror("malloc");
-		goto out;
+		goto err;
 	}
 
 	sig[0] = NULL;
@@ -157,21 +157,26 @@ char **fetch_sig(char *pw_dir, char *alias, int mounting) {
 	for (i=0; i<2; i++) {
 		if ((sig[i] = (char *)malloc(KEY_BYTES*sizeof(char)+2)) == NULL) {
 			perror("malloc");
-			goto out;
+			goto err;
 		}
 		memset(sig[i], '\0', KEY_BYTES+2);
 		/* Read KEY_BYTES characters from line */
 		if (fgets(sig[i], KEY_BYTES+2, fh) == NULL) {
 			if (i == 0) {
 				fputs("Missing file encryption signature", stderr);
+				goto err;
+			} else {
+				/* Filename encryption isn't in use */
+				free(sig[i]);
+				sig[i] = NULL;
 				goto out;
 			}
-			continue;
 		}
 		/* Validate hex signature */
 		for (j=0; j<strlen(sig[i]); j++) {
 			if (isxdigit(sig[i][j]) == 0 && isspace(sig[i][j]) == 0) {
 				fputs("Invalid hex signature\n", stderr);
+				goto err;
 			}
 			if (isspace(sig[i][j]) != 0) {
 				/* truncate at first whitespace */
@@ -180,6 +185,7 @@ char **fetch_sig(char *pw_dir, char *alias, int mounting) {
 		}
 		if (strlen(sig[i]) > 0 && strlen(sig[i]) != KEY_BYTES) {
 			fputs("Invalid hex signature length\n", stderr);
+			goto err;
 		}
 		/* Validate that signature is in the current keyring,
 		 * compile with -lkeyutils
@@ -189,14 +195,15 @@ char **fetch_sig(char *pw_dir, char *alias, int mounting) {
 				fputs("Signature not found in user keyring\n"
 				      "Perhaps try the interactive "
 				      "'ecryptfs-mount-private'\n", stderr);
-			goto out;
+			goto err;
 		}
 	}
+out:
 	if (fh != NULL) {
 		fclose(fh);
 	}
 	return sig;
-out:
+err:
 	if (fh) {
 		fclose(fh);
 	}
