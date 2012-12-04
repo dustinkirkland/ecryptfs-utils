@@ -205,6 +205,7 @@ out:
 	if (sig) {
 		free(sig[0]);
 		free(sig[1]);
+		free(sig);
 	}
 	return NULL;
 }
