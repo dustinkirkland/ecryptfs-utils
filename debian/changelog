@@ -33,6 +33,8 @@ ecryptfs-utils (102) UNRELEASED; urgency=low
       ecryptfs-mount-private when mounting and keys cannot be found in the
       kernel keyring
     - Fix memory leak and clean up free()'s in an error path
+    - Use pointer assignment tests, rather than strlen(), to determine which
+      key signatures were fetched
   * src/daemon/main.c, src/include/ecryptfs.h,
     src/libecryptfs/{Makefile.am,messaging.c,miscdev.c,netlink.c,sysfs.c},
     doc/manpage/ecryptfsd.8, doc/design_doc/ecryptfs_design_doc_v0_2.tex:

@@ -498,7 +498,8 @@ int main(int argc, char *argv[]) {
 	int force = 0;
 	struct passwd *pwd;
 	char *alias, *src, *dest, *opt, *opts2;
-	char **sig;
+	char *sig_fekek = NULL, *sig_fnek = NULL;
+	char **sigs;
 	FILE *fh_counter = NULL;
 
 	uid = getuid();
@@ -582,10 +583,13 @@ int main(int argc, char *argv[]) {
 	/* Fetch signatures from file */
 	/* First line is the file content encryption key signature */
 	/* Second line, if present, is the filename encryption key signature */
-	sig = fetch_sig(pwd->pw_dir, alias, mounting);
-	if (!sig && mounting) {
+	sigs = fetch_sig(pwd->pw_dir, alias, mounting);
+	if (!sigs && mounting) {
 		/* if umounting, no sig is ok */
 		goto fail;
+	} else if (sigs) {
+		sig_fekek = sigs[0];
+		sig_fnek = sigs[1];
 	}
 
 	/* Build mount options */
@@ -593,10 +597,10 @@ int main(int argc, char *argv[]) {
 	    (asprintf(&opt, "ecryptfs_check_dev_ruid,ecryptfs_cipher=%s,ecryptfs_key_bytes=%d,ecryptfs_unlink_sigs%s%s%s%s",
 		      KEY_CIPHER,
 		      KEY_BYTES,
-		      strlen(sig[0]) > 0 ? ",ecryptfs_sig=" : "",
-		      strlen(sig[0]) > 0 ? sig[0] : "",
-		      strlen(sig[1]) > 0 ? ",ecryptfs_fnek_sig=" : "",
-		      strlen(sig[1]) > 0 ? sig[1] : ""
+		      sig_fekek ? ",ecryptfs_sig=" : "",
+		      sig_fekek ? sig_fekek : "",
+		      sig_fnek ? ",ecryptfs_fnek_sig=" : "",
+		      sig_fnek ? sig_fnek : ""
 		     ) < 0
 	    ) || opt == NULL
 	   ) {
@@ -616,7 +620,7 @@ int main(int argc, char *argv[]) {
 			fputs("Error incrementing mount counter\n", stderr);
 		}
 		/* Mounting, so exit if already mounted */
-		if (ecryptfs_private_is_mounted(src, dest, sig[0], mounting) == 1) {
+		if (ecryptfs_private_is_mounted(src, dest, sig_fekek, mounting) == 1) {
 			goto success;
 		}
 		/* We must maintain our real uid as the user who called this
@@ -665,18 +669,18 @@ int main(int argc, char *argv[]) {
                    to prevent root from mounting without the user's key.
                    This is a best-effort basis, so we'll just print messages
                    on error. */
-		if (strlen(sig[0]) == KEY_BYTES) {
-			rc = ecryptfs_remove_auth_tok_from_keyring(sig[0]);
+		if (sig_fekek != NULL) {
+			rc = ecryptfs_remove_auth_tok_from_keyring(sig_fekek);
 			if (rc != 0 && rc != ENOKEY)
 				fputs("Could not remove key from keyring, try 'ecryptfs-umount-private'\n", stderr);
 		}
-		if (strlen(sig[1]) == KEY_BYTES) {
-			rc = ecryptfs_remove_auth_tok_from_keyring(sig[1]);
+		if (sig_fnek != NULL) {
+			rc = ecryptfs_remove_auth_tok_from_keyring(sig_fnek);
 			if (rc != 0 && rc != ENOKEY)
 				fputs("Could not remove key from keyring, try 'ecryptfs-umount-private'\n", stderr);
 		}
 		/* Unmounting, so exit if not mounted */
-		if (ecryptfs_private_is_mounted(src, dest, sig[0], mounting) == 0) {
+		if (ecryptfs_private_is_mounted(src, dest, sig_fekek, mounting) == 0) {
 			goto fail;
 		}
 		/* The key is not needed for unmounting, so we set res=0.
