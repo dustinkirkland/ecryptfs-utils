@@ -164,7 +164,6 @@ char **fetch_sig(char *pw_dir, char *alias, int mounting) {
 		if (fgets(sig[i], KEY_BYTES+2, fh) == NULL) {
 			if (i == 0) {
 				fputs("Missing file encryption signature", stderr);
-				sig = NULL;
 				goto out;
 			}
 			continue;
