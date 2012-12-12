@@ -59,6 +59,9 @@ ecryptfs-utils (102) UNRELEASED; urgency=low
     - Delete old testcases that were either too basic, covered by more
       extensive tests in the modern test framework, or just didn't work
 
+  [ Nobuto MURATA ]
+  * src/desktop/ecryptfs-record-passphrase:
+
  -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 25 Oct 2012 16:12:45 -0500
 
 ecryptfs-utils (101) quantal; urgency=low
