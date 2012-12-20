@@ -85,7 +85,12 @@ $ac_distutils_result])
                 if test -n "${python_path}"; then
                         python_path="-I$python_path"
                 fi
-                PYTHON_CPPFLAGS=$python_path
+                python_plat_path=`$PYTHON -c "import distutils.sysconfig; \
+                        print distutils.sysconfig.get_python_inc(plat_specific=True);"`
+                if test -n "${python_plat_path}"; then
+                        python_plat_path="-I$python_plat_path"
+                fi
+                PYTHON_CPPFLAGS="$python_path $python_plat_path"
         fi
         AC_MSG_RESULT([$PYTHON_CPPFLAGS])
         AC_SUBST([PYTHON_CPPFLAGS])

@@ -19,6 +19,9 @@ ecryptfs-utils (102) UNRELEASED; urgency=low
       autotools-dev
     - Drop Build-Depends on autoconf, automake, and libtool since
       dh-autoreconf depends on all of these packages
+  * m4/ac_python_devel.m4:
+    - Fix FTBFS in Raring Ringtail due to multiarch Python. Be sure to include
+      platform specific Python include directions in SWIG_PYTHON_CPPFLAGS.
   * src/utils/mount.ecryptfs_private.c:
     - Fix conditionals when checking whether to remove authentication tokens
       from the kernel keyring upon umount. This conditional was incorrectly
