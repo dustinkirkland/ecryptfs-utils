@@ -31,6 +31,7 @@ default_lfs="ext4"
 default_lmount_opts="rw,relatime"
 default_ext2_opts="user_xattr,acl"
 default_ext3_opts="user_xattr,acl,commit=600,barrier=1,data=ordered"
+default_btrfs_opts="nodatacow"
 default_mount_opts="rw,relatime,ecryptfs_cipher=aes,ecryptfs_key_bytes=16,ecryptfs_sig=\${ETL_FEKEK_SIG}"
 default_fne_mount_opts="${default_mount_opts},ecryptfs_fnek_sig=\${ETL_FNEK_SIG}"
 
@@ -334,6 +335,9 @@ etl_construct_lmount_opts()
 	ext3|ext4)
 		lmount_opts=${default_lmount_opts},${default_ext3_opts}
 		;;
+	btrfs)
+		lmount_opts=${default_lmount_opts},${default_btrfs_opts}
+		;;
 	*)
 		lmount_opts=$default_lmount_opts
 		;;
@@ -394,10 +398,11 @@ etl_lmax_filesize()
 	btrfs)
 		# btrfs is a pain, since there is a big difference between the
 		# amount of free space it reports and the maximum size of a file
-		# one can produce before filling up the partition. So instead
-		# we divide by 2 to ensure we have more than enough free space. 
+		# one can produce before filling up the partition, especially
+		# with small partitions. So instead we divide by 4 to ensure
+		# we have more than enough free space. 
 		#
-		blks=$((blks / 2))
+		blks=$((blks / 4))
 		;;
 	xfs)
 		# xfs misbehaves on small file systems when we truncate, according to
