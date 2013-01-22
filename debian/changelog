@@ -1,4 +1,4 @@
-ecryptfs-utils (102) UNRELEASED; urgency=low
+ecryptfs-utils (102) quantal; urgency=low
 
   [ Dustin Kirkland ]
   * debian/control:
@@ -65,7 +65,7 @@ ecryptfs-utils (102) UNRELEASED; urgency=low
   [ Nobuto MURATA ]
   * src/desktop/ecryptfs-record-passphrase:
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Thu, 25 Oct 2012 16:12:45 -0500
+ -- Dustin Kirkland <kirkland@ubuntu.com>  Tue, 22 Jan 2013 16:02:24 -0600
 
 ecryptfs-utils (101) quantal; urgency=low
 
