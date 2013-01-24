@@ -1,0 +1,25 @@
+.TH ecryptfs-find 1 2012-01-24 ecryptfs-utils "eCryptfs"
+.SH NAME
+ecryptfs-find \- use inode numbers to match encrypted/decrypted filenames
+
+.SH SYNOPSIS
+\fBecryptfs-find\fP cleartext-filename
+\fBecryptfs-find\fP ECRYPTFS_FNEK_ENCRYPTED.fwBGx13n218a.UqxwDN2bu3ON3GhCfyMcYl18CF7VKLMSDuEadV
+
+.SH DESCRIPTION
+This program will attempt to match encrypted filenames to their decrypted counterpart, and attempt to match decrypted filenames to their encrypted counterpart.
+
+Notes:
+ - the eCryptfs filesystem must be mounted in order to work
+ - it uses \fBls\fP(1) in order to determine the inode
+ - it uses \fBfind\fP(1) in order to locate the inode
+
+.SH SEE ALSO
+\fBfind\fP(1), \fBls\fP(1)
+
+\fIhttp://ecryptfs.org/\fP
+
+.SH AUTHOR
+This manpage was written by Dustin Kirkland <kirkland@ubuntu.com> for Ubuntu systems (but may be used by others).  Permission is granted to copy, distribute and/or modify this document under the terms of the GNU General Public License, Version 2 or any later version published by the Free Software Foundation.
+
+On Debian and Ubuntu systems, the complete text of the GNU General Public License can be found in /usr/share/common-licenses/GPL.

@@ -14,9 +14,11 @@ dist_man_MANS = \
 	ecryptfs.7 \
 	ecryptfs-add-passphrase.1 \
 	ecryptfsd.8 \
+	ecryptfs-find.1 \
 	ecryptfs-generate-tpm-key.1 \
 	ecryptfs-insert-wrapped-passphrase-into-keyring.1 \
 	ecryptfs-manager.8 \
+	ecryptfs-migrate-home.8 \
 	ecryptfs-mount-private.1 \
 	ecryptfs-recover-private.1 \
 	ecryptfs-rewrap-passphrase.1 \
@@ -26,6 +28,7 @@ dist_man_MANS = \
 	ecryptfs-stat.1 \
 	ecryptfs-umount-private.1 \
 	ecryptfs-unwrap-passphrase.1 \
+	ecryptfs-verify.1 \
 	ecryptfs-wrap-passphrase.1 \
 	mount.ecryptfs.8 \
 	umount.ecryptfs.8 \

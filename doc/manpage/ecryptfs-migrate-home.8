@@ -1,0 +1,40 @@
+.TH ecryptfs-migrate-home 8 2012-01-24 ecryptfs-utils "eCryptfs"
+.SH NAME
+ecryptfs-migrate-home \- migrate a user's home to directory to an encrypted home setup
+
+.SH SYNOPSIS
+\fBecryptfs-migrate-home\fP [-u|--user USER]
+
+.SH OPTIONS
+.TP
+.B -u, --user USER
+Migrate USER's home directory to an encrypted home directory
+
+.SH DESCRIPTION
+\fBWARNING\fP: Make a complete backup copy of the non-encrypted data to another system or external media. This script is dangerous and in case of an error, could result in data lost, or lock USER out of the system!
+
+This program must be executed by root.
+
+This program will attempt to migrate a user's home directory to an encrypted home directory.
+
+This program requires free disk space 2.5x the current size of the home directory to be migrated.  Once successful, you can recover most of this space by deleting the cleartext directory.
+
+The USER must be logged out of all sessions in order to perform the migration, and have no open files according to \fBlsof\fP(1).
+
+Once the migration has completed, the USER must login immediately, \fbBEFORE THE NEXT REBOOT\fP in order to complete the migration.
+
+After logging in, if USER can read and write files in their home directory successfully, then the migration has completed successfully and can remove the cleartext backup in \fI/home/\fP.
+
+After a successful migration, the USER really must run \fBecryptfs-unwrap-passphrase\fP(1) or \fBzescrow\fP(1) and record their randomly generated mount passphrase.
+
+If swap is not already encrypted, it is highly recommended that your administrator setup encrypted swap using \fBecryptfs-setup-swap\fP(1).
+
+.SH SEE ALSO
+\fBecryptfs-unwrap-passphrase\fP(1), \fBecryptfs-setup-private\fP(1), \fBecryptfs-setup-swap\fP(1), \fBlsof\fP(1), \fBrsync\fP(1), \fBzescrow\fP(1)
+
+\fIhttp://ecryptfs.org/\fP
+
+.SH AUTHOR
+This manpage was written by Dustin Kirkland <kirkland@ubuntu.com> for Ubuntu systems (but may be used by others).  Permission is granted to copy, distribute and/or modify this document under the terms of the GNU General Public License, Version 2 or any later version published by the Free Software Foundation.
+
+On Debian and Ubuntu systems, the complete text of the GNU General Public License can be found in /usr/share/common-licenses/GPL.

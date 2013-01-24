@@ -18,6 +18,7 @@ bin_SCRIPTS = ecryptfs-setup-private \
 	      ecryptfs-rewrite-file \
 	      ecryptfs-recover-private \
 	      ecryptfs-migrate-home \
+	      ecryptfs-find \
 	      ecryptfs-verify
 bin2dir = $(bindir)
 

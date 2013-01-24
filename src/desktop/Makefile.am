@@ -1,7 +1,7 @@
 MAINTAINERCLEANFILES = $(srcdir)/Makefile.in
 
 eudatarootdir = $(datarootdir)/ecryptfs-utils
-dist_eudataroot_SCRIPTS = ecryptfs-record-passphrase ecryptfs-find
+dist_eudataroot_SCRIPTS = ecryptfs-record-passphrase
 
 desktopdir = $(datarootdir)/ecryptfs-utils
 

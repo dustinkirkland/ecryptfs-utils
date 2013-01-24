@@ -1,6 +1,27 @@
 ecryptfs-utils (103) UNRELEASED; urgency=low
 
-  * UNRELEASED
+  * doc/manpage/ecryptfs-add-passphrase.1, doc/manpage/ecryptfsd.8,
+    doc/manpage/ecryptfs-find.1, doc/manpage/ecryptfs-generate-tpm-
+    key.1, doc/manpage/ecryptfs-insert-wrapped-passphrase-into-
+    keyring.1, doc/manpage/ecryptfs-manager.8, doc/manpage/ecryptfs-
+    migrate-home.8, doc/manpage/ecryptfs-mount-private.1,
+    doc/manpage/ecryptfs-recover-private.1, doc/manpage/ecryptfs-rewrap-
+    passphrase.1, doc/manpage/ecryptfs-rewrite-file.1,
+    doc/manpage/ecryptfs-setup-private.1, doc/manpage/ecryptfs-setup-
+    swap.1, doc/manpage/ecryptfs-stat.1, doc/manpage/ecryptfs-umount-
+    private.1, doc/manpage/ecryptfs-unwrap-passphrase.1,
+    doc/manpage/ecryptfs-verify.1, doc/manpage/ecryptfs-wrap-
+    passphrase.1, doc/manpage/Makefile.am, doc/manpage/mount.ecryptfs.8,
+    doc/manpage/mount.ecryptfs_private.1, doc/manpage/pam_ecryptfs.8,
+    doc/manpage/umount.ecryptfs.8,
+    doc/manpage/umount.ecryptfs_private.1, src/desktop/ecryptfs-find =>
+    src/utils/ecryptfs-find, src/desktop/Makefile.am,
+    src/utils/Makefile.am:
+    - add 3 new manpages, for ecryptfs-find, ecryptfs-verify, and
+      ecryptfs-migrate-home
+    - Add SEE ALSO section to manpages which were missing it
+    - Mention "Debian and Ubuntu" in license location
+    - move the ecryptfs-find utility to the proper location in src/utils
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Tue, 22 Jan 2013 16:03:13 -0600
 
