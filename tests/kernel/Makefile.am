@@ -8,6 +8,7 @@ dist_noinst_SCRIPTS = directory-concurrent.sh \
 		      file-concurrent.sh \
 		      inode-race-stat.sh \
 		      inotify.sh \
+		      link.sh \
 		      llseek.sh \
 		      lp-1009207.sh \
 		      lp-469664.sh \
