@@ -49,7 +49,8 @@ noinst_PROGRAMS = directory-concurrent/test \
 		  mmap-close/test \
 		  mmap-dir/test \
 		  read-dir/test \
-		  trunc-file/test
+		  trunc-file/test \
+		  xattr/test
 endif
 
 directory_concurrent_test_SOURCES = directory-concurrent/test.c
@@ -86,3 +87,6 @@ mmap_dir_test_SOURCES = mmap-dir/test.c
 read_dir_test_SOURCES = read-dir/test.c
 
 trunc_file_test_SOURCES = trunc-file/test.c
+
+xattr_test_SOURCES = xattr/test.c
+
