@@ -23,6 +23,7 @@ dist_noinst_SCRIPTS = directory-concurrent.sh \
 		      lp-926292.sh \
 		      lp-994247.sh \
 		      miscdev-bad-count.sh \
+		      mknod.sh \
 		      mmap-bmap.sh \
 		      mmap-close.sh \
 		      mmap-dir.sh \
