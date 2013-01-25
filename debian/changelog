@@ -1,10 +1,4 @@
-ecryptfs-utils (104) UNRELEASED; urgency=low
-
-  * UNRELEASED
-
- -- Dustin Kirkland <kirkland@ubuntu.com>  Fri, 25 Jan 2013 12:06:42 -0600
-
-ecryptfs-utils (103) quantal; urgency=low
+ecryptfs-utils (103) UNRELEASED; urgency=low
 
   [ Tyler Hicks ]
   * debian/rules:
@@ -35,6 +29,8 @@ ecryptfs-utils (103) quantal; urgency=low
     - Add SEE ALSO section to manpages which were missing it
     - Mention "Debian and Ubuntu" in license location
     - move the ecryptfs-find utility to the proper location in src/utils
+  * src/utils/Makefile.am:
+    - fix broken build
 
   [ Colin King ]
   * === added directory tests/kernel/mmap-bmap, === added directory

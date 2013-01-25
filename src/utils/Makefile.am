@@ -1,6 +1,6 @@
 MAINTAINERCLEANFILES = $(srcdir)/Makefile.in
 
-EXTRA_DIST=ecryptfsrc ecryptfs-rewrite-file ecryptfs-setup-private ecryptfs-setup-swap ecryptfs-mount-private ecryptfs-umount-private ecryptfs-migrate-home ecryptfs-recover-private ecryptfs-verify
+EXTRA_DIST=ecryptfsrc ecryptfs-rewrite-file ecryptfs-setup-private ecryptfs-setup-swap ecryptfs-mount-private ecryptfs-umount-private ecryptfs-migrate-home ecryptfs-recover-private ecryptfs-find ecryptfs-verify
 
 rootsbin_PROGRAMS=mount.ecryptfs \
 		  umount.ecryptfs \
