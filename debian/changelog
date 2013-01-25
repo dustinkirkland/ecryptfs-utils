@@ -1,5 +1,11 @@
 ecryptfs-utils (103) UNRELEASED; urgency=low
 
+  [ Tyler Hicks ]
+  * debian/rules:
+    - Use dpkg-buildflags to inject distro compiler hardening flags into the
+      build. This also fixes the hardening-no-fortify-functions lintian
+      warnings.
+  [ Dustin Kirkland ]
   * doc/manpage/ecryptfs-add-passphrase.1, doc/manpage/ecryptfsd.8,
     doc/manpage/ecryptfs-find.1, doc/manpage/ecryptfs-generate-tpm-
     key.1, doc/manpage/ecryptfs-insert-wrapped-passphrase-into-
