@@ -31,6 +31,8 @@ ecryptfs-utils (103) UNRELEASED; urgency=low
     - move the ecryptfs-find utility to the proper location in src/utils
   * src/utils/Makefile.am:
     - fix broken build
+  * debian/ecryptfs-utils.links:
+    - link no longer needed for ecryptfs-find
 
   [ Colin King ]
   * === added directory tests/kernel/mmap-bmap, === added directory
