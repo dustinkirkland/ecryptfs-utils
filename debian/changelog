@@ -5,6 +5,7 @@ ecryptfs-utils (103) UNRELEASED; urgency=low
     - Use dpkg-buildflags to inject distro compiler hardening flags into the
       build. This also fixes the hardening-no-fortify-functions lintian
       warnings.
+
   [ Dustin Kirkland ]
   * doc/manpage/ecryptfs-add-passphrase.1, doc/manpage/ecryptfsd.8,
     doc/manpage/ecryptfs-find.1, doc/manpage/ecryptfs-generate-tpm-
@@ -28,6 +29,18 @@ ecryptfs-utils (103) UNRELEASED; urgency=low
     - Add SEE ALSO section to manpages which were missing it
     - Mention "Debian and Ubuntu" in license location
     - move the ecryptfs-find utility to the proper location in src/utils
+
+  [ Colin King ]
+  * === added directory tests/kernel/mmap-bmap, === added directory
+    tests/kernel/xattr, tests/kernel/link.sh, tests/kernel/Makefile.am,
+    tests/kernel/mknod.sh, tests/kernel/mmap-bmap.sh, tests/kernel/mmap-
+    bmap/test.c, tests/kernel/tests.rc, tests/kernel/xattr.sh,
+    tests/kernel/xattr/test.c:
+    - ran the current eCryptfs tests on 3.8-rc4 with kernel gcov enabled
+      and spotted a few trivial areas where it would be useful to up the
+      test coverage on the code
+    - so here are a few very simple additional tests to exercise eCryptfs
+      a little further
 
  -- Dustin Kirkland <kirkland@ubuntu.com>  Tue, 22 Jan 2013 16:03:13 -0600
 

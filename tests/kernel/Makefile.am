@@ -8,6 +8,7 @@ dist_noinst_SCRIPTS = directory-concurrent.sh \
 		      file-concurrent.sh \
 		      inode-race-stat.sh \
 		      inotify.sh \
+		      link.sh \
 		      llseek.sh \
 		      lp-1009207.sh \
 		      lp-469664.sh \
@@ -23,6 +24,8 @@ dist_noinst_SCRIPTS = directory-concurrent.sh \
 		      lp-926292.sh \
 		      lp-994247.sh \
 		      miscdev-bad-count.sh \
+		      mknod.sh \
+		      mmap-bmap.sh \
 		      mmap-close.sh \
 		      mmap-dir.sh \
 		      read-dir.sh \
@@ -42,10 +45,12 @@ noinst_PROGRAMS = directory-concurrent/test \
 		  lp-870326/test \
 		  lp-994247/test \
 		  miscdev-bad-count/test \
+		  mmap-bmap/test \
 		  mmap-close/test \
 		  mmap-dir/test \
 		  read-dir/test \
-		  trunc-file/test
+		  trunc-file/test \
+		  xattr/test
 endif
 
 directory_concurrent_test_SOURCES = directory-concurrent/test.c
@@ -73,6 +78,8 @@ lp_994247_test_SOURCES = lp-994247/test.c
 miscdev_bad_count_test_SOURCES = miscdev-bad-count/test.c
 miscdev_bad_count_test_LDADD = $(top_builddir)/src/libecryptfs/libecryptfs.la
 
+mmap_bmap_test_SOURCES = mmap-bmap/test.c
+
 mmap_close_test_SOURCES = mmap-close/test.c
 
 mmap_dir_test_SOURCES = mmap-dir/test.c
@@ -80,3 +87,6 @@ mmap_dir_test_SOURCES = mmap-dir/test.c
 read_dir_test_SOURCES = read-dir/test.c
 
 trunc_file_test_SOURCES = trunc-file/test.c
+
+xattr_test_SOURCES = xattr/test.c
+
