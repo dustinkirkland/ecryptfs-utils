@@ -39,6 +39,9 @@ override_dh_fixperms:
 	chmod 4755 debian/ecryptfs-utils/sbin/mount.ecryptfs_private
 
 override_dh_install:
+	# Removing translation markers to work as an update-notifier hook
+	sed -i 's/^_//' debian/tmp/usr/share/ecryptfs-utils/ecryptfs-record-passphrase
+
 	dh_install --fail-missing --sourcedir=debian/tmp
 
 override_dh_python2:

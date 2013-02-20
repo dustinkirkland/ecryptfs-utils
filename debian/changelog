@@ -1,8 +1,13 @@
 ecryptfs-utils (104) UNRELEASED; urgency=low
 
+  [ Dustin Kirkland ]
   * UNRELEASED
 
- -- Dustin Kirkland <kirkland@ubuntu.com>  Fri, 25 Jan 2013 12:58:07 -0600
+  [ Nobuto MURATA ]
+  * fix an empty update-notifier window (LP: #1107650)
+    - changes made in Rev.758 was incomplete
+
+ -- Nobuto MURATA <nobuto@ubuntu.com>  Thu, 21 Feb 2013 01:56:33 +0900
 
 ecryptfs-utils (103) quantal; urgency=low
 
