@@ -7,6 +7,12 @@ ecryptfs-utils (104) UNRELEASED; urgency=low
   * fix an empty update-notifier window (LP: #1107650)
     - changes made in Rev.758 was incomplete
 
+  [ Tyler Hicks ]
+  * doc/manpage/ecryptfs.7:
+    - adjust man page text to avoid confusion about whether the interactive
+      mount helper takes a capital 'N' for the answer to y/n questions
+      (LP: #1130460)
+
  -- Nobuto MURATA <nobuto@ubuntu.com>  Thu, 21 Feb 2013 01:56:33 +0900
 
 ecryptfs-utils (103) quantal; urgency=low
