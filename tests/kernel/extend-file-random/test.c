@@ -48,7 +48,7 @@ int test_write(int fd, char *buffer, size_t len, off_t offset)
 	}
 
 	if (write(fd, buffer, len) != len) {
-		fprintf(stderr, "Failed to write %lu bytes, position %lu: %s\n", 
+		fprintf(stderr, "Failed to write %zu bytes, position %lu: %s\n", 
 			len, offset, strerror(errno));
 		return TEST_FAILED;
 	}
@@ -64,7 +64,7 @@ int test_read(int fd, char *buffer, size_t len, off_t offset)
 	}
 
 	if (read(fd, buffer, len) != len) {
-		fprintf(stderr, "Failed to read %lu bytes, position %lu: %s\n", 
+		fprintf(stderr, "Failed to read %zu bytes, position %lu: %s\n", 
 			len, offset, strerror(errno));
 		return TEST_FAILED;
 	}
