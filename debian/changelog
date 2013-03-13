@@ -1,7 +1,10 @@
 ecryptfs-utils (104) UNRELEASED; urgency=low
 
-  [ Dustin Kirkland ]
-  * UNRELEASED
+  [ Colin King ]
+  * src/libecryptfs/ecryptfs-stat.c, tests/kernel/extend-file-
+    random/test.c, tests/kernel/inode-race-stat/test.c,
+    tests/kernel/trunc-file/test.c:
+    - Fixed some 32 bit build warnings
 
   [ Nobuto MURATA ]
   * fix an empty update-notifier window (LP: #1107650)

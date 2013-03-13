@@ -146,7 +146,7 @@ int ecryptfs_parse_stat(struct ecryptfs_crypt_stat_user *crypt_stat, char *buf,
 	if (buf_size < (ECRYPTFS_FILE_SIZE_BYTES
 			+ MAGIC_ECRYPTFS_MARKER_SIZE_BYTES
 			+ 4)) {
-		printf("%s: Invalid metadata size; must have at least [%lu] "
+		printf("%s: Invalid metadata size; must have at least [%zu] "
 		       "bytes; there are only [%zu] bytes\n", __FUNCTION__,
 		       (ECRYPTFS_FILE_SIZE_BYTES
 			+ MAGIC_ECRYPTFS_MARKER_SIZE_BYTES

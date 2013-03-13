@@ -272,7 +272,7 @@ int main(int argc, char **argv)
 
 	len *= 1024;
 	if (len > SSIZE_MAX) {
-		fprintf(stderr, "size should be < %zd\n", SSIZE_MAX / 1024);
+		fprintf(stderr, "size should be < %zd\n", (ssize_t)SSIZE_MAX / 1024);
 		exit(TEST_ERROR);
 	}
 

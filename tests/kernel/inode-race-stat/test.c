@@ -34,6 +34,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <stdint.h>
 
 #include <unistd.h>
 #include <fcntl.h>
@@ -122,7 +123,7 @@ static void do_test(const int fdin, const int fdout, const char *filename)
 		if (cmd[0] == CMD_TEST) {
 			int ret;
 			off_t sz;
-			sscanf(cmd+1, "%zd", &sz);
+			sscanf(cmd+1, "%jd", (intmax_t *)&sz);
 
 			ret = check_size(filename, sz);
 			switch (ret) {
@@ -307,7 +308,7 @@ int main(int argc, char **argv)
 		}
 
 		/* Now tell children to stat the file */
-		snprintf(cmd, sizeof(cmd), "%c%zd", CMD_TEST, sz);
+		snprintf(cmd, sizeof(cmd), "%c%jd", CMD_TEST, (intmax_t)sz);
 		for (i = 0; i < threads; i++) {
 			if (write(pipe_to[i][1], cmd, strlen(cmd)+1) < 0) {
 				fprintf(stderr, "write to pipe failed: %s\n",
