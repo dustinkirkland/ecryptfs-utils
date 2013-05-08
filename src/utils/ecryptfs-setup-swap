@@ -161,7 +161,7 @@ for swap in $swaps; do
 		[ -e "/dev/mapper/cryptswap$i" ] || break
 	done
 	# Add crypttab entry
-	echo "cryptswap$i $swap /dev/urandom swap,cipher=aes-cbc-essiv:sha256" >> /etc/crypttab
+	echo "cryptswap$i UUID=$uuid /dev/urandom swap,cipher=aes-cbc-essiv:sha256" >> /etc/crypttab
 
 	# Add fstab entry
 	echo "/dev/mapper/cryptswap$i none swap sw 0 0" >> /etc/fstab

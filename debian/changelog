@@ -16,6 +16,10 @@ ecryptfs-utils (104) UNRELEASED; urgency=low
       mount helper takes a capital 'N' for the answer to y/n questions
       (LP: #1130460)
 
+  [ Dustin Kirkland ]
+  * src/utils/ecryptfs-setup-swap: LP: #1172014
+    - write crypttab entry using UUID
+
  -- Nobuto MURATA <nobuto@ubuntu.com>  Thu, 21 Feb 2013 01:56:33 +0900
 
 ecryptfs-utils (103) quantal; urgency=low
